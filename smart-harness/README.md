@@ -7,25 +7,56 @@ One canonical harness for both **VS Code / GitHub Copilot** and **Claude Code**.
 You only need two workflows on either platform:
 
 - **Dev** / `/dev` — build, fix, refactor, debug
-- **ReviewPR** / `/review-pr` — deep review of somebody else's PR
+- **ReviewPR** / `/review-pr` — deep, execution-based review of somebody else's PR
 
-Both harnesses share the same engineering skills. Platform-specific agents live separately.
+Everything else is hidden orchestration.
+
+## One shared skill library
+
+The two harnesses use the **same canonical engineering skills** from:
+
+```text
+smart-harness/shared/skills/
+```
+
+When installed, those skills are copied once to `.claude/skills/` for a project or `~/.claude/skills/` globally. Claude Code uses that location natively, and current VS Code Copilot also discovers Agent Skills there.
+
+So there is no separate Copilot-vs-Claude copy to maintain.
 
 ## Repository layout
 
 ```text
 smart-harness/
   shared/skills/              # canonical skills used by BOTH harnesses
-  copilot/agents/             # VS Code Copilot agents
-  copilot/github-skills/      # GitHub.com native Copilot review skill
-  claude-code/agents/         # Claude Code subagents
-  claude-code/skills/         # /dev and /review-pr entry points
-  config/models.json          # all model choices in ONE place
-  config/configure-models.py  # applies model config to both harnesses
-  install.sh                  # install copilot | claude | both
+    plan-first/
+    parallel-work/
+    engineering-core/
+    codebase-map/
+    task-ledger/
+    pr-review/
+
+  copilot/
+    agents/                   # VS Code Copilot Dev/ReviewPR + hidden workers
+    github-skills/            # GitHub.com native Copilot code-review guidance
+
+  claude-code/
+    agents/                   # Claude Code hidden subagents
+    commands/                 # Claude-only /dev and /review-pr entry points
+
+  config/
+    models.json               # all model choices in ONE place
+    configure-models.py       # applies model config to both harnesses
+
+  templates/
+    CLAUDE.md.example
+
+  install.sh                  # install into one project
+  install-global.sh           # install once for this machine
 ```
 
-## Install both into the same project
+Claude's entry points live under `.claude/commands`, rather than the shared skill directory, so installing both products does not create duplicate `/dev` or `/review-pr` skill definitions.
+
+## Install both into a project
 
 ```bash
 bash smart-harness/install.sh both /path/to/project
@@ -38,21 +69,39 @@ bash smart-harness/install.sh copilot /path/to/project
 bash smart-harness/install.sh claude /path/to/project
 ```
 
-When `both` is installed, shared skills are copied **once** to `.claude/skills/`. Current VS Code Copilot discovers Agent Skills from `.claude/skills`, and Claude Code uses that location natively.
-
 Installed layout:
 
 ```text
 project/
   .claude/
-    skills/       # shared skills + Claude /dev and /review-pr
+    skills/       # ONE shared skill library used by both products
     agents/       # Claude-only subagents
+    commands/     # Claude-only /dev and /review-pr
   .github/
-    agents/       # Copilot-only agents
-    skills/       # GitHub.com Copilot code-review guidance
+    agents/       # Copilot-only Dev/ReviewPR + hidden workers
+    skills/       # GitHub.com native Copilot code-review guidance
 ```
 
-This means there is no duplicate copy of shared skills inside one working project.
+Re-running the installer syncs updates. Replaced files are backed up under `.smart-harness-backups/` rather than inside a discoverable skills directory.
+
+## Install once for the whole machine
+
+If these are personal defaults across repositories:
+
+```bash
+bash smart-harness/install-global.sh both
+```
+
+That installs:
+
+```text
+~/.claude/skills/     # shared by Claude Code + VS Code Copilot
+~/.claude/agents/     # Claude-only
+~/.claude/commands/   # Claude-only /dev and /review-pr
+~/.copilot/agents/    # Copilot-only
+```
+
+Project-local rules and customizations can still override/augment the global setup.
 
 ## Models: edit one file
 
@@ -68,101 +117,128 @@ Then run:
 python3 smart-harness/config/configure-models.py
 ```
 
-The script accepts arbitrary model identifiers, so model generations can change without redesigning the harness.
+The model identifiers are deliberately opaque strings. When model generations change, update that file instead of redesigning the harness.
 
-Defaults currently reflect the available model sets discussed when this harness was built.
+Current defaults:
 
-## Non-negotiable workflow rules
+### Copilot
 
-### 1. Always plan before editing
+- coordinator/top: Claude Opus 5
+- normal implementation: Claude Sonnet 5
+- deep reasoning/implementation: GPT-5.6 Sol
+- fast exploration/execution: GPT-5.6 Terra
+
+### Claude Code
+
+- coordinator/normal: Sonnet 4.6 1M (`sonnet[1m]`)
+- fast: Haiku 4.5 200K (`haiku`)
+- deep: Opus 4.7 1M
+- top: Opus 4.8 1M
+
+Change the IDs/effort values as your available models evolve.
+
+# Non-negotiable workflow rules
+
+## 1. Always plan before editing
 
 Every coding task starts with a plan. Plan depth is proportional to risk:
 
-- trivial change: 1–3 step micro-plan
-- ordinary feature: explicit implementation + verification plan
-- complex/high-risk change: codebase evidence + architecture plan + independent challenge
+- trivial change: 1–3 step micro-plan;
+- ordinary feature: explicit implementation + verification plan;
+- complex/high-risk change: codebase evidence + architecture plan + independent challenge.
 
-No worker should begin edits before the coordinator has an accepted plan.
+No worker should begin source edits before the coordinator has an accepted plan.
 
-### 2. Parallelize independent work
+## 2. Parallelize independent work
 
-The harness should parallelize when work is genuinely independent:
+The harness parallelizes genuinely independent work:
 
-- repository exploration
-- competing hypotheses
-- architecture / correctness / security review perspectives
-- static analysis and test execution
-- independent test suites when they do not contend for shared resources
+- repository exploration of separate modules;
+- competing debugging hypotheses;
+- architecture/correctness/security review perspectives;
+- static analysis and test execution;
+- independent unit/integration suites when they do not contend for shared resources.
 
-Writing is parallelized only when components are cleanly separable and isolated worktrees/branches prevent collisions. Sequential dependencies stay sequential.
+Writing is parallelized only when components are cleanly separable **and** isolated worktrees/branches prevent collisions. Sequential dependencies remain sequential.
 
-### 3. PR review is execution-based, not diff-only
+Claude Code uses subagents for normal parallelism. Agent Teams are reserved for rare large tasks where independent peers need sustained direct collaboration.
 
-`ReviewPR` / `/review-pr` must create an isolated Git worktree at the PR HEAD and review **that checkout**.
+## 3. PR review is execution-based, not diff-only
+
+`ReviewPR` / `/review-pr` must create an isolated Git worktree at the committed PR HEAD and review **that checkout**.
 
 It must:
 
-1. inspect design, architecture, correctness, and wiring;
-2. run the complete discoverable unit-test suite;
-3. run the complete discoverable integration-test suite;
-4. run relevant e2e/runtime tests when configured and feasible;
-5. run compiler/type/lint/static-analysis checks;
-6. perform adversarial behavioral review;
-7. perform security/resilience review when risk warrants it;
-8. clearly mark anything blocked by unavailable credentials/services as **NOT EXECUTED**, never PASS.
+1. plan the review before executing it;
+2. inspect design, architecture, correctness, and runtime wiring;
+3. run the complete feasible configured **unit-test suite**;
+4. run the complete feasible configured **integration-test suite**;
+5. run relevant e2e/runtime tests when configured and feasible;
+6. run compiler/build/type/lint/static-analysis checks;
+7. perform adversarial behavioral review;
+8. perform security/resilience review when risk warrants it;
+9. clearly mark unavailable checks **NOT EXECUTED**, never PASS;
+10. independently verify/falsify BLOCKER/MAJOR findings.
 
-Static review and test/static execution should run in parallel where safe.
+Static reasoning and dynamic test/static execution run in parallel where safe.
 
-If the PR fails a test, run the failing subset against the base commit when practical to distinguish a PR regression from a pre-existing failure.
+If PR-head tests fail and regression status is unclear, the harness should run the failing subset against the base commit in a temporary base worktree when practical.
 
-## Worktree behavior for PR review
+## PR worktree protocol
 
-The shared `pr-review` skill defines the portable protocol:
+The shared `pr-review` skill defines the portable flow:
 
 ```bash
 git worktree add --detach <review-dir> <PR_HEAD_SHA>
 ```
 
-All reads and execution happen inside that worktree. The source checkout is not edited.
+All review reads, tests, analyzers, and probes target that worktree. The developer's main checkout is not edited.
 
-The worktree is removed after the report unless it is useful to preserve it for investigation.
+After the report:
+
+```bash
+git worktree remove --force <review-dir>
+git worktree prune
+```
 
 A worktree is a code-isolation boundary, not a security sandbox.
 
-## Parallelism by platform
+# Managing both on the same machine
 
-### Copilot
+The simplest approach is:
 
-The `Dev` and `ReviewPR` coordinators explicitly ask VS Code to launch independent custom subagents in parallel. VS Code supports parallel subagent execution and isolated contexts.
+1. clone `coding_tools` once;
+2. treat `smart-harness/` as the source of truth;
+3. edit shared skills only under `smart-harness/shared/skills/`;
+4. edit models only in `smart-harness/config/models.json`;
+5. rerun the installer to sync one or more projects.
 
-### Claude Code
-
-Claude Code uses parallel subagents for independent work. The harness does **not** require Agent Teams for normal work: Anthropic recommends teams only where independent peers need sustained collaboration, because they add coordination/token overhead. Teams remain an optional escalation for a clearly partitioned large feature.
-
-## Managing both on one machine
-
-Recommended: clone `coding_tools` once and treat `smart-harness/` as the source of truth.
-
-When you change a model or skill:
+Example:
 
 ```bash
 cd coding_tools
 python3 smart-harness/config/configure-models.py
-bash smart-harness/install.sh both /path/to/project
+bash smart-harness/install.sh both ~/src/project-a
+bash smart-harness/install.sh both ~/src/project-b
 ```
 
-Repeat the installer for other projects that should receive the update.
+Or use the global installer if the harness should be your default everywhere:
 
-For project-specific rules, edit the target project's `CLAUDE.md` / `.claude/rules/`; do not fork shared skills unless the workflow genuinely differs.
+```bash
+bash smart-harness/install-global.sh both
+```
 
-## Old folders
+Repository-specific facts belong in each project's `CLAUDE.md`, `.claude/rules/`, ADRs, schemas, and tests. Do not fork shared skills just to store project facts.
 
-`copilot-smart-harness/` and `claude-code-smart-harness/` are retained temporarily as v0.x compatibility snapshots. **`smart-harness/` is the canonical source going forward.**
+# Old folders
 
-## References
+`copilot-smart-harness/` and `claude-code-smart-harness/` are retained temporarily as compatibility snapshots. **`smart-harness/` is the canonical source going forward.**
+
+# References
 
 - VS Code subagents / parallel orchestration: https://code.visualstudio.com/docs/agents/run/subagents
 - VS Code worktree isolation: https://code.visualstudio.com/docs/agents/concepts/agent-harnesses
+- VS Code Agent Skills: https://code.visualstudio.com/docs/agent-customization/agent-skills
 - Claude Code subagents: https://code.claude.com/docs/en/sub-agents
 - Claude Code worktrees: https://code.claude.com/docs/en/worktrees
 - Claude Code skills: https://code.claude.com/docs/en/skills
