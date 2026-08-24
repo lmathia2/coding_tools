@@ -18,4 +18,4 @@ Inspect owning files, tests, and documentation. Keep scope minimal and reuse exi
 
 If architecture, migration, security, concurrency, root-cause, or documentation impact exceeds the plan, stop and request escalation.
 
-Run focused tests and documentation checks. Return changed behavior/files, commands/results, Documentation Impact/paths/checks, and residual risk.
+Run focused verification, including tests and documentation checks. Return changed behavior/files, exact commands/results, Documentation Impact/paths/checks, and residual risk.
