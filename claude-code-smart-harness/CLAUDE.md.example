@@ -1,0 +1,52 @@
+# Repository Guidance for Claude Code
+
+Keep this file concise. Put procedures in skills, not here.
+
+## Build / verification
+
+```bash
+# targeted/unit tests
+<command>
+
+# build / typecheck
+<command>
+
+# lint / static analysis
+<command>
+
+# integration/e2e
+<command>
+```
+
+## Architecture invariants
+
+- <critical invariant>
+
+## Compatibility constraints
+
+- <public API / schema / persistent-data requirement>
+
+## Generated files
+
+- <generated locations and regeneration command>
+
+## Important conventions
+
+- <non-obvious repository convention>
+- <authoritative location for contracts/schemas/config>
+
+## Security / operational constraints
+
+- <repository-specific constraint>
+
+## Harness workflow
+
+Use `/dev` for coding, planning, refactoring and debugging.
+
+Use `/review-pr` for reviewing somebody else's pull request.
+
+For bugs, establish root cause before speculative fixes.
+
+Do not claim completion without fresh executable evidence.
+
+Version-controlled code, tests, schemas, rules and ADRs are authoritative. Memory and task ledgers are caches/state, not architectural truth.
