@@ -1,6 +1,7 @@
 ---
 name: pr-review
 description: Portable deep PR-review protocol: isolated worktree at PR HEAD, parallel dynamic/static review, full unit and integration execution, security/resilience analysis, and high-severity finding verification.
+user-invocable: false
 ---
 
 # PR Review
@@ -37,19 +38,11 @@ A worktree is code isolation, not a security sandbox.
 
 ## 3. Parallel review lanes
 
-Run independent lanes concurrently when safe:
+Run independent lanes concurrently when safe.
 
 ### Reasoning lane
 
-Review:
-
-- architecture/design fit;
-- correctness and runtime wiring;
-- callers, DI/registration/routes/config/flags;
-- state/error/concurrency/transaction/retry/idempotency behavior;
-- public/API/data/schema compatibility;
-- migration/rollback;
-- behavioral test adequacy.
+Review architecture/design fit, correctness and runtime wiring, callers/DI/routes/config, state/error/concurrency/transaction/retry/idempotency behavior, public/API/data/schema compatibility, migration/rollback, and behavioral test adequacy.
 
 ### Execution lane
 
@@ -66,22 +59,15 @@ Targeted tests may run first for fast feedback, but they do not replace the full
 
 Unit/integration/static lanes may run concurrently only when they do not contend for the same database, port, fixtures, or mutable external state.
 
-Never install new tooling merely to make a check appear runnable unless the user asks.
-
 Anything blocked by missing credentials/services is `NOT EXECUTED`, never PASS.
 
 ### High-risk lanes
 
-For auth/permissions/tenant boundaries, secrets/crypto, persistent migrations, distributed state/concurrency, retries/idempotency/transactions, external contracts, deployment/rollback, or critical financial/business logic, add in parallel:
-
-- adversarial behavioral/failure analysis;
-- security and resilience threat/failure modeling.
+For auth/permissions/tenant boundaries, secrets/crypto, persistent migrations, distributed state/concurrency, retries/idempotency/transactions, external contracts, deployment/rollback, or critical financial/business logic, add in parallel adversarial behavioral analysis plus security/resilience failure modeling.
 
 ## 4. Adversarial behavior
 
-Derive concrete scenarios such as malformed/boundary input, duplicate events, partial failure, timeout/cancellation, retry after side effect, stale/reordered state, concurrent updates, restart/recovery, old callers/data, and rollback.
-
-Turn important scenarios into executable probes/tests when the existing repo tooling supports them.
+Derive concrete scenarios such as malformed/boundary input, duplicate events, partial failure, timeout/cancellation, retry after side effect, stale/reordered state, concurrent updates, restart/recovery, old callers/data, and rollback. Turn important scenarios into executable probes/tests when repository tooling supports them.
 
 ## 5. Distinguish PR regressions from baseline failures
 
@@ -89,28 +75,11 @@ If PR-head tests fail and the cause is unclear, create a temporary base worktree
 
 ## 6. Findings
 
-Use:
-
-- BLOCKER
-- MAJOR
-- MINOR
-- SUGGESTION
-
-For BLOCKER/MAJOR require concrete evidence, impact, reproduction/verification, and smallest remediation.
-
-Independently verify/falsify high-severity findings before finalizing them.
+Use BLOCKER / MAJOR / MINOR / SUGGESTION. For BLOCKER/MAJOR require concrete evidence, impact, reproduction/verification, and smallest remediation. Independently verify/falsify high-severity findings before finalizing them.
 
 ## 7. Report
 
-Include:
-
-- risk and merge recommendation;
-- architecture/correctness findings;
-- executed tests with exact command/result;
-- static-analysis results;
-- security/resilience findings when relevant;
-- missing tests required before merge;
-- clearly separated NOT EXECUTED checks.
+Include risk and merge recommendation, architecture/correctness findings, exact test commands/results, static-analysis results, security/resilience findings when relevant, missing tests required before merge, and clearly separated NOT EXECUTED checks.
 
 ## 8. Cleanup
 
