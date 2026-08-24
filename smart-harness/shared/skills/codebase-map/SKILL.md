@@ -1,6 +1,7 @@
 ---
 name: codebase-map
 description: Build a compact task-relevant map of ownership, callers, contracts, tests, and risk edges before complex changes.
+user-invocable: false
 ---
 
 # Codebase Map
