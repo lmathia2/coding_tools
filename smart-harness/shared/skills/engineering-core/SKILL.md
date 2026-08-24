@@ -1,6 +1,7 @@
 ---
 name: engineering-core
 description: Core implementation discipline shared by Copilot and Claude Code: root-cause debugging, pragmatic TDD, scoped changes, and evidence-based completion.
+user-invocable: false
 ---
 
 # Engineering Core
