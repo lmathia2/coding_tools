@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "source": {
+    "repository": "badlogic/pi-skills",
+    "commit": "90bb51cae36515a648515b633a81c0c6efc8c74d"
+  },
+  "profiles": {
+    "useful": ["vscode", "browser-tools", "brave-search"],
+    "coding": ["vscode", "browser-tools"],
+    "research": ["brave-search"],
+    "media": ["transcribe", "youtube-transcript"],
+    "google": ["gccli", "gdcli", "gmcli"]
+  }
+}

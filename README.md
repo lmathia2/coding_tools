@@ -1,27 +1,22 @@
-# coding_tools
+# Coding Tools
 
-Various coding tools, skills, and agent configurations.
+Reusable coding-agent tools, skills, and orchestration configurations.
 
 ## Smart Harness
 
-The canonical multi-harness setup is now:
+The canonical implementation is:
 
-**[`smart-harness/`](./smart-harness/README.md)**
+[**smart-harness/**](smart-harness/README.md)
 
-It provides one shared engineering policy/skill layer with platform-specific orchestration for:
+It provides one shared engineering policy for:
 
-- VS Code + GitHub Copilot
+- VS Code / GitHub Copilot
 - Claude Code
+- Pi
 
-Install both into a project with:
+The user-facing interface stays small:
 
-```bash
-bash smart-harness/install.sh both /path/to/project
-```
+- `Dev` / `/dev` — plan, implement, document, and verify
+- `ReviewPR` / `/review-pr` — isolated, execution-based PR review
 
-Daily interface:
-
-- Copilot: `Dev` / `ReviewPR`
-- Claude Code: `/dev` / `/review-pr`
-
-The older `copilot-smart-harness/` and `claude-code-smart-harness/` folders are retained as compatibility snapshots; new work should use `smart-harness/`.
+The previous standalone Copilot and Claude harness snapshots have been superseded by the unified Smart Harness.

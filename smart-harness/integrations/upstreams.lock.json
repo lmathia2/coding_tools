@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "upstreams": [
+    {
+      "name": "superpowers",
+      "repository": "obra/superpowers",
+      "ref": "main",
+      "commit": "b36e0829c6d0140e93cfef2ca599b1b07d4a7797",
+      "license": "MIT",
+      "mode": "optional-methodology",
+      "homepage": "https://github.com/obra/superpowers"
+    },
+    {
+      "name": "ponytail",
+      "repository": "DietrichGebert/ponytail",
+      "ref": "main",
+      "commit": "2ed6c52c9d7e5e56942508591085fd45dea277d3",
+      "license": "MIT",
+      "mode": "optional-minimality",
+      "homepage": "https://github.com/DietrichGebert/ponytail"
+    },
+    {
+      "name": "pi",
+      "repository": "earendil-works/pi",
+      "ref": "main",
+      "commit": "dcd461925db2edf69a43c8135db1180d418afd54",
+      "license": "MIT",
+      "mode": "platform",
+      "homepage": "https://github.com/earendil-works/pi"
+    },
+    {
+      "name": "pi-extensions",
+      "repository": "narumiruna/pi-extensions",
+      "ref": "main",
+      "commit": "bc5e98e897d74ab311887e50181f8aa6e70877d4",
+      "license": "MIT",
+      "mode": "optional-extensions",
+      "homepage": "https://github.com/narumiruna/pi-extensions"
+    },
+    {
+      "name": "pi-skills",
+      "repository": "badlogic/pi-skills",
+      "ref": "main",
+      "commit": "90bb51cae36515a648515b633a81c0c6efc8c74d",
+      "license": "MIT",
+      "mode": "optional-skills",
+      "homepage": "https://github.com/badlogic/pi-skills"
+    }
+  ]
+}

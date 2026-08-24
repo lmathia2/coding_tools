@@ -1,39 +1,39 @@
 ---
 name: plan-first
-description: Mandatory planning protocol for every coding or review task. Plan depth scales with risk, but editing never starts before a plan exists.
-user-invocable: false
+description: Mandatory planning protocol for every coding or review task. Plan depth scales with risk, but source editing never starts before an explicit plan and documentation impact assessment exist.
 ---
 
 # Plan First
 
 Before any source edit, produce an explicit plan.
 
-## Micro-plan
+## Required plan fields
 
-For mechanical/local work, 1–3 steps are enough:
+Every plan includes:
 
-1. files/behavior to change;
-2. edit strategy;
-3. verification command(s).
+1. Goal and acceptance criteria.
+2. Repository evidence and affected boundaries.
+3. Implementation steps in dependency order.
+4. Verification plan.
+5. **Documentation Impact** using `documentation-sync`.
+6. Parallel work map: what can run concurrently and what must remain sequential.
 
-## Normal plan
+## Proportional depth
 
-For ordinary engineering work include:
+### Mechanical
 
-- acceptance criteria;
-- owning code/callers;
-- implementation steps;
-- tests and verification;
-- compatibility/edge cases that matter.
+Use a 1–3 step micro-plan.
 
-## Deep plan
+### Normal
 
-Use when architecture, migration, security, concurrency, distributed state, public contracts, or broad refactoring are involved:
+Identify owning code, callers/contracts, tests, documentation surfaces, and verification.
 
-- gather repository evidence;
-- identify alternatives;
-- state key invariants;
-- include migration/rollback;
-- get an independent challenge before implementation.
+### Complex/high risk
 
-Do not keep planning merely to create consensus. Once material uncertainty is resolved, execute.
+Map architecture, invariants, alternatives, compatibility/migration/rollback, security/resilience, docs/ADR/runbook impact, and an independent challenge.
+
+## Gate
+
+Do not dispatch a writing worker until the plan is accepted by the coordinator.
+
+If repository evidence invalidates the plan during execution, pause, revise the plan, and then continue.

@@ -1,5 +1,5 @@
 ---
-description: Execution-based Claude Code PR review. Plans first, creates an isolated PR-head worktree, runs semantic review and full unit/integration/static checks in parallel, and verifies serious findings.
+description: Execution-based PR review: plan first, create an isolated PR-head worktree, run semantic and full executable/documentation checks in parallel, and verify serious findings.
 argument-hint: [base-ref] [PR intent/details]
 model: sonnet[1m]
 effort: high
@@ -10,63 +10,46 @@ effort: high
 
 Review request: $ARGUMENTS
 
-Apply `plan-first`, `parallel-work`, and `pr-review`.
+Apply `plan-first`, `parallel-work`, `pr-review`, and `documentation-sync`.
 
-## 1. Plan before review execution
+## 1. Plan
 
-Establish the base ref, committed PR HEAD SHA, intent/acceptance criteria, changed runtime/contracts, expected test/static commands, and NORMAL/HIGH_RISK classification.
+Establish base ref, exact PR HEAD SHA, intent/acceptance criteria, changed runtime/contracts/data/operations/docs, expected unit/integration/e2e/static/docs commands, risk, and parallel lanes.
 
-If a PR number is provided and `gh` is already authenticated, read PR metadata/head SHA with read-only `gh pr view`/Git commands. Do not mutate the developer's primary checkout.
+## 2. Create review worktree
 
-## 2. Create the review worktree
+Create a detached worktree at exact PR HEAD under `.agent-worktrees/`. Record its absolute path.
 
-Create a detached worktree at the exact PR HEAD under `.agent-worktrees/` as specified by `pr-review`. Record its absolute path.
-
-All reviewers must read the worktree path, not the primary checkout. All Bash test/static commands must use `cd <review-worktree> && ...` or equivalent because subagent shell cwd does not persist.
+All reviewers and Bash commands must target that path. Never mutate the primary checkout.
 
 ## 3. Parallel default lanes
 
 Launch together:
 
-- `smart-deep-worker` in PR_CORE mode, explicitly giving the review-worktree path and base/head refs;
-- `smart-fast-executor` in PR_EXEC mode, explicitly giving the review-worktree path.
+- `smart-deep-reasoner` in PR_CORE mode with worktree/base/head;
+- `smart-fast-executor` in PR_EXEC mode with the worktree.
 
-The execution lane must discover repository/CI commands and run the **complete feasible configured unit-test suite and complete feasible configured integration-test suite**, not merely targeted changed tests. Also run configured e2e/runtime tests when feasible and build/type/lint/static-analysis checks.
+PR_EXEC runs the complete feasible configured unit and integration suites, relevant e2e/runtime checks, build/type/lint/static analysis, and documentation build/doctest/example/link/generated-reference checks.
 
-Independent test/static suites may run concurrently when they do not compete for the same database, ports, fixtures, or mutable external state.
+Independent suites may run concurrently only when resources do not conflict.
+
+If `ponytail-review` is installed, it may run as an additional complexity-only lane.
 
 ## 4. High-risk lanes
 
-For auth/permissions/tenant/security boundaries, persistence/schema migration, distributed state/concurrency, retries/idempotency/transactions, external contracts, deployment/rollback, or critical business/financial logic, launch in parallel:
+For security/trust boundaries, persistence/migrations, distributed state/concurrency, retries/idempotency/transactions, external contracts, deployment/rollback, or critical logic, launch in parallel:
 
-- a fresh `smart-deep-worker` in PR_ADVERSARIAL mode;
+- `smart-deep-reasoner` in PR_ADVERSARIAL mode;
 - `smart-top-reviewer` in SECURITY_RESILIENCE mode.
 
-Wait for every required parallel lane before synthesis.
+## 5. Baseline and high-severity verification
 
-## 5. Baseline failures
+When PR-head failures may be pre-existing, run the failing subset in a temporary base worktree when practical.
 
-If PR-head tests fail and it is unclear whether the PR caused them, create a temporary base worktree and run the failing subset against the base commit when practical. Mark NEW / PRE-EXISTING / INCONCLUSIVE.
+Attempt to falsify every BLOCKER/MAJOR in a fresh independent context before publishing it.
 
-## 6. Verify BLOCKER/MAJOR findings
+## 6. Report and cleanup
 
-Attempt to falsify serious findings with a fresh independent context before publishing them. Prefer the other reasoning tier when practical: top reviewer verifies deep-worker findings; deep-worker verifies top-reviewer findings. Independent findings may be verified in parallel.
+Return risk/recommendation, verified findings, exact test/static/docs commands/results, missing behavior/docs, NOT EXECUTED blockers, and GitHub-ready serious comments.
 
-## 7. Report
-
-Return:
-
-- risk and recommendation APPROVE / COMMENT / REQUEST CHANGES / BLOCK;
-- architecture/design/correctness/wiring findings;
-- exact full unit/integration/e2e test commands and results;
-- build/type/lint/static-analysis results;
-- security/resilience findings when relevant;
-- missing behavior tests required before merge;
-- NOT EXECUTED checks and the exact blocker;
-- concise GitHub-ready comments for verified BLOCKER/MAJOR findings.
-
-Do not equate line coverage with behavioral correctness.
-
-## 8. Cleanup
-
-Remove/prune the review worktree after capturing the report unless preserving it is explicitly useful for ongoing investigation. Never edit/commit/push/rebase/merge the source checkout during review.
+Remove/prune the worktree after capturing the report unless preserving it is explicitly useful.

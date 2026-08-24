@@ -1,0 +1,47 @@
+name: Smart Harness CI
+
+on:
+  push:
+    paths:
+      - 'smart-harness/**'
+      - '.github/workflows/smart-harness-*.yml'
+  pull_request:
+    paths:
+      - 'smart-harness/**'
+      - '.github/workflows/smart-harness-*.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check model configuration
+        run: python3 smart-harness/config/configure-models.py --check
+
+      - name: Check generated reference
+        run: python3 smart-harness/scripts/generate-reference.py --check
+
+      - name: Validate harness and documentation
+        run: python3 smart-harness/scripts/validate-harness.py
+
+      - name: Validate shell syntax
+        run: |
+          bash -n smart-harness/install.sh
+          bash -n smart-harness/install-global.sh
+          bash -n smart-harness/integrations/install-methodologies.sh
+          bash -n smart-harness/pi/install-extensions.sh
+          bash -n smart-harness/pi/install-skills.sh
+
+      - name: Smoke-test project installation
+        run: |
+          tmp="$(mktemp -d)"
+          git -C "$tmp" init
+          bash smart-harness/install.sh all "$tmp"
+          test -f "$tmp/.github/agents/dev.agent.md"
+          test -f "$tmp/.claude/commands/dev.md"
+          test -f "$tmp/.pi/prompts/dev.md"
+          test -f "$tmp/.claude/skills/documentation-sync/SKILL.md"

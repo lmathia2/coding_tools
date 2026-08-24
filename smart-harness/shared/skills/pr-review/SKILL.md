@@ -1,93 +1,103 @@
 ---
 name: pr-review
-description: Portable deep PR-review protocol: isolated worktree at PR HEAD, parallel dynamic/static review, full unit and integration execution, security/resilience analysis, and high-severity finding verification.
-user-invocable: false
+description: Portable deep PR-review protocol: isolated worktree at PR HEAD, parallel dynamic/static review, full feasible unit and integration execution, documentation validation, security/resilience analysis, and high-severity finding verification.
 ---
 
 # PR Review
 
-A PR review is not complete if it only reads the diff.
+## 1. Plan
 
-## 1. Plan first
+Establish:
 
-Before review execution, define:
+- base ref and exact committed PR HEAD;
+- PR intent and acceptance criteria;
+- changed runtime, contracts, data, operations, and documentation;
+- expected unit, integration, e2e, static, and documentation commands;
+- NORMAL or HIGH_RISK classification;
+- independent parallel review lanes.
 
-- base ref and PR HEAD;
-- PR intent/acceptance criteria;
-- changed runtime/contracts;
-- test/static commands to discover;
-- review perspectives to run in parallel;
-- risk classification: NORMAL or HIGH_RISK.
+## 2. Isolated worktree
 
-## 2. Create an isolated review worktree
-
-Use the committed PR HEAD, not the developer's mutable checkout:
+Review the exact PR HEAD in a detached worktree:
 
 ```bash
-ROOT=$(git rev-parse --show-toplevel)
-HEAD_SHA=$(git rev-parse HEAD)
-REVIEW_DIR="$ROOT/.agent-worktrees/pr-review-${HEAD_SHA:0:10}-$(date +%s)"
-git worktree add --detach "$REVIEW_DIR" "$HEAD_SHA"
+git worktree add --detach <review-dir> <PR_HEAD_SHA>
 ```
 
-All file reads, tests, analyzers, and probes for the review must target `REVIEW_DIR`.
+All reads, tests, analyzers, examples, and probes run from that worktree.
 
-Do not edit the source checkout. Do not commit, push, rebase, or merge during review.
+The primary developer checkout remains untouched.
 
-A worktree is code isolation, not a security sandbox.
+A worktree is isolation from the developer branch, not a security sandbox.
 
-## 3. Parallel review lanes
+## 3. Parallel lanes
 
-Run independent lanes concurrently when safe.
+Run independent lanes concurrently where safe:
 
-### Reasoning lane
+- architecture, correctness, runtime wiring, compatibility, and documentation semantics;
+- complete feasible configured unit suite;
+- complete feasible configured integration suite;
+- relevant e2e/runtime tests;
+- compiler/build/type/lint/static analysis;
+- documentation build, doctests, example execution, link/schema drift checks;
+- adversarial behavior;
+- security/resilience for high-risk changes.
 
-Review architecture/design fit, correctness and runtime wiring, callers/DI/routes/config, state/error/concurrency/transaction/retry/idempotency behavior, public/API/data/schema compatibility, migration/rollback, and behavioral test adequacy.
+Do not parallelize suites that contend for the same database, ports, fixtures, accounts, or mutable external state.
 
-### Execution lane
+## 4. Test completeness
 
-Inside the worktree, discover authoritative commands from CI/build configuration and run **all feasible configured suites**, including:
+Targeted tests are fast feedback, not the review gate.
 
-1. full unit-test suite;
-2. full integration-test suite;
-3. e2e/runtime suites when configured and feasible;
-4. build/compiler/typecheck;
-5. lint/static analysis;
-6. repository-native security/code scanning when already available.
+Run the complete feasible configured unit and integration suites.
 
-Targeted tests may run first for fast feedback, but they do not replace the full unit + integration suites.
+Mark blocked checks `NOT EXECUTED` with the exact missing credential, service, platform, or dependency.
 
-Unit/integration/static lanes may run concurrently only when they do not contend for the same database, port, fixtures, or mutable external state.
+## 5. Baseline comparison
 
-Anything blocked by missing credentials/services is `NOT EXECUTED`, never PASS.
+If PR-head tests fail and causality is unclear, create a temporary base worktree and run the failing subset there when practical.
 
-### High-risk lanes
+Classify the failure:
 
-For auth/permissions/tenant boundaries, secrets/crypto, persistent migrations, distributed state/concurrency, retries/idempotency/transactions, external contracts, deployment/rollback, or critical financial/business logic, add in parallel adversarial behavioral analysis plus security/resilience failure modeling.
+- NEW REGRESSION
+- PRE-EXISTING
+- INCONCLUSIVE
 
-## 4. Adversarial behavior
+## 6. Documentation review
 
-Derive concrete scenarios such as malformed/boundary input, duplicate events, partial failure, timeout/cancellation, retry after side effect, stale/reordered state, concurrent updates, restart/recovery, old callers/data, and rollback. Turn important scenarios into executable probes/tests when repository tooling supports them.
+Apply `documentation-sync`.
 
-## 5. Distinguish PR regressions from baseline failures
+Verify documentation describes:
 
-If PR-head tests fail and the cause is unclear, create a temporary base worktree or otherwise execute the failing subset against the base commit when practical. Report whether the failure is new, pre-existing, or inconclusive.
+- function and contract;
+- intent and goals;
+- architecture/decision rationale;
+- configuration and operational behavior;
+- migration/rollback;
+- realistic examples.
 
-## 6. Findings
+Run repository-native documentation checks. Stale required docs are a merge issue.
 
-Use BLOCKER / MAJOR / MINOR / SUGGESTION. For BLOCKER/MAJOR require concrete evidence, impact, reproduction/verification, and smallest remediation. Independently verify/falsify high-severity findings before finalizing them.
+## 7. Findings
 
-## 7. Report
+Use:
 
-Include risk and merge recommendation, architecture/correctness findings, exact test commands/results, static-analysis results, security/resilience findings when relevant, missing tests required before merge, and clearly separated NOT EXECUTED checks.
+- BLOCKER
+- MAJOR
+- MINOR
+- SUGGESTION
+
+For each finding include location, evidence, concrete failure/risk, remediation or missing test, and confidence.
+
+Attempt to falsify every BLOCKER/MAJOR in a fresh independent context before publishing it.
 
 ## 8. Cleanup
 
 After capturing the report:
 
 ```bash
-git worktree remove --force "$REVIEW_DIR"
+git worktree remove --force <review-dir>
 git worktree prune
 ```
 
-Preserve the worktree only when ongoing investigation requires it, and say so explicitly.
+Preserve the worktree only when explicitly useful for continuing investigation.

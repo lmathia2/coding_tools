@@ -1,5 +1,5 @@
 ---
-description: Default smart Claude Code development workflow. Always plans first, parallelizes independent work, and escalates from Haiku to Sonnet/Opus only as task complexity requires.
+description: Smart development workflow: always plans first, parallelizes independent work, keeps documentation synchronized, and escalates model intelligence only as needed.
 argument-hint: <coding task>
 model: sonnet[1m]
 effort: high
@@ -10,52 +10,58 @@ effort: high
 
 Task: $ARGUMENTS
 
-Apply `plan-first`, `parallel-work`, and `engineering-core`.
+Apply `plan-first`, `parallel-work`, `engineering-core`, and `documentation-sync`.
 
-## 1. Always plan before edits
+## 1. Plan before edits
 
-No source edit before an explicit accepted plan exists.
+No source edit before an explicit accepted plan.
+
+Every plan includes acceptance criteria, implementation order, verification, `Documentation Impact`, and parallel work lanes.
 
 - mechanical: 1–3 step micro-plan;
-- normal: acceptance criteria + implementation + verification plan;
-- complex/high risk: repository evidence + alternatives/invariants + independent challenge.
+- normal: implementation, tests, and docs plan;
+- complex/high risk: repository evidence, alternatives/invariants, migration/rollback, docs/ADR/runbook impact, and independent challenge.
 
-Use `smart-fast-executor` subagents for independent repository exploration. Launch separate independent explorations in parallel rather than serially.
+Launch `smart-fast-executor` agents for independent code, caller, test, and documentation discovery in parallel.
 
 ## 2. Route intelligently
 
-### MECHANICAL
-After the micro-plan, delegate implementation to `smart-fast-worker` (Haiku).
+### Mechanical
 
-### NORMAL
-Implement in this main Sonnet conversation after the plan. Keep planning, implementation, and testing together because they share context.
+Delegate to `smart-fast-worker` after the micro-plan.
 
-### COMPLEX
-Delegate implementation to `smart-deep-worker` in IMPLEMENT mode after the plan.
+### Normal
 
-### DEBUG_AMBIGUOUS
-Before edits, launch `smart-deep-worker` in DEBUG mode. If there are genuinely independent plausible causes, launch multiple investigations in parallel with distinct hypotheses. Implement only after an evidence-backed root cause or discriminating experiment exists.
+Implement in this main Sonnet conversation after the plan. Keep shared planning/implementation/testing/docs context together.
 
-### ARCHITECTURE_OR_HIGH_RISK
-Triggers include multiple credible designs, shared/public contracts, persistence/schema migration, auth/permissions, distributed state/transactions, rollback-sensitive infrastructure, critical calculations, or broad cross-layer refactors.
+### Complex
+
+Delegate implementation to `smart-deep-implementer` after the plan.
+
+### Debug ambiguous
+
+Before edits, launch `smart-deep-reasoner` in DEBUG mode. Launch independent hypothesis investigations in parallel when useful. Implement only after root cause or a discriminating experiment is established.
+
+### Architecture or high risk
 
 Launch in parallel:
+
 - `smart-top-reviewer` in ARCHITECTURE mode;
-- `smart-deep-worker` in INDEPENDENT_PLAN_CHALLENGE mode;
-- independent `smart-fast-executor` repository investigations where useful.
+- `smart-deep-reasoner` in INDEPENDENT_PLAN_CHALLENGE mode;
+- `smart-fast-executor` repository/test/docs investigations as needed.
 
-Synthesize once and resolve material disagreement using repository evidence. Avoid repeated debate unless new evidence invalidates the plan.
+Synthesize once from evidence. Avoid repeated debate unless new evidence invalidates the plan.
 
-## 3. Parallel implementation only when clearly partitioned
+## 3. Parallel implementation only when safely partitioned
 
-If the accepted plan has independent components with agreed interfaces and no overlapping files/state, create isolated worktrees/branches and run writers in parallel. Otherwise implement sequentially.
+Parallel writers require stable interfaces, disjoint ownership, isolated worktrees/branches, and an integration step. Otherwise write sequentially.
 
-Do not use Agent Teams by default. Use them only for a large feature where peers own independent components and need sustained direct coordination.
+## 4. Documentation executes with code
 
-## 4. Verify
+Apply `documentation-sync` during the implementation pass. Update required API/function docs, intent/goals, examples, ADRs, configuration, migration, and runbooks before verification.
 
-Run targeted tests and the relevant broader unit/integration/build/type/static checks. Use `smart-fast-executor` for verbose/deterministic verification when that keeps the main context clean.
+## 5. Verify
 
-Do not claim completion without fresh executable evidence.
+Run targeted tests and broader unit/integration/e2e/build/type/lint/static/docs checks according to blast radius. Use `smart-fast-executor` for verbose deterministic execution.
 
-Return Result, Verification, Important Decisions, Residual Risk.
+Return Result, Verification, Documentation Impact/paths/checks, Important Decisions, and Residual Risk.

@@ -1,47 +1,50 @@
 ---
 name: engineering-core
-description: Core implementation discipline shared by Copilot and Claude Code: root-cause debugging, pragmatic TDD, scoped changes, and evidence-based completion.
-user-invocable: false
+description: Core execution discipline shared by Copilot, Claude Code, and Pi: root-cause debugging, pragmatic TDD, scoped changes, documentation sync, and evidence-based completion.
 ---
 
 # Engineering Core
 
-## Bugs
+## Understand before editing
 
-Do not guess-and-patch unclear failures.
+Read the owning code, callers/contracts, tests, and relevant documentation.
 
-1. reproduce expected vs observed behavior;
-2. gather evidence along the relevant call/state path;
-3. for non-obvious failures, form competing hypotheses and discriminating checks;
-4. state the causal mechanism before fixing;
-5. make the smallest causal repair;
-6. add a regression test when practical.
+Use the accepted plan. If facts contradict it, stop and revise rather than silently redesigning.
 
-For flaky/concurrent failures, one successful run is not proof.
+## Debug systematically
 
-## Behavior changes
+For unclear failures:
 
-Prefer a failing executable condition before implementation when practical:
+1. reproduce;
+2. gather evidence;
+3. form competing hypotheses;
+4. run discriminating checks;
+5. state the causal mechanism;
+6. implement the minimal root-cause fix;
+7. add regression evidence.
 
-- RED: test expresses the desired behavior and fails for the right reason;
-- GREEN: smallest coherent implementation;
-- REFACTOR: clean up only after behavior passes.
+## Use pragmatic TDD
 
-Strict test-first is optional for docs, generated artifacts, formatting, and mechanical changes already protected by deterministic checks.
+For behavior-changing work, establish a failing executable condition first when practical.
 
-## Scope
+Use characterization tests before risky refactors.
 
-Prefer existing repository abstractions. Avoid unrelated cleanup and speculative generalization.
+## Keep scope coherent
 
-## Verification before completion
+Prefer existing abstractions, standard-library/native features, and the smallest design that fully satisfies the requirement.
 
-Never claim done/fixed/passing without fresh evidence.
+Do not simplify away validation, security, failure handling, accessibility, compatibility, documentation, or explicitly requested behavior.
 
-Verification ladder:
+## Keep documentation synchronized
 
-1. targeted behavior/regression test;
-2. relevant module/package suite;
-3. build/typecheck/lint/static analysis;
-4. integration/e2e/runtime checks according to blast radius.
+Apply `documentation-sync` during execution, not after completion.
 
-List commands actually executed and PASS / FAIL. Never report an unexecuted check as PASS.
+Update function/API docs, intent/goals, architecture/ADRs, examples, configuration, migrations, and runbooks when affected.
+
+## Verify before completion
+
+Run focused tests first, then broader unit/integration/e2e/build/type/lint/static and documentation checks according to blast radius.
+
+Report exact commands and results.
+
+Never claim an unexecuted check passed.

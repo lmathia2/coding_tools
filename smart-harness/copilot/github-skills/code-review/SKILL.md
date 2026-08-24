@@ -1,16 +1,21 @@
 ---
 name: focused-deep-code-review
-description: Review PRs for substantive architecture, correctness/wiring, behavioral testing, security/resilience, and deterministic-analysis risk without flooding the PR with style comments.
+description: Review pull requests for substantive architecture, correctness/wiring, behavioral testing, documentation synchronization, security/resilience, and deterministic-analysis risk without flooding the PR with style comments.
 ---
 
 # Focused Deep Code Review
 
 Prioritize merge risk over style.
 
-Review design/contracts, runtime wiring, callers, state/error/concurrency behavior, API/data/schema compatibility, migration/rollback, and behavioral test adequacy.
+Review:
 
-For changed trust/failure boundaries, review authz, validation, secrets, unsafe sinks, retries, idempotency, partial failure, recovery, and rollback.
+- design, ownership, coupling, contracts, migration, and rollback;
+- runtime wiring through routes/handlers/DI/config/flags/callers/state/error paths;
+- happy, error, boundary, integration, state-transition, compatibility, retry/idempotency tests;
+- documentation of function, intent, goals, API contracts, architecture, configuration, migration, and operations;
+- relevant security/resilience boundaries;
+- compiler/type/lint/static-analysis/CodeQL/coverage/docs-build expectations.
 
-Respect compiler/type/lint/static-analysis/CodeQL/coverage expectations in the repository.
+A correct-looking implementation that is not wired into runtime behavior is a correctness defect. A behavior/API/architecture change with stale required documentation is incomplete.
 
-Focus comments on BLOCKER, MAJOR, and meaningful MINOR issues. For high severity include location, concrete execution/failure scenario, impact, evidence, and smallest remediation or missing test. State uncertainty rather than presenting speculation as fact.
+Focus comments on BLOCKER, MAJOR, and meaningful MINOR issues. For high-severity comments include location, execution/failure scenario, impact, evidence, and smallest remediation/test. State uncertainty rather than presenting speculation as fact.

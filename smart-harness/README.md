@@ -1,245 +1,178 @@
-# Smart Harness — Copilot + Claude Code
+# Smart Harness — Copilot, Claude Code, and Pi
 
-One canonical harness for both **VS Code / GitHub Copilot** and **Claude Code**.
+One high-quality development harness with **two workflows** and **one shared skill library**.
 
 ## The interface
 
-You only need two workflows on either platform:
-
-- **Dev** / `/dev` — build, fix, refactor, debug
-- **ReviewPR** / `/review-pr` — deep, execution-based review of somebody else's PR
+| Work | VS Code Copilot | Claude Code | Pi |
+|---|---|---|---|
+| Build, fix, refactor, debug | `Dev` | `/dev` | `/dev` |
+| Review another developer's PR | `ReviewPR` | `/review-pr` | `/review-pr` |
 
 Everything else is hidden orchestration.
 
-## One shared skill library
+The goal is simple: **finish correctly and quickly with high quality; save tokens where doing so does not reduce quality.**
 
-The two harnesses use the **same canonical engineering skills** from:
+## Non-negotiable behavior
 
-```text
-smart-harness/shared/skills/
-```
+### Plan before execution
 
-When installed, those skills are copied once to `.claude/skills/` for a project or `~/.claude/skills/` globally. Claude Code uses that location natively, and current VS Code Copilot also discovers Agent Skills there.
+Every source change starts with a plan. A tiny edit gets a micro-plan; complex work gets repository evidence, alternatives, risk analysis, and an independent challenge.
 
-So there is no separate Copilot-vs-Claude copy to maintain.
+### Parallelize independent work
 
-## Repository layout
+Independent code/test/documentation discovery, debugging hypotheses, review perspectives, and non-conflicting verification run concurrently. Parallel writers require disjoint ownership and isolated worktrees.
+
+### Documentation executes with code
+
+Every plan contains `Documentation Impact`.
+
+When code changes function, behavior, APIs, architecture, configuration, schemas, migrations, or operations, the same execution pass updates the authoritative documentation. Documentation explains:
+
+- function — what it does;
+- intent — why it exists;
+- goals — the outcome/invariant it owns;
+- contract — inputs, outputs, errors, side effects, and compatibility;
+- constraints and non-goals;
+- operational/failure behavior;
+- a realistic example when useful.
+
+Documentation builds, doctests, examples, links, and generated-reference drift are verification gates when the repository provides them.
+
+### PR review runs the code
+
+PR review creates a detached worktree at the exact committed PR HEAD. Semantic review and executable lanes run in parallel against that worktree.
+
+The review runs the complete feasible configured unit and integration suites, relevant e2e/runtime tests, build/type/lint/static analysis, and documentation checks. Anything blocked is `NOT EXECUTED`, never silently treated as passing.
+
+## Repository structure
 
 ```text
 smart-harness/
-  shared/skills/              # canonical skills used by BOTH harnesses
-    plan-first/
-    parallel-work/
-    engineering-core/
-    codebase-map/
-    task-ledger/
-    pr-review/
-
-  copilot/
-    agents/                   # VS Code Copilot Dev/ReviewPR + hidden workers
-    github-skills/            # GitHub.com native Copilot code-review guidance
-
-  claude-code/
-    agents/                   # Claude Code hidden subagents
-    commands/                 # Claude-only /dev and /review-pr entry points
-
-  config/
-    models.json               # all model choices in ONE place
-    configure-models.py       # applies model config to both harnesses
-
-  templates/
-    CLAUDE.md.example
-
-  install.sh                  # install into one project
-  install-global.sh           # install once for this machine
+  shared/skills/              provider-neutral workflow and quality policy
+  copilot/                    VS Code Copilot agents and GitHub review guidance
+  claude-code/                Claude subagents and /dev /review-pr commands
+  pi/                         Pi prompts and curated extension/skill profiles
+  config/                     centralized model configuration
+  integrations/               Superpowers, Ponytail, Pi upstream locks/installers
+  scripts/                    generation, validation, and upstream checks
+  docs/                       architecture, workflow contracts, docs policy, reference
+  templates/                  CLAUDE.md, ADR, and module documentation templates
+  install.sh                  project install
+  install-global.sh           machine-wide install
 ```
 
-Claude's entry points live under `.claude/commands`, rather than the shared skill directory, so installing both products does not create duplicate `/dev` or `/review-pr` skill definitions.
+## Install into a project
 
-## Install both into a project
+All three adapters:
 
 ```bash
-bash smart-harness/install.sh both /path/to/project
+bash smart-harness/install.sh all /path/to/project
 ```
 
-Or one platform only:
+Or select one/two:
 
 ```bash
 bash smart-harness/install.sh copilot /path/to/project
 bash smart-harness/install.sh claude /path/to/project
+bash smart-harness/install.sh pi /path/to/project
+bash smart-harness/install.sh both /path/to/project   # Copilot + Claude
 ```
 
-Installed layout:
+Shared skills are installed once into `.claude/skills/`. Current VS Code Copilot and Claude Code discover that location; Pi's project settings reference it.
 
-```text
-project/
-  .claude/
-    skills/       # ONE shared skill library used by both products
-    agents/       # Claude-only subagents
-    commands/     # Claude-only /dev and /review-pr
-  .github/
-    agents/       # Copilot-only Dev/ReviewPR + hidden workers
-    skills/       # GitHub.com native Copilot code-review guidance
-```
+Re-running the installer synchronizes updates and backs up replaced files under `.smart-harness-backups/`.
 
-Re-running the installer syncs updates. Replaced files are backed up under `.smart-harness-backups/` rather than inside a discoverable skills directory.
-
-## Install once for the whole machine
-
-If these are personal defaults across repositories:
+## Install globally on one machine
 
 ```bash
-bash smart-harness/install-global.sh both
+bash smart-harness/install-global.sh all
 ```
 
-That installs:
+This installs shared skills to `~/.claude/skills`, Copilot agents to `~/.copilot/agents`, Claude agents/commands to `~/.claude`, and Pi prompts/settings to `~/.pi/agent`.
 
-```text
-~/.claude/skills/     # shared by Claude Code + VS Code Copilot
-~/.claude/agents/     # Claude-only
-~/.claude/commands/   # Claude-only /dev and /review-pr
-~/.copilot/agents/    # Copilot-only
-```
-
-Project-local rules and customizations can still override/augment the global setup.
-
-## Models: edit one file
+## Models: one configuration file
 
 Edit:
 
 ```text
-smart-harness/config/models.json
+config/models.json
 ```
 
 Then run:
 
 ```bash
-python3 smart-harness/config/configure-models.py
+python3 config/configure-models.py
 ```
 
-The model identifiers are deliberately opaque strings. When model generations change, update that file instead of redesigning the harness.
+Model identifiers are intentionally opaque so generations can change without redesigning the harness.
 
-Current defaults:
+## Optional Superpowers and Ponytail
 
-### Copilot
+Smart Harness tracks pinned upstream revisions for both projects.
 
-- coordinator/top: Claude Opus 5
-- normal implementation: Claude Sonnet 5
-- deep reasoning/implementation: GPT-5.6 Sol
-- fast exploration/execution: GPT-5.6 Terra
-
-### Claude Code
-
-- coordinator/normal: Sonnet 4.6 1M (`sonnet[1m]`)
-- fast: Haiku 4.5 200K (`haiku`)
-- deep: Opus 4.7 1M
-- top: Opus 4.8 1M
-
-Change the IDs/effort values as your available models evolve.
-
-# Non-negotiable workflow rules
-
-## 1. Always plan before editing
-
-Every coding task starts with a plan. Plan depth is proportional to risk:
-
-- trivial change: 1–3 step micro-plan;
-- ordinary feature: explicit implementation + verification plan;
-- complex/high-risk change: codebase evidence + architecture plan + independent challenge.
-
-No worker should begin source edits before the coordinator has an accepted plan.
-
-## 2. Parallelize independent work
-
-The harness parallelizes genuinely independent work:
-
-- repository exploration of separate modules;
-- competing debugging hypotheses;
-- architecture/correctness/security review perspectives;
-- static analysis and test execution;
-- independent unit/integration suites when they do not contend for shared resources.
-
-Writing is parallelized only when components are cleanly separable **and** isolated worktrees/branches prevent collisions. Sequential dependencies remain sequential.
-
-Claude Code uses subagents for normal parallelism. Agent Teams are reserved for rare large tasks where independent peers need sustained direct collaboration.
-
-## 3. PR review is execution-based, not diff-only
-
-`ReviewPR` / `/review-pr` must create an isolated Git worktree at the committed PR HEAD and review **that checkout**.
-
-It must:
-
-1. plan the review before executing it;
-2. inspect design, architecture, correctness, and runtime wiring;
-3. run the complete feasible configured **unit-test suite**;
-4. run the complete feasible configured **integration-test suite**;
-5. run relevant e2e/runtime tests when configured and feasible;
-6. run compiler/build/type/lint/static-analysis checks;
-7. perform adversarial behavioral review;
-8. perform security/resilience review when risk warrants it;
-9. clearly mark unavailable checks **NOT EXECUTED**, never PASS;
-10. independently verify/falsify BLOCKER/MAJOR findings.
-
-Static reasoning and dynamic test/static execution run in parallel where safe.
-
-If PR-head tests fail and regression status is unclear, the harness should run the failing subset against the base commit in a temporary base worktree when practical.
-
-## PR worktree protocol
-
-The shared `pr-review` skill defines the portable flow:
+Install the curated skill-only subset globally or into a project:
 
 ```bash
-git worktree add --detach <review-dir> <PR_HEAD_SHA>
+bash smart-harness/integrations/install-methodologies.sh global
+bash smart-harness/integrations/install-methodologies.sh project /path/to/project
 ```
 
-All review reads, tests, analyzers, and probes target that worktree. The developer's main checkout is not edited.
+The forceful Superpowers bootstrap is intentionally excluded from the curated profile so the two-command Smart Harness interface stays intact. Full native plugin instructions are in [integrations/README.md](integrations/README.md).
 
-After the report:
+Ponytail is optional and cannot simplify away documentation, tests, validation, security, accessibility, compatibility, failure handling, or explicit requirements.
+
+## Pi extensions and skills
+
+Install the recommended Pi core:
 
 ```bash
-git worktree remove --force <review-dir>
-git worktree prune
+bash smart-harness/pi/install-extensions.sh core
 ```
 
-A worktree is a code-isolation boundary, not a security sandbox.
+Optional profiles cover browser testing, observability, productivity, and full Superpowers/Ponytail methodology.
 
-# Managing both on the same machine
+Curated Pi skills from the tracked `badlogic/pi-skills` source:
 
-The simplest approach is:
+```bash
+bash smart-harness/pi/install-skills.sh useful
+```
 
-1. clone `coding_tools` once;
-2. treat `smart-harness/` as the source of truth;
-3. edit shared skills only under `smart-harness/shared/skills/`;
-4. edit models only in `smart-harness/config/models.json`;
-5. rerun the installer to sync one or more projects.
+See [pi/README.md](pi/README.md).
 
-Example:
+## Keeping code and documentation synchronized
+
+- `documentation-sync` is explicitly invoked by every development and PR-review entry point.
+- `docs/REFERENCE.md` is generated from model/integration/profile configuration.
+- CI validates workflow invariants, generated docs, local links, model routing, and installer syntax.
+- A scheduled workflow checks tracked upstreams and opens a reviewable update PR.
+
+Run locally:
+
+```bash
+python3 smart-harness/config/configure-models.py --check
+python3 smart-harness/scripts/generate-reference.py --check
+python3 smart-harness/scripts/validate-harness.py
+```
+
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Workflow contracts](docs/WORKFLOW_CONTRACTS.md)
+- [Documentation policy](docs/DOCUMENTATION_POLICY.md)
+- [Integrations](docs/INTEGRATIONS.md)
+- [Generated reference](docs/REFERENCE.md)
+- [Changelog](CHANGELOG.md)
+
+## Updating
 
 ```bash
 cd coding_tools
+python3 smart-harness/scripts/check-upstreams.py
 python3 smart-harness/config/configure-models.py
-bash smart-harness/install.sh both ~/src/project-a
-bash smart-harness/install.sh both ~/src/project-b
+python3 smart-harness/scripts/generate-reference.py
+python3 smart-harness/scripts/validate-harness.py
+bash smart-harness/install.sh all /path/to/project
 ```
 
-Or use the global installer if the harness should be your default everywhere:
-
-```bash
-bash smart-harness/install-global.sh both
-```
-
-Repository-specific facts belong in each project's `CLAUDE.md`, `.claude/rules/`, ADRs, schemas, and tests. Do not fork shared skills just to store project facts.
-
-# Old folders
-
-`copilot-smart-harness/` and `claude-code-smart-harness/` are retained temporarily as compatibility snapshots. **`smart-harness/` is the canonical source going forward.**
-
-# References
-
-- VS Code subagents / parallel orchestration: https://code.visualstudio.com/docs/agents/run/subagents
-- VS Code worktree isolation: https://code.visualstudio.com/docs/agents/concepts/agent-harnesses
-- VS Code Agent Skills: https://code.visualstudio.com/docs/agent-customization/agent-skills
-- Claude Code subagents: https://code.claude.com/docs/en/sub-agents
-- Claude Code worktrees: https://code.claude.com/docs/en/worktrees
-- Claude Code skills: https://code.claude.com/docs/en/skills
-- Claude Code agent teams: https://code.claude.com/docs/en/agent-teams
+Review upstream methodology/extension changes before accepting updated locks: skills can instruct agents to act, and extensions execute with developer permissions.

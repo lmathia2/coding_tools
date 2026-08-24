@@ -2,48 +2,57 @@
 
 Keep this concise and repository-specific.
 
-## Build / verify
+## Purpose and goals
+
+- Product/service function:
+- Primary outcomes/invariants:
+- Non-goals:
+
+## Build and verification
 
 ```bash
-# unit tests
+# unit
 <command>
 
-# integration tests
+# integration
 <command>
 
-# typecheck / build
+# e2e/runtime
 <command>
 
-# lint / static analysis
+# build/type/lint/static
+<command>
+
+# docs build/doctest/link/generated-reference checks
 <command>
 ```
 
 ## Architecture invariants
 
-- <critical invariant>
+- 
 
-## Compatibility constraints
+## Compatibility and data constraints
 
-- <public API / schema / data requirement>
+- 
 
-## Generated files
+## Documentation policy
 
-- <locations and regeneration command>
+Documentation is part of done.
 
-## Important conventions
+When behavior, APIs, functions, architecture, configuration, schemas, migrations, or operations change:
 
-- <non-obvious repository-specific convention>
+- update the authoritative docs in the same change;
+- explain function, intent, and goals;
+- document contracts, errors, side effects/state, and relevant failure behavior;
+- update examples, ADRs, migration/rollback, and runbooks as applicable;
+- run repository-native documentation checks.
 
-## Security constraints
-
-- <repository-specific rule>
+Do not add comments that merely restate obvious code.
 
 ## Agent workflow
 
-- Always create a plan before source edits.
-- Parallelize independent analysis/verification; keep dependent work sequential.
-- Use isolated worktrees for parallel writers and PR reviews.
-- PR reviews must execute the full feasible unit and integration suites plus static checks.
-- Do not claim completion without fresh executable evidence.
+Use `Dev` / `/dev` for development.
 
-Version-controlled code, tests, schemas, rules, and ADRs are authoritative. Agent memory is a cache.
+Use `ReviewPR` / `/review-pr` for another developer's PR.
+
+Plan before editing. Parallelize independent work. Do not claim completion without executable and documentation evidence.
