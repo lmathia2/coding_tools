@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "copilot": {
+    "coordinator": {"model": "Claude Opus 5"},
+    "normal": {"model": "Claude Sonnet 5"},
+    "deep": {"model": "GPT-5.6 Sol"},
+    "fast": {"model": "GPT-5.6 Terra"},
+    "top": {"model": "Claude Opus 5"}
+  },
+  "claude_code": {
+    "coordinator": {"model": "sonnet[1m]", "effort": "high", "notes": "Current default: Sonnet 4.6, 1M"},
+    "normal": {"model": "sonnet[1m]", "effort": "high", "notes": "Current default: Sonnet 4.6, 1M"},
+    "deep": {"model": "claude-opus-4-7", "effort": "xhigh", "notes": "Current default: Opus 4.7, 1M"},
+    "fast": {"model": "haiku", "effort": "medium", "notes": "Current default: Haiku 4.5, 200K"},
+    "top": {"model": "claude-opus-4-8", "effort": "high", "notes": "Current default: Opus 4.8, 1M"}
+  }
+}
