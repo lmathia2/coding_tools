@@ -45,17 +45,16 @@ copy_file() {
 copy_dir() {
   local src="$1" dst="$2"
   mkdir -p "$(dirname "$dst")"
-  if [[ -d "$dst" ]]; then
-    if ! diff -qr "$src" "$dst" >/dev/null 2>&1; then
-      backup_existing "$dst"
-    fi
+  if [[ -d "$dst" ]] && ! diff -qr "$src" "$dst" >/dev/null 2>&1; then
+    backup_existing "$dst"
   fi
   rm -rf "$dst"
   cp -R "$src" "$dst"
   echo "installed $(rel_to_target "$dst")"
 }
 
-# Shared skills are canonical and installed once for either/both harnesses.
+# Canonical shared skills: copied once. Both Claude Code and VS Code Copilot
+# discover .claude/skills, so a "both" install does not duplicate them.
 mkdir -p "$TARGET/.claude/skills"
 for d in "$ROOT"/shared/skills/*; do
   copy_dir "$d" "$TARGET/.claude/skills/$(basename "$d")"
@@ -70,12 +69,12 @@ if [[ "$PLATFORM" == "copilot" || "$PLATFORM" == "both" ]]; then
 fi
 
 if [[ "$PLATFORM" == "claude" || "$PLATFORM" == "both" ]]; then
-  mkdir -p "$TARGET/.claude/agents"
+  mkdir -p "$TARGET/.claude/agents" "$TARGET/.claude/commands"
   for f in "$ROOT"/claude-code/agents/*.md; do
     copy_file "$f" "$TARGET/.claude/agents/$(basename "$f")"
   done
-  for d in "$ROOT"/claude-code/skills/*; do
-    copy_dir "$d" "$TARGET/.claude/skills/$(basename "$d")"
+  for f in "$ROOT"/claude-code/commands/*.md; do
+    copy_file "$f" "$TARGET/.claude/commands/$(basename "$f")"
   done
 fi
 
@@ -98,6 +97,7 @@ cat <<EOF
 Done.
 - Copilot: select Dev or ReviewPR in VS Code.
 - Claude Code: use /dev or /review-pr.
-- Shared skills live in .claude/skills and are used by both.
+- Shared skills live once in .claude/skills and are used by both.
+- Claude-only entry points live in .claude/commands, so they do not duplicate shared skills.
 - Re-running this installer syncs updates; replaced files are backed up under .smart-harness-backups/.
 EOF
