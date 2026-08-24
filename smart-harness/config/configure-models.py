@@ -59,11 +59,13 @@ def main() -> None:
     files: list[tuple[Path, str]] = []
     files += [(p, "copilot") for p in (ROOT / "copilot" / "agents").glob("*.agent.md")]
     files += [(p, "claude_code") for p in (ROOT / "claude-code" / "agents").glob("*.md")]
-    files += [(p, "claude_code") for p in (ROOT / "claude-code" / "skills").glob("*/SKILL.md")]
+    files += [(p, "claude_code") for p in (ROOT / "claude-code" / "commands").glob("*.md")]
+
     changed = []
     for path, platform in files:
         if rewrite(path, platform):
             changed.append(path.relative_to(ROOT))
+
     print("Applied model config:")
     for p in changed:
         print(f"  updated {p}")
