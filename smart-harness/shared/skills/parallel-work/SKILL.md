@@ -1,6 +1,7 @@
 ---
 name: parallel-work
 description: Parallelization policy for agentic coding and review. Run independent analysis and verification concurrently; parallelize writes only when isolated and dependency-safe.
+user-invocable: false
 ---
 
 # Parallel Work
