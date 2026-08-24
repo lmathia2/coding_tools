@@ -15,26 +15,44 @@ if [[ -z "$TARGET" || ! -d "$TARGET" ]]; then
   exit 1
 fi
 TARGET="$(cd "$TARGET" && pwd)"
+BACKUP_ROOT="$TARGET/.smart-harness-backups/$STAMP"
+
+rel_to_target() {
+  local p="$1"
+  printf '%s' "${p#$TARGET/}"
+}
+
+backup_existing() {
+  local dst="$1"
+  [[ -e "$dst" ]] || return 0
+  local rel
+  rel="$(rel_to_target "$dst")"
+  local out="$BACKUP_ROOT/$rel"
+  mkdir -p "$(dirname "$out")"
+  cp -R "$dst" "$out"
+}
 
 copy_file() {
   local src="$1" dst="$2"
   mkdir -p "$(dirname "$dst")"
   if [[ -e "$dst" ]] && ! cmp -s "$src" "$dst"; then
-    cp -p "$dst" "${dst}.bak.${STAMP}"
+    backup_existing "$dst"
   fi
   cp "$src" "$dst"
-  echo "installed ${dst#$TARGET/}"
+  echo "installed $(rel_to_target "$dst")"
 }
 
 copy_dir() {
   local src="$1" dst="$2"
   mkdir -p "$(dirname "$dst")"
   if [[ -d "$dst" ]]; then
-    cp -R "$dst" "${dst}.bak.${STAMP}"
+    if ! diff -qr "$src" "$dst" >/dev/null 2>&1; then
+      backup_existing "$dst"
+    fi
   fi
   rm -rf "$dst"
   cp -R "$src" "$dst"
-  echo "installed ${dst#$TARGET/}"
+  echo "installed $(rel_to_target "$dst")"
 }
 
 # Shared skills are canonical and installed once for either/both harnesses.
@@ -67,14 +85,13 @@ else
   echo "existing CLAUDE.md left untouched"
 fi
 
-mkdir -p "$TARGET/.agent-worktrees"
-if [[ -f "$TARGET/.gitignore" ]]; then
-  if ! grep -qxF '.agent-worktrees/' "$TARGET/.gitignore"; then
-    printf '\n.agent-worktrees/\n.agent-state/\n' >> "$TARGET/.gitignore"
+mkdir -p "$TARGET/.agent-worktrees" "$TARGET/.agent-state"
+touch "$TARGET/.gitignore"
+for entry in '.agent-worktrees/' '.agent-state/' '.smart-harness-backups/'; do
+  if ! grep -qxF "$entry" "$TARGET/.gitignore"; then
+    printf '%s\n' "$entry" >> "$TARGET/.gitignore"
   fi
-else
-  printf '.agent-worktrees/\n.agent-state/\n' > "$TARGET/.gitignore"
-fi
+done
 
 cat <<EOF
 
@@ -82,4 +99,5 @@ Done.
 - Copilot: select Dev or ReviewPR in VS Code.
 - Claude Code: use /dev or /review-pr.
 - Shared skills live in .claude/skills and are used by both.
+- Re-running this installer syncs updates; replaced files are backed up under .smart-harness-backups/.
 EOF
