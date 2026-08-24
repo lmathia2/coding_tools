@@ -1,6 +1,7 @@
 ---
 name: plan-first
 description: Mandatory planning protocol for every coding or review task. Plan depth scales with risk, but editing never starts before a plan exists.
+user-invocable: false
 ---
 
 # Plan First
