@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "roles": {
+    "coordinator": {
+      "model": "sonnet[1m]",
+      "effort": "high",
+      "notes": "Main /dev and /review-pr turn; currently Sonnet 4.6 with 1M context"
+    },
+    "fast": {
+      "model": "haiku",
+      "effort": null,
+      "notes": "Fast deterministic verification; currently Haiku 4.5 / 200K"
+    },
+    "deep": {
+      "model": "claude-opus-4-7",
+      "effort": "xhigh",
+      "notes": "Complex implementation/debugging/challenge/review; 1M context available in this environment"
+    },
+    "top": {
+      "model": "claude-opus-4-8",
+      "effort": "high",
+      "notes": "Architecture lead/adjudication/security/high-severity verification; 1M context available in this environment"
+    }
+  }
+}
