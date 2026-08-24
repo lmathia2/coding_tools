@@ -1,5 +1,5 @@
 ---
-description: Execution-based PR review: plan first, create an isolated PR-head worktree, run semantic and full executable/documentation checks in parallel, and verify serious findings.
+description: Self-contained execution-based PR review. Plans first, creates an isolated PR-head worktree, runs semantic/executable/documentation/complexity lanes in parallel, runs full feasible unit/integration/static checks, and verifies serious findings.
 argument-hint: [base-ref] [PR intent/details]
 model: sonnet[1m]
 effort: high
@@ -10,46 +10,39 @@ effort: high
 
 Review request: $ARGUMENTS
 
-Apply `plan-first`, `parallel-work`, `pr-review`, and `documentation-sync`.
+Apply `plan-first`, `parallel-work`, `context-snapshot`, `pr-review`, `documentation-sync`, and `ponytail-review`.
 
-## 1. Plan
+## 1. Plan before review execution
 
-Establish base ref, exact PR HEAD SHA, intent/acceptance criteria, changed runtime/contracts/data/operations/docs, expected unit/integration/e2e/static/docs commands, risk, and parallel lanes.
+Establish base ref, committed PR HEAD SHA, intent/acceptance criteria, changed runtime/contracts/docs, expected test/static/docs commands, risk, and parallel lanes.
 
-## 2. Create review worktree
+## 2. Create the review worktree
 
-Create a detached worktree at exact PR HEAD under `.agent-worktrees/`. Record its absolute path.
-
-All reviewers and Bash commands must target that path. Never mutate the primary checkout.
+Create a detached worktree at exact PR HEAD under `.agent-worktrees/`. All reviewers and commands use that path. Never mutate the developer's primary checkout.
 
 ## 3. Parallel default lanes
 
 Launch together:
 
-- `smart-deep-reasoner` in PR_CORE mode with worktree/base/head;
-- `smart-fast-executor` in PR_EXEC mode with the worktree.
+- `smart-deep-reasoner` in PR_CORE mode against the worktree;
+- `smart-fast-executor` in PR_EXEC mode against the worktree;
+- a complexity-only `ponytail-review` pass against the same snapshot/diff.
 
-PR_EXEC runs the complete feasible configured unit and integration suites, relevant e2e/runtime checks, build/type/lint/static analysis, and documentation build/doctest/example/link/generated-reference checks.
-
-Independent suites may run concurrently only when resources do not conflict.
-
-If `ponytail-review` is installed, it may run as an additional complexity-only lane.
+The execution lane runs the complete feasible configured unit suite and complete feasible configured integration suite, plus relevant e2e/runtime, build/type/lint/static-analysis and documentation checks. Independent suites may run concurrently only when resources do not conflict.
 
 ## 4. High-risk lanes
 
-For security/trust boundaries, persistence/migrations, distributed state/concurrency, retries/idempotency/transactions, external contracts, deployment/rollback, or critical logic, launch in parallel:
+For security/trust boundaries, migration/persistence, distributed state/concurrency, retries/idempotency/transactions, external contracts, deployment/rollback, or critical business logic, launch in parallel:
 
-- `smart-deep-reasoner` in PR_ADVERSARIAL mode;
+- fresh `smart-deep-reasoner` in PR_ADVERSARIAL mode;
 - `smart-top-reviewer` in SECURITY_RESILIENCE mode.
 
-## 5. Baseline and high-severity verification
+## 5. Baseline and finding verification
 
-When PR-head failures may be pre-existing, run the failing subset in a temporary base worktree when practical.
-
-Attempt to falsify every BLOCKER/MAJOR in a fresh independent context before publishing it.
+When PR-head failures have unclear causality, run the failing subset against a temporary base worktree. Attempt to falsify every BLOCKER/MAJOR in a fresh independent context before publishing it.
 
 ## 6. Report and cleanup
 
-Return risk/recommendation, verified findings, exact test/static/docs commands/results, missing behavior/docs, NOT EXECUTED blockers, and GitHub-ready serious comments.
+Return recommendation, evidence-backed architecture/correctness/wiring/docs findings, safe complexity reductions, exact unit/integration/e2e/static/docs results, security/resilience findings, missing behavior tests/docs, NOT EXECUTED blockers, and GitHub-ready serious comments. Then remove/prune the worktree unless intentionally preserved.
 
-Remove/prune the worktree after capturing the report unless preserving it is explicitly useful.
+Ponytail review never replaces correctness, security, testing, accessibility, compatibility, or documentation review.

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Provide one high-quality, low-friction development interface across VS Code Copilot, Claude Code, and Pi while sharing engineering policy and routing specialized work to the right model/tool context.
+Provide one self-contained, high-quality, low-friction development interface across VS Code Copilot, Claude Code, and Pi while sharing engineering policy and routing specialized work to the appropriate model/tool context.
 
 ## Goals
 
@@ -12,69 +12,69 @@ Provide one high-quality, low-friction development interface across VS Code Copi
 - execution-based verification;
 - documentation synchronized with behavior;
 - isolated PR review worktrees;
-- centralized model and integration configuration;
-- optional methodologies without polluting the default workflow.
+- centralized model configuration;
+- selected methodology/context capabilities stored locally with no runtime network dependency.
 
 ## Non-goals
 
 - replace repository-specific architecture or build tooling;
 - make every task multi-agent;
 - treat a worktree as a security sandbox;
-- auto-enable every third-party skill or Pi extension;
-- use documentation as a substitute for executable tests.
+- auto-enable every upstream skill or extension;
+- use documentation as a substitute for executable tests;
+- silently track upstream plugin behavior.
 
 ## Layers
 
-### Shared policy
+### Shared policy and local skills
 
-`shared/skills/` contains provider-neutral process and quality contracts.
+`shared/skills/` contains provider-neutral process, quality, methodology, minimality, context, and review contracts.
+
+Third-party-derived skills are curated and adapted locally; provenance and licenses live under `vendor/`.
 
 ### Platform adapters
 
 - `copilot/agents/`
 - `claude-code/agents/` and `claude-code/commands/`
-- `pi/prompts/`
+- `pi/prompts/` and bundled `pi/tools/`
 
-Adapters translate shared policy into native orchestration primitives.
+Adapters translate shared policy into native orchestration primitives. Pi uses a standard-library helper to run independent print-mode children concurrently without an extension package.
 
 ### Configuration
 
-`config/models.json` is the model source of truth.
-
-`integrations/upstreams.lock.json` tracks optional external projects.
-
-`pi/extensions.json` defines curated Pi extension profiles.
+`config/models.json` is the model source of truth. `config/configure-models.py` applies it using only local files.
 
 ### Documentation
 
-Human-authored architecture and policy live in `docs/`.
+Human-authored architecture and policy live in `docs/`. `docs/REFERENCE.md` is generated from local model and skill/provenance configuration.
 
-`docs/REFERENCE.md` is generated from canonical configuration.
-
-## Execution flow
+## Development flow
 
 ```text
 request
   -> proportional plan
   -> documentation impact
-  -> parallel evidence gathering
+  -> context snapshot + parallel evidence
   -> accepted dependency-aware plan
+  -> Ponytail minimum-correct-design gate
   -> scoped implementation
   -> code + tests + docs
   -> unit/integration/static/docs verification
-  -> focused independent review where risk warrants
+  -> complexity review + focused semantic review where risk warrants
 ```
+
+For non-trivial work, `superpowers-methodology` supplies design, isolation, executable-plan, TDD, delegated execution, review, and completion discipline without the upstream plugin runtime.
 
 ## PR review flow
 
 ```text
 PR metadata + exact HEAD
-  -> review plan
+  -> review plan/context snapshot
   -> detached worktree
-  -> parallel semantic review and full executable checks
-  -> documentation + security/resilience lanes
+  -> parallel semantic, execution, documentation, and complexity lanes
+  -> high-risk adversarial/security lanes
   -> falsify high-severity findings
-  -> report
+  -> evidence report
   -> remove worktree
 ```
 
@@ -86,4 +86,5 @@ PR metadata + exact HEAD
 4. Required checks are never reported as passing unless executed.
 5. Parallel writers require isolated ownership/worktrees.
 6. PR review runs against exact committed PR HEAD.
-7. Optional methodologies cannot weaken safety or documentation invariants.
+7. Minimality cannot weaken safety, documentation, tests, compatibility, or accepted requirements.
+8. Runtime setup never downloads another skill, plugin, package, or repository.

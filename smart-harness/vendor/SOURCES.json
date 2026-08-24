@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "policy": "All third-party-derived runtime content required by the harness is checked into this repository. No runtime network fetch or plugin install is performed.",
+  "components": [
+    {
+      "name": "Superpowers methodology adaptation",
+      "source": "https://github.com/obra/superpowers",
+      "commit": "b36e0829c6d0140e93cfef2ca599b1b07d4a7797",
+      "license": "MIT",
+      "license_file": "vendor/licenses/SUPERPOWERS-MIT.txt",
+      "local_paths": [
+        "shared/skills/superpowers-methodology",
+        "shared/skills/superpowers-skill-authoring"
+      ],
+      "mode": "curated and adapted; no hooks, plugin manifests, telemetry, scripts, or marketplace dependency"
+    },
+    {
+      "name": "Ponytail adaptation",
+      "source": "https://github.com/DietrichGebert/ponytail",
+      "commit": "2ed6c52c9d7e5e56942508591085fd45dea277d3",
+      "license": "MIT",
+      "license_file": "vendor/licenses/PONYTAIL-MIT.txt",
+      "local_paths": [
+        "shared/skills/ponytail",
+        "shared/skills/ponytail-review"
+      ],
+      "mode": "curated and adapted; no hooks, plugin runtime, telemetry, npm dependency, or marketplace dependency"
+    },
+    {
+      "name": "Pi VS Code skill adaptation",
+      "source": "https://github.com/badlogic/pi-skills",
+      "commit": "90bb51cae36515a648515b633a81c0c6efc8c74d",
+      "license": "MIT",
+      "license_file": "vendor/licenses/PI-SKILLS-MIT.txt",
+      "local_paths": [
+        "shared/skills/vscode"
+      ],
+      "mode": "single dependency-free skill; other upstream skills requiring APIs, npm packages, Chrome, or external CLIs are intentionally not included"
+    }
+  ]
+}

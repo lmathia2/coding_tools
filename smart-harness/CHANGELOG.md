@@ -1,25 +1,15 @@
 # Changelog
 
-## 0.5.0 — 2026-08-24
+## 0.5.0 — Self-contained distribution
 
-### Added
+- Removed runtime installers and scheduled synchronization for external skill/plugin repositories.
+- Vendored the selected Superpowers methodology, Ponytail, Ponytail review, and Pi VS Code skill directly under `shared/skills/`.
+- Added source provenance and full MIT license notices under `vendor/`.
+- Replaced Pi extension dependencies with a bundled standard-library parallel Pi runner.
+- Updated Copilot, Claude Code, and Pi workflows to use the vendored methodology/minimality skills while preserving documentation, testing, security, and compatibility requirements.
+- Added CI gates that reject external clone/install commands in the runtime harness and validate vendored notices, generated reference docs, model routing, shell syntax, and installation smoke tests.
 
-- Pi adapter with `/dev` and `/review-pr` prompt templates.
-- Mandatory `documentation-sync` shared skill.
-- Documentation impact planning, same-change docs updates, and documentation verification across every execution workflow.
-- Architecture, workflow-contract, documentation-policy, integration, and generated-reference documentation.
-- ADR and module README templates.
-- Curated Pi extension profiles and Pi skills installer.
-- Optional pinned Superpowers and Ponytail integrations.
-- Upstream lock checking and scheduled update PR workflow.
-- CI validation for workflow invariants, model/config drift, docs links, scripts, and generated reference.
-
-### Changed
+## 0.4.0 — Unified documentation-first harness
 
 - Unified Copilot, Claude Code, and Pi around one shared skill library.
-- PR review now explicitly validates docs in the isolated PR-head worktree alongside full feasible unit/integration/static checks.
-- Model configuration and generated documentation are centralized.
-
-### Removed
-
-- Superseded standalone Copilot and Claude harness snapshots from the canonical repository layout.
+- Added mandatory plan-first, documentation-sync, safe parallelism, execution-based PR review, model routing, worktree isolation, generated reference documentation, and validation workflows.

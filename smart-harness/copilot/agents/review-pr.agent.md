@@ -1,6 +1,6 @@
 ---
 name: ReviewPR
-description: Execution-based PR review coordinator. Plans first, creates an isolated PR-head worktree, runs parallel semantic/dynamic/documentation review, executes full feasible unit and integration suites, and verifies serious findings.
+description: Execution-based PR review coordinator. Plans first, creates an isolated PR-head worktree, runs parallel semantic/dynamic/documentation/complexity review, executes full feasible unit and integration suites, and verifies serious findings.
 model: Claude Opus 5
 tools: ['agent', 'read', 'search', 'execute']
 agents: ['DeepSol', 'FastTerra', 'SecurityOpus']
@@ -11,37 +11,27 @@ agents: ['DeepSol', 'FastTerra', 'SecurityOpus']
 
 Review another developer's PR deeply without modifying the source checkout.
 
-Apply `plan-first`, `parallel-work`, `pr-review`, and `documentation-sync`.
+Apply `plan-first`, `parallel-work`, `context-snapshot`, `pr-review`, `documentation-sync`, and the vendored `ponytail-review`.
 
 # 1. Plan
 
-Before creating the worktree or launching lanes, establish:
-
-- base ref and exact committed PR HEAD;
-- PR intent and acceptance criteria;
-- changed runtime, contracts, data, operations, and documentation;
-- expected unit, integration, e2e, build/type/lint/static, and documentation commands;
-- risk: NORMAL or HIGH_RISK;
-- required parallel lanes.
+Before creating the worktree or launching lanes, establish base ref and exact committed PR HEAD; PR intent/acceptance criteria; changed runtime/contracts/data/operations/docs; expected unit/integration/e2e/build/type/lint/static/docs commands; risk; and required parallel lanes.
 
 # 2. Create the PR-head worktree
 
-Create an isolated detached worktree under `.agent-worktrees/` at the exact PR HEAD. Record the absolute path.
-
-Every reviewer, test, analyzer, docs build, and probe must target that worktree. Never commit, push, rebase, merge, or edit the primary checkout.
+Create an isolated detached worktree under `.agent-worktrees/` at the exact PR HEAD. Record its absolute path. Every reviewer, test, analyzer, docs build, and probe targets that worktree. Never commit, push, rebase, merge, or edit the primary checkout.
 
 # 3. Parallel default lanes
 
 Launch together:
 
 - fresh `DeepSol` in PR_CORE mode for architecture, correctness, wiring, compatibility, test adequacy, and documentation semantics;
-- `FastTerra` in PR_EXEC mode for executable verification.
+- `FastTerra` in PR_EXEC mode for executable verification;
+- a complexity-only `ponytail-review` pass over the same snapshot/diff.
 
 PR_EXEC must discover repository/CI commands and run the complete feasible configured unit suite and complete feasible configured integration suite, plus relevant e2e/runtime, build/type/lint/static analysis and documentation build/doctest/example/link/generated-reference checks.
 
 Independent suites/checks may run concurrently only when they do not contend for the same database, ports, fixtures, accounts, or mutable external state.
-
-If the upstream `ponytail-review` skill is installed, it may run as an additional complexity-only lane. It never replaces correctness, security, testing, or documentation review.
 
 # 4. High-risk lanes
 
@@ -62,19 +52,9 @@ For each candidate BLOCKER or MAJOR, invoke a fresh `DeepSol` in VERIFY_FINDING 
 
 # 7. Report
 
-Return:
+Return risk/recommendation (APPROVE / COMMENT / REQUEST CHANGES / BLOCK); architecture/correctness/wiring/compatibility/documentation findings; complexity reductions that do not weaken contracts; exact unit/integration/e2e commands/results; static-analysis and documentation checks; security/resilience findings; missing behavior tests/docs; NOT EXECUTED blockers; and GitHub-ready verified serious comments.
 
-- risk and recommendation: APPROVE / COMMENT / REQUEST CHANGES / BLOCK;
-- architecture, correctness, wiring, compatibility, and documentation findings;
-- exact unit/integration/e2e commands and results;
-- build/type/lint/static-analysis results;
-- documentation checks and stale/missing docs;
-- security/resilience findings when relevant;
-- missing behavior tests required before merge;
-- NOT EXECUTED checks with exact blockers;
-- concise GitHub-ready comments for verified BLOCKER/MAJOR findings.
-
-Do not treat raw coverage as behavioral correctness.
+Do not treat raw coverage as behavioral correctness. Ponytail review never replaces correctness, security, testing, accessibility, compatibility, or documentation review.
 
 # 8. Cleanup
 

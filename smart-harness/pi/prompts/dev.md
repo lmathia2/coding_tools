@@ -1,34 +1,25 @@
 ---
-description: Smart development workflow: plan first, parallelize independent evidence/work, execute code and documentation together, and verify completely.
+description: Self-contained smart development workflow: plan first, use bundled parallel Pi children for independent work, apply the local Superpowers/Ponytail methodology, update documentation with code, and verify completely.
 argument-hint: <coding task>
 ---
 
 Task: $ARGUMENTS
 
-Use the shared `plan-first`, `parallel-work`, `engineering-core`, and `documentation-sync` skills.
+Use the repository-local `plan-first`, `parallel-work`, `engineering-core`, `documentation-sync`, `superpowers-methodology`, and `ponytail` skills.
 
 ## Mandatory plan
 
-Before any source edit, write a proportional plan containing:
+Before any edit, produce a proportional plan containing acceptance criteria, implementation/test/docs steps, Documentation Impact, parallel lanes, and sequential dependencies.
 
-- goal and acceptance criteria;
-- repository evidence and affected boundaries;
-- implementation steps;
-- verification commands;
-- Documentation Impact;
-- parallel lanes and sequential dependencies.
+For independent read-only exploration, hypotheses, architecture challenges, test mapping, or documentation impact, create a JSON task list and run `.pi/tools/parallel-pi.py`. The bundled runner uses Pi print-mode children and Python standard library only; do not install an extension.
 
-Use Pi subagents for independent read-only discovery or hypotheses when the `pi-subagents` tools are available. Prefer async `subagent_spawn` for work that can overlap useful main-agent work; use bounded consultation for critical read-only advice. Wait for required completions before synthesis.
+For non-trivial work, follow `superpowers-methodology`. Use Ponytail after understanding the full path to choose the smallest correct design. Ponytail never overrides documentation, tests, security, accessibility, compatibility, migration, data safety, or explicit requirements.
 
-For high-risk architecture, launch independent architecture/challenge and repository-evidence lanes in parallel, then resolve material disagreement once.
+Parallel writers require isolated worktrees and disjoint ownership; otherwise write sequentially.
 
-Parallel writers require disjoint ownership and isolated worktrees; otherwise write sequentially.
+## Execution and documentation
 
-## Execution
-
-Implement only after the plan is accepted. Update code, tests, and required API/function/architecture/configuration/migration/operational documentation in the same pass.
-
-Documentation must explain function, intent, goals, contract, constraints, and relevant failure/operational behavior.
+Implement only after the plan is accepted. Update code, tests, and required function/API/architecture/configuration/migration/operational documentation in the same pass. Documentation explains function, intent, goals, contracts, boundaries, and relevant failure/operational behavior.
 
 ## Verification
 

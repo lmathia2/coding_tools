@@ -1,178 +1,112 @@
-# Smart Harness — Copilot, Claude Code, and Pi
+# Smart Harness
 
-One high-quality development harness with **two workflows** and **one shared skill library**.
+One self-contained engineering harness for VS Code/GitHub Copilot, Claude Code, and Pi.
 
-## The interface
+## Daily interface
 
-| Work | VS Code Copilot | Claude Code | Pi |
-|---|---|---|---|
-| Build, fix, refactor, debug | `Dev` | `/dev` | `/dev` |
-| Review another developer's PR | `ReviewPR` | `/review-pr` | `/review-pr` |
+| Product | Development | PR review |
+|---|---|---|
+| Copilot | `Dev` | `ReviewPR` |
+| Claude Code | `/dev` | `/review-pr` |
+| Pi | `/dev` | `/review-pr` |
 
 Everything else is hidden orchestration.
 
-The goal is simple: **finish correctly and quickly with high quality; save tokens where doing so does not reduce quality.**
+## Self-contained guarantee
 
-## Non-negotiable behavior
+All required agents, commands, prompts, skills, selected third-party-derived methodology text, Pi helper scripts, templates, licenses, validation, and documentation are checked into this repository.
 
-### Plan before execution
+Runtime setup performs **no**:
 
-Every source change starts with a plan. A tiny edit gets a micro-plan; complex work gets repository evidence, alternatives, risk analysis, and an independent challenge.
+- Git clone/pull of another repository;
+- skill/plugin/marketplace installation;
+- Pi/npm/pip package installation;
+- MCP server setup;
+- curl/wget download;
+- scheduled upstream replacement.
 
-### Parallelize independent work
+You still need the host you intend to use—VS Code/GitHub Copilot, Claude Code, or Pi—and the target project's normal build/test dependencies.
 
-Independent code/test/documentation discovery, debugging hypotheses, review perspectives, and non-conflicting verification run concurrently. Parallel writers require disjoint ownership and isolated worktrees.
-
-### Documentation executes with code
-
-Every plan contains `Documentation Impact`.
-
-When code changes function, behavior, APIs, architecture, configuration, schemas, migrations, or operations, the same execution pass updates the authoritative documentation. Documentation explains:
-
-- function — what it does;
-- intent — why it exists;
-- goals — the outcome/invariant it owns;
-- contract — inputs, outputs, errors, side effects, and compatibility;
-- constraints and non-goals;
-- operational/failure behavior;
-- a realistic example when useful.
-
-Documentation builds, doctests, examples, links, and generated-reference drift are verification gates when the repository provides them.
-
-### PR review runs the code
-
-PR review creates a detached worktree at the exact committed PR HEAD. Semantic review and executable lanes run in parallel against that worktree.
-
-The review runs the complete feasible configured unit and integration suites, relevant e2e/runtime tests, build/type/lint/static analysis, and documentation checks. Anything blocked is `NOT EXECUTED`, never silently treated as passing.
-
-## Repository structure
-
-```text
-smart-harness/
-  shared/skills/              provider-neutral workflow and quality policy
-  copilot/                    VS Code Copilot agents and GitHub review guidance
-  claude-code/                Claude subagents and /dev /review-pr commands
-  pi/                         Pi prompts and curated extension/skill profiles
-  config/                     centralized model configuration
-  integrations/               Superpowers, Ponytail, Pi upstream locks/installers
-  scripts/                    generation, validation, and upstream checks
-  docs/                       architecture, workflow contracts, docs policy, reference
-  templates/                  CLAUDE.md, ADR, and module documentation templates
-  install.sh                  project install
-  install-global.sh           machine-wide install
-```
-
-## Install into a project
-
-All three adapters:
+## Install from this checkout
 
 ```bash
+# All three adapters into a project
 bash smart-harness/install.sh all /path/to/project
-```
 
-Or select one/two:
-
-```bash
+# Or one/two adapters
 bash smart-harness/install.sh copilot /path/to/project
 bash smart-harness/install.sh claude /path/to/project
 bash smart-harness/install.sh pi /path/to/project
 bash smart-harness/install.sh both /path/to/project   # Copilot + Claude
 ```
 
-Shared skills are installed once into `.claude/skills/`. Current VS Code Copilot and Claude Code discover that location; Pi's project settings reference it.
-
-Re-running the installer synchronizes updates and backs up replaced files under `.smart-harness-backups/`.
-
-## Install globally on one machine
+Global personal defaults:
 
 ```bash
 bash smart-harness/install-global.sh all
 ```
 
-This installs shared skills to `~/.claude/skills`, Copilot agents to `~/.copilot/agents`, Claude agents/commands to `~/.claude`, and Pi prompts/settings to `~/.pi/agent`.
+Re-running an installer synchronizes local files and backs up replaced harness paths.
 
-## Models: one configuration file
+## Shared skills
 
-Edit:
+One canonical library under `shared/skills/` is installed to `.claude/skills/` (or `~/.claude/skills/`). Current Copilot and Claude Code discover it directly; Pi settings reference the same location.
+
+Core policies include plan-first, parallel-work, engineering-core, documentation-sync, codebase-map/context-snapshot, task-ledger, and worktree-based PR review.
+
+Vendored/adapted dependency-free skills include:
+
+- `superpowers-methodology`
+- `superpowers-skill-authoring`
+- `ponytail`
+- `ponytail-review`
+- `vscode`
+
+Provenance and MIT licenses are under [`vendor/`](vendor/THIRD_PARTY_NOTICES.md).
+
+## Development defaults
+
+Every task:
+
+1. plans before editing;
+2. assesses documentation impact;
+3. parallelizes independent evidence/hypotheses;
+4. uses the smallest correct implementation;
+5. updates code, tests, and required documentation together;
+6. runs executable verification before completion.
+
+Non-trivial tasks use the vendored Superpowers methodology. Ponytail minimizes implementation only after the full flow is understood and cannot override documentation, tests, security, accessibility, compatibility, migration, data safety, or explicit requirements.
+
+## PR review defaults
+
+Review runs at the exact committed PR HEAD in an isolated worktree. Static reasoning, full feasible unit/integration suites, e2e/runtime checks, build/type/lint/static analysis, documentation checks, complexity review, adversarial behavior, and security/resilience lanes run in parallel where safe. Serious findings are independently challenged before publication.
+
+## Pi parallelism without extensions
+
+The bundled `.pi/tools/parallel-pi.py` uses Pi print-mode children to run independent bounded tasks concurrently. It requires no third-party Pi extension or npm dependency.
+
+## Models
+
+Edit one file:
 
 ```text
-config/models.json
+smart-harness/config/models.json
 ```
 
-Then run:
+Then apply/check:
 
 ```bash
-python3 config/configure-models.py
-```
-
-Model identifiers are intentionally opaque so generations can change without redesigning the harness.
-
-## Optional Superpowers and Ponytail
-
-Smart Harness tracks pinned upstream revisions for both projects.
-
-Install the curated skill-only subset globally or into a project:
-
-```bash
-bash smart-harness/integrations/install-methodologies.sh global
-bash smart-harness/integrations/install-methodologies.sh project /path/to/project
-```
-
-The forceful Superpowers bootstrap is intentionally excluded from the curated profile so the two-command Smart Harness interface stays intact. Full native plugin instructions are in [integrations/README.md](integrations/README.md).
-
-Ponytail is optional and cannot simplify away documentation, tests, validation, security, accessibility, compatibility, failure handling, or explicit requirements.
-
-## Pi extensions and skills
-
-Install the recommended Pi core:
-
-```bash
-bash smart-harness/pi/install-extensions.sh core
-```
-
-Optional profiles cover browser testing, observability, productivity, and full Superpowers/Ponytail methodology.
-
-Curated Pi skills from the tracked `badlogic/pi-skills` source:
-
-```bash
-bash smart-harness/pi/install-skills.sh useful
-```
-
-See [pi/README.md](pi/README.md).
-
-## Keeping code and documentation synchronized
-
-- `documentation-sync` is explicitly invoked by every development and PR-review entry point.
-- `docs/REFERENCE.md` is generated from model/integration/profile configuration.
-- CI validates workflow invariants, generated docs, local links, model routing, and installer syntax.
-- A scheduled workflow checks tracked upstreams and opens a reviewable update PR.
-
-Run locally:
-
-```bash
-python3 smart-harness/config/configure-models.py --check
-python3 smart-harness/scripts/generate-reference.py --check
-python3 smart-harness/scripts/validate-harness.py
-```
-
-## Documentation
-
-- [Architecture](docs/ARCHITECTURE.md)
-- [Workflow contracts](docs/WORKFLOW_CONTRACTS.md)
-- [Documentation policy](docs/DOCUMENTATION_POLICY.md)
-- [Integrations](docs/INTEGRATIONS.md)
-- [Generated reference](docs/REFERENCE.md)
-- [Changelog](CHANGELOG.md)
-
-## Updating
-
-```bash
-cd coding_tools
-python3 smart-harness/scripts/check-upstreams.py
 python3 smart-harness/config/configure-models.py
-python3 smart-harness/scripts/generate-reference.py
-python3 smart-harness/scripts/validate-harness.py
-bash smart-harness/install.sh all /path/to/project
+python3 smart-harness/config/configure-models.py --check
 ```
 
-Review upstream methodology/extension changes before accepting updated locks: skills can instruct agents to act, and extensions execute with developer permissions.
+## Documentation and validation
+
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- [`docs/WORKFLOW_CONTRACTS.md`](docs/WORKFLOW_CONTRACTS.md)
+- [`docs/DOCUMENTATION_POLICY.md`](docs/DOCUMENTATION_POLICY.md)
+- [`docs/SELF_CONTAINED.md`](docs/SELF_CONTAINED.md)
+- [`docs/VENDORED_COMPONENTS.md`](docs/VENDORED_COMPONENTS.md)
+- [`docs/REFERENCE.md`](docs/REFERENCE.md) — generated
+
+CI verifies model/config drift, generated docs, skill frontmatter, provenance/licenses, local links, workflow invariants, forbidden runtime external-install patterns, shell/Python syntax, and an all-platform local installation smoke test.

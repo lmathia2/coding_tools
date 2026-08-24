@@ -4,11 +4,11 @@ on:
   push:
     paths:
       - 'smart-harness/**'
-      - '.github/workflows/smart-harness-*.yml'
+      - '.github/workflows/smart-harness-ci.yml'
   pull_request:
     paths:
       - 'smart-harness/**'
-      - '.github/workflows/smart-harness-*.yml'
+      - '.github/workflows/smart-harness-ci.yml'
 
 permissions:
   contents: read
@@ -18,25 +18,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Check model configuration
         run: python3 smart-harness/config/configure-models.py --check
-
       - name: Check generated reference
         run: python3 smart-harness/scripts/generate-reference.py --check
-
-      - name: Validate harness and documentation
+      - name: Validate self-contained harness
         run: python3 smart-harness/scripts/validate-harness.py
-
+      - name: Validate Python syntax
+        run: python3 -m compileall -q smart-harness/config smart-harness/scripts smart-harness/pi/tools
       - name: Validate shell syntax
         run: |
           bash -n smart-harness/install.sh
           bash -n smart-harness/install-global.sh
-          bash -n smart-harness/integrations/install-methodologies.sh
-          bash -n smart-harness/pi/install-extensions.sh
-          bash -n smart-harness/pi/install-skills.sh
-
-      - name: Smoke-test project installation
+      - name: Smoke-test local all-platform installation
         run: |
           tmp="$(mktemp -d)"
           git -C "$tmp" init
@@ -44,4 +38,7 @@ jobs:
           test -f "$tmp/.github/agents/dev.agent.md"
           test -f "$tmp/.claude/commands/dev.md"
           test -f "$tmp/.pi/prompts/dev.md"
+          test -f "$tmp/.pi/tools/parallel-pi.py"
+          test -f "$tmp/.claude/skills/superpowers-methodology/SKILL.md"
+          test -f "$tmp/.claude/skills/ponytail/SKILL.md"
           test -f "$tmp/.claude/skills/documentation-sync/SKILL.md"
