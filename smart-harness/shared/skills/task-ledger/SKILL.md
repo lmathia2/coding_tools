@@ -1,6 +1,7 @@
 ---
 name: task-ledger
 description: Persistent concise state for long multi-stage agent tasks so compaction or handoff does not lose the accepted plan, progress, or verification evidence.
+user-invocable: false
 ---
 
 # Task Ledger
