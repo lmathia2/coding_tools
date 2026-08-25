@@ -16,6 +16,8 @@ Apply `plan-first`, `parallel-work`, `context-snapshot`, `pr-review`, `documenta
 
 Establish base ref, committed PR HEAD SHA, intent/acceptance criteria, changed runtime/contracts/docs, expected test/static/docs commands, risk, and parallel lanes.
 
+If an outside-in product behavior specification exists, map the changed behavior to affected feature/foundation/cross-cutting docs, glossary, coverage rows, verification items, source commit, and triage.
+
 ## 2. Create the review worktree
 
 Create a detached worktree at exact PR HEAD under `.agent-worktrees/`. All reviewers and commands use that path. Never mutate the developer's primary checkout.
@@ -24,11 +26,11 @@ Create a detached worktree at exact PR HEAD under `.agent-worktrees/`. All revie
 
 Launch together:
 
-- `smart-deep-reasoner` in PR_CORE mode against the worktree;
+- `smart-deep-reasoner` in PR_CORE mode against the worktree, including behavior-spec semantics when present;
 - `smart-fast-executor` in PR_EXEC mode against the worktree;
 - a complexity-only `ponytail-review` pass against the same snapshot/diff.
 
-The execution lane runs the complete feasible configured unit suite and complete feasible configured integration suite, plus relevant e2e/runtime, build/type/lint/static-analysis and documentation checks. Independent suites may run concurrently only when resources do not conflict.
+The execution lane runs the complete feasible configured unit suite and complete feasible configured integration suite, plus relevant e2e/runtime, build/type/lint/static-analysis, documentation, and applicable behavior-spec checklist/probe checks. Independent suites may run concurrently only when resources do not conflict.
 
 ## 4. High-risk lanes
 
@@ -43,6 +45,6 @@ When PR-head failures have unclear causality, run the failing subset against a t
 
 ## 6. Report and cleanup
 
-Return recommendation, evidence-backed architecture/correctness/wiring/docs findings, safe complexity reductions, exact unit/integration/e2e/static/docs results, security/resilience findings, missing behavior tests/docs, NOT EXECUTED blockers, and GitHub-ready serious comments. Then remove/prune the worktree unless intentionally preserved.
+Return recommendation, evidence-backed architecture/correctness/wiring/docs findings, stale or missing behavior-spec artifacts, safe complexity reductions, exact unit/integration/e2e/static/docs results, security/resilience findings, missing behavior tests/docs, NOT EXECUTED blockers, and GitHub-ready serious comments. Then remove/prune the worktree unless intentionally preserved.
 
 Ponytail review never replaces correctness, security, testing, accessibility, compatibility, or documentation review.

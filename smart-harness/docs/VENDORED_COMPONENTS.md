@@ -1,19 +1,34 @@
-# Vendored Components
+# Vendored and Inspired Components
 
-The Smart Harness contains a small reviewed subset of external methodologies as local Agent Skills.
+The Smart Harness contains a small reviewed subset of external methodologies as local Agent Skills and one independently written skill derived from an unlicensed public methodology description.
 
 ## Selection principles
 
-A component is copied/adapted only when it materially improves the two normal workflows and can run without another installation.
+A component is included only when it materially improves the two normal workflows, can run without another installation, and has an acceptable provenance/licensing path.
 
-Included:
+### Vendored/adapted under MIT
 
 - Superpowers methodology and skill-authoring discipline;
 - Ponytail minimal-correct-solution and complexity review;
-- Pi Skills' VS Code diff workflow;
-- a local context-snapshot skill and bundled Pi parallel runner.
+- Pi Skills' VS Code diff workflow.
 
-Not included:
+Exact commits and full notices are in `vendor/SOURCES.json` and `vendor/licenses/`.
+
+### Independently implemented from conceptual inspiration
+
+- `product-behavior-spec`, inspired by Steve Ruiz's public product-description gist.
+
+The gist did not display an explicit license when reviewed, so its files/templates/code were not copied. The local skill and references were written independently. See `vendor/INSPIRATIONS.md`.
+
+### Local Smart Harness components
+
+- context-snapshot;
+- documentation-sync;
+- plan-first/parallel-work/engineering-core;
+- worktree-based PR-review protocol;
+- bundled Pi parallel runner.
+
+## Not included
 
 - upstream plugin hooks or marketplaces;
 - telemetry/branding assets;
@@ -24,4 +39,4 @@ Not included:
 
 ## Maintenance
 
-`vendor/SOURCES.json` records exact source commits and local paths. Full license notices are checked in. There is no scheduled external synchronization: updates arrive only through reviewed repository commits so behavior cannot change behind the user's back.
+There is no scheduled external synchronization. Updates arrive only through reviewed repository commits. Changes to vendored/adapted material update source commits/licenses; changes inspired by unlicensed sources remain independently written and are recorded in `vendor/INSPIRATIONS.md`.

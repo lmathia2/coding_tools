@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.0 — Outside-in product behavior specifications
+
+- Added the self-contained `product-behavior-spec` skill for feature-by-feature, user-visible behavior documentation grounded in code, tests, and running-product verification.
+- Added original local templates for scope/coverage, goal state, glossary, feature lifecycle, verification checklists, defect triage, product-shape mapping, and Markdown link validation.
+- Integrated behavior-spec creation and maintenance into the existing `Dev`/`/dev` workflow without adding another command.
+- Integrated stale behavior-spec detection and checklist execution into Copilot, Claude Code, Pi, and GitHub-native PR review.
+- Extended `documentation-sync` so existing behavior documents, source commits, glossary, coverage, verification, and triage remain synchronized with code changes.
+- Recorded conceptual inspiration from Steve Ruiz's public product-description gist. Because no explicit license was visible, the local implementation was written independently instead of copying gist files.
+
 ## 0.5.0 — Self-contained distribution
 
 - Removed runtime installers and scheduled synchronization for external skill/plugin repositories.
