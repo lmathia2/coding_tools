@@ -11,9 +11,9 @@ Use `pr-review`.
 2. Create the detached PR-head worktree.
 3. Run two default lanes in parallel using the main context plus `.pi/tools/parallel-pi.py` when useful:
    - semantic architecture/correctness/wiring/contracts/tests/docs/simplicity review;
-   - executable full feasible unit/integration suites plus relevant runtime/static/docs checks.
+   - execution lane with complete feasible unit and integration suites plus relevant runtime/static/docs checks.
 4. Add adversarial and security/resilience reasoning only for HIGH_RISK changes.
 5. Independently attempt to falsify candidate BLOCKER/MAJOR findings before publishing high severity.
-6. Report recommendation and exact evidence, then clean up worktrees.
+6. Report recommendation and exact execution evidence, then clean up worktrees.
 
 Check existing product-behavior documentation only when the PR changes behavior it covers. Do not create a product behavior specification during review.
