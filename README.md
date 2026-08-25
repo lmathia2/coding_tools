@@ -4,17 +4,13 @@ Reusable coding-agent tools and orchestration configurations.
 
 ## Smart Harness
 
-[`smart-harness/`](smart-harness/README.md) is the single canonical implementation for:
+[`smart-harness/`](smart-harness/README.md) is the single self-contained harness for VS Code/GitHub Copilot, Claude Code, and Pi.
 
-- VS Code / GitHub Copilot
-- Claude Code
-- Pi
+The daily interface is deliberately small:
 
-It is self-contained: all required agents, prompts, shared skills, selected Superpowers/Ponytail/Pi-derived skills, scripts, templates, licenses, and documentation are stored in this repository. Runtime use does not clone another repository, install a plugin, install an MCP server, or download a skill pack.
+- `Dev` / `/dev` — plan, implement, document, and verify;
+- `ReviewPR` / `/review-pr` — isolated execution-based PR review.
 
-The user-facing interface stays small:
+v0.7 consolidates overlapping policies and agents around a simple default: one coordinator, one implementation context, deterministic verification; additional models run only when uncertainty or risk makes an independent perspective valuable.
 
-- `Dev` / `/dev` — plan, implement, document, and verify
-- `ReviewPR` / `/review-pr` — isolated, execution-based PR review
-
-The host product itself and the target repository's normal build/test dependencies are still required.
+No external skill pack, plugin, MCP server, package, or repository is installed by the harness.

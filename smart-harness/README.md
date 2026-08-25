@@ -1,8 +1,8 @@
-# Smart Harness
+# Smart Harness v0.7
 
-One self-contained engineering harness for VS Code/GitHub Copilot, Claude Code, and Pi.
+A self-contained, low-friction engineering harness for VS Code/GitHub Copilot, Claude Code, and Pi.
 
-## Daily interface
+## Two things to remember
 
 | Product | Development | PR review |
 |---|---|---|
@@ -10,99 +10,117 @@ One self-contained engineering harness for VS Code/GitHub Copilot, Claude Code, 
 | Claude Code | `/dev` | `/review-pr` |
 | Pi | `/dev` | `/review-pr` |
 
-Everything else is hidden orchestration.
+Everything else is routing and evidence gathering.
 
-## Self-contained guarantee
+## Design target
 
-All required agents, commands, prompts, skills, selected third-party-derived methodology text, Pi helper scripts, templates, licenses, validation, and documentation are checked into this repository.
+The default is intentionally small:
 
-Runtime setup performs no Git clone/pull from another repository, skill/plugin/marketplace installation, Pi/npm/pip package installation, MCP setup, curl/wget download, or scheduled upstream replacement.
+```text
+request
+  -> proportional plan
+  -> one implementation context
+  -> deterministic verification
+  -> done
+```
 
-You still need the host you intend to use—VS Code/GitHub Copilot, Claude Code, or Pi—and the target project's normal build/test dependencies.
+Only add another agent/model when an independent answer can materially change quality: ambiguous root cause, architecture choice, high-risk boundary, or PR semantic review.
 
-## Install from this checkout
+## Complexity budget
+
+The harness intentionally caps its core discoverable surface:
+
+- **5 shared skills**: `engineering-workflow`, `pr-review`, `product-behavior-spec`, `skill-authoring`, `vscode`;
+- **Copilot**: 2 visible coordinators + 5 hidden specialists;
+- **Claude Code**: 2 visible commands + 4 hidden specialists;
+- **Pi**: 2 prompts + one local parallel-child helper.
+
+CI rejects accidental re-expansion of these core budgets unless the validator is deliberately changed in the same review.
+
+## Smart development routing
+
+- fast/tool-heavy/mechanical → Terra (Copilot) or Haiku (Claude);
+- normal implementation → Sonnet;
+- complex implementation/debugging → Sol or Opus 4.7;
+- architecture/security/adjudication → Opus only when warranted.
+
+Routine work does not automatically receive a second premium LLM review when tests/compiler/static evidence are strong.
+
+## Engineering workflow
+
+`engineering-workflow` owns the default process in one place:
+
+1. understand repository facts and plan before edits;
+2. parallelize only meaningful independent work;
+3. choose the smallest correct design;
+4. debug from evidence and use pragmatic TDD where useful;
+5. update affected authoritative documentation with code;
+6. run executable verification before completion.
+
+Documentation impact is always assessed, but `NOT AFFECTED` is valid with a concrete reason. The harness does not create documentation merely to satisfy a ritual.
+
+## PR review
+
+`ReviewPR` / `/review-pr` preserves the stronger review path:
+
+```text
+exact PR HEAD worktree
+      ├── semantic review
+      └── executable verification
+             ├── full feasible unit suite
+             ├── full feasible integration suite
+             ├── relevant e2e/runtime
+             ├── build/type/lint/static
+             └── affected docs checks
+```
+
+High-risk PRs add adversarial and security/resilience review. Candidate BLOCKER/MAJOR findings get one fresh falsification attempt before publication.
+
+Minimality is part of semantic review; there is no separate Ponytail lane.
+
+## Product behavior specifications
+
+`product-behavior-spec` remains available for explicit outside-in product documentation requests. It is **not** part of every coding task. If a repository already has such documentation and a change affects it, the normal documentation gate updates only the impacted artifacts.
+
+## Self-contained installation
+
+All runtime harness content is in this repository. No plugin, skill pack, MCP server, npm/pip package, or external repository is installed by the harness.
 
 ```bash
 bash smart-harness/install.sh all /path/to/project
+```
 
-# Or one/two adapters
+Or install only what you use:
+
+```bash
 bash smart-harness/install.sh copilot /path/to/project
 bash smart-harness/install.sh claude /path/to/project
 bash smart-harness/install.sh pi /path/to/project
 bash smart-harness/install.sh both /path/to/project
 ```
 
-Global personal defaults:
+Global defaults:
 
 ```bash
 bash smart-harness/install-global.sh all
 ```
 
-Re-running an installer synchronizes local files and backs up replaced harness paths.
-
-## Shared skills
-
-One canonical library under `shared/skills/` is installed to `.claude/skills/` (or `~/.claude/skills/`). Current Copilot and Claude Code discover it directly; Pi settings reference the same location.
-
-Core policies include plan-first, parallel-work, engineering-core, documentation-sync, codebase-map/context-snapshot, task-ledger, and worktree-based PR review.
-
-Vendored/adapted dependency-free skills include:
-
-- `superpowers-methodology`
-- `superpowers-skill-authoring`
-- `ponytail`
-- `ponytail-review`
-- `vscode`
-
-The independently written `product-behavior-spec` skill builds and maintains outside-in feature behavior documentation, verification checklists, and behavior triage. It is conceptually inspired by Steve Ruiz's public product-description gist; no gist files were copied because no explicit license was visible.
-
-Provenance and notices are under [`vendor/`](vendor/THIRD_PARTY_NOTICES.md) and [`vendor/INSPIRATIONS.md`](vendor/INSPIRATIONS.md).
-
-## Development defaults
-
-Every task:
-
-1. plans before editing;
-2. assesses documentation impact;
-3. parallelizes independent evidence/hypotheses;
-4. uses the smallest correct implementation;
-5. updates code, tests, and required documentation together;
-6. runs executable verification before completion.
-
-Non-trivial tasks use the vendored Superpowers methodology. Ponytail minimizes implementation only after the full flow is understood and cannot override documentation, tests, security, accessibility, compatibility, migration, data safety, or explicit requirements.
-
-When the request is to document a product's user-visible behavior, `Dev`/`/dev` automatically uses `product-behavior-spec`; no third workflow or command is required.
-
-## Product behavior specification
-
-The default output is `docs/product-behavior/`, containing scope/coverage, a glossary, foundations, feature documents, cross-cutting behavior, verification checklists, and consolidated behavior triage. Claims are grounded in source/tests and marked separately from runtime-verified observations.
-
-See [`docs/PRODUCT_BEHAVIOR_SPEC.md`](docs/PRODUCT_BEHAVIOR_SPEC.md).
-
-## PR review defaults
-
-Review runs at the exact committed PR HEAD in an isolated worktree. Static reasoning, full feasible unit/integration suites, e2e/runtime checks, build/type/lint/static analysis, documentation checks, existing product-behavior-spec checks, complexity review, adversarial behavior, and security/resilience lanes run in parallel where safe. Serious findings are independently challenged before publication.
-
-## Pi parallelism without extensions
-
-The bundled `.pi/tools/parallel-pi.py` uses Pi print-mode children to run independent bounded tasks concurrently. It requires no third-party Pi extension or npm dependency.
-
 ## Models
 
-Edit one file:
+Edit only:
 
 ```text
 smart-harness/config/models.json
 ```
 
-Then apply/check:
+Then:
 
 ```bash
 python3 smart-harness/config/configure-models.py
 python3 smart-harness/config/configure-models.py --check
 ```
 
-## Documentation and validation
+## Documentation
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 - [`docs/WORKFLOW_CONTRACTS.md`](docs/WORKFLOW_CONTRACTS.md)
@@ -111,5 +129,3 @@ python3 smart-harness/config/configure-models.py --check
 - [`docs/SELF_CONTAINED.md`](docs/SELF_CONTAINED.md)
 - [`docs/VENDORED_COMPONENTS.md`](docs/VENDORED_COMPONENTS.md)
 - [`docs/REFERENCE.md`](docs/REFERENCE.md) — generated
-
-CI verifies model/config drift, generated docs, skill frontmatter, provenance/licenses, local links, workflow invariants, forbidden runtime external-install patterns, shell/Python syntax, and an all-platform local installation smoke test.

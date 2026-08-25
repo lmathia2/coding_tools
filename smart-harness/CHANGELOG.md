@@ -1,24 +1,26 @@
 # Changelog
 
+## 0.7.0 — Simplification release
+
+- Collapsed eleven overlapping process skills into one `engineering-workflow` skill while preserving plan-first execution, evidence-based debugging/TDD, safe parallelism, minimal design, documentation synchronization, and verification.
+- Folded Ponytail/minimality review into normal engineering and PR review instead of running a separate review lane.
+- Kept `product-behavior-spec` as an explicit specialist capability; normal coding updates existing behavior docs only when affected and never creates a spec automatically.
+- Reduced the shared discoverable skill surface from 13 to 5: `engineering-workflow`, `pr-review`, `product-behavior-spec`, `skill-authoring`, and `vscode`.
+- Reduced Claude Code hidden agents from 7 to 4: `smart-fast`, `smart-deep-reasoner`, `smart-deep-implementer`, and `smart-top-reviewer`.
+- Reduced Copilot hidden agents from 6 to 5 by merging Terra exploration, deterministic verification, and mechanical implementation into `FastTerra`.
+- Established the default cost/quality shape as one coordinator + one implementation context + deterministic verification; extra premium agents are conditional on uncertainty or risk.
+- Preserved execution-based PR review: exact PR-head worktree, semantic + execution lanes in parallel, complete feasible unit/integration suites, high-risk specialist escalation, and independent serious-finding verification.
+- Installers now remove legacy harness-managed skills/agents so upgrading actually shrinks the discovered surface.
+- CI now enforces a simplicity budget for core skills and hidden agents.
+
 ## 0.6.0 — Outside-in product behavior specifications
 
-- Added the self-contained `product-behavior-spec` skill for feature-by-feature, user-visible behavior documentation grounded in code, tests, and running-product verification.
-- Added original local templates for scope/coverage, goal state, glossary, feature lifecycle, verification checklists, defect triage, product-shape mapping, and Markdown link validation.
-- Integrated behavior-spec creation and maintenance into the existing `Dev`/`/dev` workflow without adding another command.
-- Integrated stale behavior-spec detection and checklist execution into Copilot, Claude Code, Pi, and GitHub-native PR review.
-- Extended `documentation-sync` so existing behavior documents, source commits, glossary, coverage, verification, and triage remain synchronized with code changes.
-- Recorded conceptual inspiration from Steve Ruiz's public product-description gist. Because no explicit license was visible, the local implementation was written independently instead of copying gist files.
+- Added the self-contained `product-behavior-spec` specialist skill and integrated maintenance of existing behavior documentation into coding and PR review.
 
 ## 0.5.0 — Self-contained distribution
 
-- Removed runtime installers and scheduled synchronization for external skill/plugin repositories.
-- Vendored the selected Superpowers methodology, Ponytail, Ponytail review, and Pi VS Code skill directly under `shared/skills/`.
-- Added source provenance and full MIT license notices under `vendor/`.
-- Replaced Pi extension dependencies with a bundled standard-library parallel Pi runner.
-- Updated Copilot, Claude Code, and Pi workflows to use the vendored methodology/minimality skills while preserving documentation, testing, security, and compatibility requirements.
-- Added CI gates that reject external clone/install commands in the runtime harness and validate vendored notices, generated reference docs, model routing, shell syntax, and installation smoke tests.
+- Vendored selected methodology/minimality capabilities, removed runtime external dependencies, and added self-contained Pi parallel tooling.
 
 ## 0.4.0 — Unified documentation-first harness
 
-- Unified Copilot, Claude Code, and Pi around one shared skill library.
-- Added mandatory plan-first, documentation-sync, safe parallelism, execution-based PR review, model routing, worktree isolation, generated reference documentation, and validation workflows.
+- Unified Copilot, Claude Code, and Pi around one shared skill library with plan-first execution, safe parallelism, worktree PR review, model routing, documentation synchronization, and validation.

@@ -14,37 +14,76 @@ BACKUP_ROOT="$TARGET/.smart-harness-backups/$STAMP"
 selected() {
   case "$PLATFORM:$1" in copilot:copilot|claude:claude|pi:pi|both:copilot|both:claude|all:copilot|all:claude|all:pi) return 0;; *) return 1;; esac
 }
-backup_existing() { local dst="$1"; [[ -e "$dst" || -L "$dst" ]] || return 0; local rel="${dst#$TARGET/}"; mkdir -p "$BACKUP_ROOT/$(dirname "$rel")"; cp -R "$dst" "$BACKUP_ROOT/$rel"; }
-copy_file() { local src="$1" dst="$2"; mkdir -p "$(dirname "$dst")"; if [[ -e "$dst" ]] && ! cmp -s "$src" "$dst"; then backup_existing "$dst"; fi; cp "$src" "$dst"; echo "installed ${dst#$TARGET/}"; }
-copy_dir() { local src="$1" dst="$2"; mkdir -p "$(dirname "$dst")"; if [[ -e "$dst" || -L "$dst" ]] && ! diff -qr "$src" "$dst" >/dev/null 2>&1; then backup_existing "$dst"; fi; rm -rf "$dst"; cp -R "$src" "$dst"; echo "installed ${dst#$TARGET/}"; }
+
+backup_existing() {
+  local dst="$1"
+  [[ -e "$dst" || -L "$dst" ]] || return 0
+  local rel="${dst#$TARGET/}"
+  mkdir -p "$BACKUP_ROOT/$(dirname "$rel")"
+  cp -R "$dst" "$BACKUP_ROOT/$rel"
+}
+
+remove_legacy() {
+  local dst="$1"
+  [[ -e "$dst" || -L "$dst" ]] || return 0
+  backup_existing "$dst"
+  rm -rf "$dst"
+  echo "removed legacy ${dst#$TARGET/}"
+}
+
+copy_file() {
+  local src="$1" dst="$2"
+  mkdir -p "$(dirname "$dst")"
+  if [[ -e "$dst" ]] && ! cmp -s "$src" "$dst"; then backup_existing "$dst"; fi
+  cp "$src" "$dst"
+  echo "installed ${dst#$TARGET/}"
+}
+
+copy_dir() {
+  local src="$1" dst="$2"
+  mkdir -p "$(dirname "$dst")"
+  if [[ -e "$dst" || -L "$dst" ]] && ! diff -qr "$src" "$dst" >/dev/null 2>&1; then backup_existing "$dst"; fi
+  rm -rf "$dst"
+  cp -R "$src" "$dst"
+  echo "installed ${dst#$TARGET/}"
+}
 
 merge_pi_settings() {
-  python3 - "$1" "$2" <<'PY_SETTINGS'
+  python3 - "$1" "$2" <<'PY'
 import json, pathlib, sys
 path=pathlib.Path(sys.argv[1]); skill_path=sys.argv[2]
 data=json.loads(path.read_text()) if path.exists() else {}
-skills=data.setdefault("skills",[])
+skills=data.setdefault("skills", [])
 if skill_path not in skills: skills.append(skill_path)
 data["enableSkillCommands"]=True
-path.parent.mkdir(parents=True,exist_ok=True)
-path.write_text(json.dumps(data,indent=2)+"\n")
-PY_SETTINGS
+path.parent.mkdir(parents=True, exist_ok=True)
+path.write_text(json.dumps(data, indent=2)+"\n")
+PY
 }
 
-# Canonical local shared skills. No network operation occurs.
+# v0.7 removes prior harness-managed skills that duplicated the core workflow.
+for name in codebase-map context-snapshot documentation-sync engineering-core parallel-work plan-first ponytail ponytail-review superpowers-methodology superpowers-skill-authoring task-ledger; do
+  remove_legacy "$TARGET/.claude/skills/$name"
+done
+
+# One canonical shared skill library.
 mkdir -p "$TARGET/.claude/skills"
 for dir in "$ROOT"/shared/skills/*; do copy_dir "$dir" "$TARGET/.claude/skills/$(basename "$dir")"; done
 
 if selected copilot; then
+  remove_legacy "$TARGET/.github/agents/worker-terra.agent.md"
   mkdir -p "$TARGET/.github/agents" "$TARGET/.github/skills"
   for file in "$ROOT"/copilot/agents/*.agent.md; do copy_file "$file" "$TARGET/.github/agents/$(basename "$file")"; done
   copy_dir "$ROOT/copilot/github-skills/code-review" "$TARGET/.github/skills/code-review"
 fi
+
 if selected claude; then
+  for name in deep-worker.md fast-executor.md fast-verifier.md fast-worker.md; do remove_legacy "$TARGET/.claude/agents/$name"; done
   mkdir -p "$TARGET/.claude/agents" "$TARGET/.claude/commands"
   for file in "$ROOT"/claude-code/agents/*.md; do copy_file "$file" "$TARGET/.claude/agents/$(basename "$file")"; done
   for file in "$ROOT"/claude-code/commands/*.md; do copy_file "$file" "$TARGET/.claude/commands/$(basename "$file")"; done
 fi
+
 if selected pi; then
   mkdir -p "$TARGET/.pi/prompts" "$TARGET/.pi/tools"
   for file in "$ROOT"/pi/prompts/*.md; do copy_file "$file" "$TARGET/.pi/prompts/$(basename "$file")"; done
@@ -62,10 +101,12 @@ mkdir -p "$TARGET/.agent-worktrees" "$TARGET/.agent-state"
 touch "$TARGET/.gitignore"
 for entry in '.agent-worktrees/' '.agent-state/' '.smart-harness-backups/'; do grep -qxF "$entry" "$TARGET/.gitignore" || printf '%s\n' "$entry" >> "$TARGET/.gitignore"; done
 
-cat <<EOF_DONE
+cat <<EOF
 
-Done. All installed content came from this checkout; no external plugin, package, skill, or repository was downloaded.
+Smart Harness v0.7 installed from this checkout.
 - Copilot: Dev / ReviewPR
 - Claude Code: /dev /review-pr
 - Pi: /dev /review-pr
-EOF_DONE
+- Shared discoverable skills: 5
+- Legacy v0.6 harness-managed skills/agents were backed up and removed.
+EOF

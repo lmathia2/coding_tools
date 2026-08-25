@@ -1,56 +1,42 @@
 # Documentation Policy
 
-## Definition of done
+Documentation is a completion gate inside `engineering-workflow` and `pr-review`, not a separate default workflow.
 
-Documentation is part of done when a change affects:
+## When documentation changes
+
+Update authoritative documentation when code changes affect:
 
 - public or reusable APIs;
-- user-visible behavior or failure semantics;
-- module/service purpose;
+- non-obvious function/module responsibility or intent;
+- observable behavior or failure semantics;
 - architecture or durable decisions;
 - configuration;
 - schemas or persisted data;
 - migrations and compatibility;
 - operations, rollout, recovery, or troubleshooting;
-- examples or tutorials;
-- an existing product behavior specification, verification checklist, glossary, coverage table, or behavior-triage item.
+- examples/tutorials;
+- deprecation/changelog guidance.
+
+`NOT AFFECTED` is valid when the plan states a concrete reason. Do not create documentation just to satisfy a ritual.
 
 ## Quality bar
 
-Documentation should communicate:
+Useful documentation explains the relevant portions of:
 
-- **function** — what the code or system does;
+- **function** — what it does;
 - **intent** — why it exists;
-- **goals** — the outcome or invariant it protects;
-- **contract** — inputs, outputs, errors, side effects, and compatibility;
-- **observable behavior** — lifecycle, cancellation, interruption, failure, and recovery from the user/operator point of view;
-- **constraints** — boundaries, trade-offs, and non-goals;
-- **operation** — how it behaves under failure and how to verify/recover it.
+- **goal/invariant** — what outcome it protects;
+- **contract** — inputs, outputs, errors, side effects, compatibility;
+- **constraints/non-goals**;
+- **operational/failure behavior** — retries, timeouts, idempotency, recovery, rollback, observability when relevant;
+- the smallest realistic example when the interface is not self-evident.
 
-Do not document obvious syntax. Document the reasoning, contract, and behavior that cannot be safely inferred.
+Do not translate obvious syntax into comments.
 
-## Documentation layers
+## Verification
 
-Use the right durable artifact:
+Run repository-native docs builds, doctests, examples, link checks, schema/API-reference generation, or generated-file clean-diff checks when affected. Never report an unexecuted docs check as passing.
 
-- API/reference docs for callable interfaces;
-- module/package docs for code ownership and internal contracts;
-- ADRs/design docs for durable decisions and trade-offs;
-- runbooks for operation and recovery;
-- `product-behavior-spec` for outside-in, feature-by-feature user behavior and verification;
-- executable tests and generated specifications whenever they are the stronger source of truth.
+## Product behavior specifications
 
-## Sync mechanism
-
-The `documentation-sync` skill is explicitly invoked by all execution and PR-review workflows.
-
-If an outside-in behavior specification exists, changed behavior updates its feature/foundation/cross-cutting docs, glossary, coverage status, verification items, source commit, and triage in the same change.
-
-CI validates:
-
-- workflow files mention documentation;
-- generated reference content is current;
-- core skills and model config are structurally valid;
-- the self-contained product behavior skill and references exist.
-
-Repositories using the harness should add their native docs build, doctest, behavior-checklist/probe, link, and generated-spec checks to CI.
+Do not generate `docs/product-behavior/` automatically. Run the specialist workflow only when explicitly requested. If the repository already has such a specification and a code change affects documented user-visible behavior, update and reverify only the affected artifacts.

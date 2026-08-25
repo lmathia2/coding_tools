@@ -1,87 +1,33 @@
 # Product Behavior Specification
 
+`product-behavior-spec` is an optional specialist skill for explicitly requested outside-in product documentation. It is not part of every coding or PR task.
+
 ## Function
 
-`product-behavior-spec` creates or maintains an outside-in account of a software product's observable behavior. It organizes documentation by user-facing feature rather than source package and links every important claim to code, tests, executable verification, or an explicit open question.
+Create durable feature-by-feature documentation of user-visible behavior from code, tests, and feasible running-product verification, including lifecycle, variants, interruption/failure/recovery, evidence, and unresolved discrepancies.
 
-## Intent
+## When to use
 
-API and architecture documentation explain interfaces and implementation decisions, but they often do not answer questions such as:
+Use when the user explicitly asks for a product description, outside-in behavior specification, feature behavior catalog, or executable verification catalog.
 
-- What exactly happens when a user starts and then abandons an interaction?
-- Which state becomes durable, and when?
-- How do role, configuration, offline state, retry, or concurrent edits change the outcome?
-- What does the user see during partial failure?
-- Is surprising behavior intentional, a documentation error, or a product defect?
+Do not invoke the full workflow merely because a normal feature changes behavior. If a repository already has a behavior specification, `engineering-workflow` and `pr-review` maintain only the affected existing artifacts.
 
-The behavior specification provides one stable place to answer those questions.
-
-## Goals
-
-- document user-visible behavior feature by feature;
-- make lifecycle, interruption, failure, and recovery explicit;
-- keep a canonical glossary and cross-feature foundations;
-- distinguish source-derived drafts from runtime-verified claims;
-- generate stable executable/manual verification items;
-- consolidate suspected defects into evidence-backed triage;
-- stay synchronized with code through `documentation-sync` and PR review.
-
-## Default structure
+## Default output
 
 ```text
 docs/product-behavior/
-  README.md              scope, interaction model, structure, coverage
-  goal.md                standing drafting/maintenance instructions
-  glossary.md            canonical vocabulary
-  foundations/           shared lifecycle, state, limits, and definitions
-  features/              user-facing feature documents
-  cross-cutting/         identity, persistence, offline, accessibility, etc.
-  verification/          protocol and stable claim checklists
-  bug-triage.md          consolidated behavior mismatches
+  README.md
+  goal.md
+  glossary.md
+  foundations/
+  features/
+  cross-cutting/
+  verification/
+  bug-triage.md
 ```
 
-## Workflow
+The specialist skill and its references own the detailed authoring/verification structure.
 
-```text
-scope and product shape
-  -> repository/runtime reconnaissance
-  -> scaffold and coverage plan
-  -> pilot feature
-  -> foundations
-  -> parallel independent feature drafting
-  -> executable/runtime verification
-  -> triage and consistency pass
-  -> ongoing sync with code changes
-```
+## Verification principle
 
-## Relationship to normal documentation
-
-This is complementary to:
-
-- API/reference docs — callable interfaces and types;
-- architecture/ADRs — implementation boundaries and decisions;
-- runbooks — operational procedures;
-- module docs — code ownership and internal contracts.
-
-A product behavior document states what the user or operator can observe. Technical detail appears only when it explains that outcome.
-
-## Triggering the workflow
-
-The normal `Dev` or `/dev` entry point should load the skill when asked to:
-
-- write a product description;
-- document how an application behaves;
-- create a user-experience behavior spec;
-- catalog feature behavior and edge cases;
-- build verification checklists from code/tests;
-- extend or refresh an existing behavior-spec directory.
-
-No additional user-facing command is required.
-
-## PR review integration
-
-When a repository already has a behavior specification, `ReviewPR`/`/review-pr` checks whether changed user-visible behavior also updates relevant feature/foundation documents, verification items, coverage status, and triage.
-
-## Provenance
-
-The design was conceptually inspired by Steve Ruiz's public `product-description` gist. Because no explicit license was visible when reviewed, this repository contains an independently written implementation rather than copied gist files. See [`../vendor/INSPIRATIONS.md`](../vendor/INSPIRATIONS.md).
+Keep code/test-derived claims distinct from behavior actually exercised in the running product. Never claim visual feel, device interaction, accessibility behavior, or timing perception was verified unless that environment was actually exercised.

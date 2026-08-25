@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "policy": "All third-party-derived runtime content required by the harness is checked into this repository. No runtime network fetch or plugin install is performed.",
+  "schema_version": 2,
+  "policy": "All third-party-derived runtime guidance required by the harness is stored locally. v0.7 folds overlapping methodology concepts into the core engineering and PR-review skills instead of exposing separate default skills.",
   "components": [
     {
       "name": "Superpowers methodology adaptation",
@@ -9,10 +9,10 @@
       "license": "MIT",
       "license_file": "vendor/licenses/SUPERPOWERS-MIT.txt",
       "local_paths": [
-        "shared/skills/superpowers-methodology",
-        "shared/skills/superpowers-skill-authoring"
+        "shared/skills/engineering-workflow",
+        "shared/skills/skill-authoring"
       ],
-      "mode": "curated and adapted; no hooks, plugin manifests, telemetry, scripts, or marketplace dependency"
+      "mode": "concepts curated and adapted into core workflow; no hooks, plugin manifests, telemetry, scripts, marketplace, or runtime dependency"
     },
     {
       "name": "Ponytail adaptation",
@@ -21,10 +21,10 @@
       "license": "MIT",
       "license_file": "vendor/licenses/PONYTAIL-MIT.txt",
       "local_paths": [
-        "shared/skills/ponytail",
-        "shared/skills/ponytail-review"
+        "shared/skills/engineering-workflow",
+        "shared/skills/pr-review"
       ],
-      "mode": "curated and adapted; no hooks, plugin runtime, telemetry, npm dependency, or marketplace dependency"
+      "mode": "minimal-correct-solution concepts folded into implementation and semantic review; no separate review lane or plugin runtime"
     },
     {
       "name": "Pi VS Code skill adaptation",
@@ -35,7 +35,7 @@
       "local_paths": [
         "shared/skills/vscode"
       ],
-      "mode": "single dependency-free skill; other upstream skills requiring APIs, npm packages, Chrome, or external CLIs are intentionally not included"
+      "mode": "single dependency-free utility skill"
     }
   ]
 }

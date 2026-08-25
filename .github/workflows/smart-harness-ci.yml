@@ -18,27 +18,46 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Check model configuration
         run: python3 smart-harness/config/configure-models.py --check
+
       - name: Check generated reference
         run: python3 smart-harness/scripts/generate-reference.py --check
-      - name: Validate self-contained harness
+
+      - name: Validate v0.7 simplicity and workflow invariants
         run: python3 smart-harness/scripts/validate-harness.py
+
       - name: Validate Python syntax
-        run: python3 -m compileall -q smart-harness/config smart-harness/scripts smart-harness/pi/tools
+        run: python3 -m compileall -q smart-harness/config smart-harness/scripts smart-harness/pi/tools smart-harness/shared/skills/product-behavior-spec/references
+
       - name: Validate shell syntax
         run: |
           bash -n smart-harness/install.sh
           bash -n smart-harness/install-global.sh
+
       - name: Smoke-test local all-platform installation
         run: |
           tmp="$(mktemp -d)"
           git -C "$tmp" init
+
+          # Seed v0.6 paths to prove the upgrader actually removes them.
+          mkdir -p "$tmp/.claude/skills/plan-first" "$tmp/.claude/skills/ponytail" "$tmp/.claude/agents"
+          touch "$tmp/.claude/skills/plan-first/SKILL.md" "$tmp/.claude/skills/ponytail/SKILL.md"
+          touch "$tmp/.claude/agents/fast-verifier.md" "$tmp/.claude/agents/deep-worker.md"
+
           bash smart-harness/install.sh all "$tmp"
+
           test -f "$tmp/.github/agents/dev.agent.md"
+          test -f "$tmp/.github/agents/fast-terra.agent.md"
+          test ! -e "$tmp/.github/agents/worker-terra.agent.md"
           test -f "$tmp/.claude/commands/dev.md"
+          test -f "$tmp/.claude/agents/fast.md"
+          test ! -e "$tmp/.claude/agents/fast-verifier.md"
+          test ! -e "$tmp/.claude/agents/deep-worker.md"
           test -f "$tmp/.pi/prompts/dev.md"
           test -f "$tmp/.pi/tools/parallel-pi.py"
-          test -f "$tmp/.claude/skills/superpowers-methodology/SKILL.md"
-          test -f "$tmp/.claude/skills/ponytail/SKILL.md"
-          test -f "$tmp/.claude/skills/documentation-sync/SKILL.md"
+          test -f "$tmp/.claude/skills/engineering-workflow/SKILL.md"
+          test -f "$tmp/.claude/skills/pr-review/SKILL.md"
+          test ! -e "$tmp/.claude/skills/plan-first"
+          test ! -e "$tmp/.claude/skills/ponytail"
