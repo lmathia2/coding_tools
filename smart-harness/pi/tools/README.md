@@ -15,4 +15,13 @@ JSON
 python3 .pi/tools/parallel-pi.py --tasks /tmp/tasks.json --cwd .
 ```
 
-It installs no Pi package and uses only Python's standard library plus the already-installed `pi` host executable. Child tasks are read-only by default. Writing tools must be explicitly supplied and should target isolated worktrees with disjoint ownership.
+It installs no Pi package and uses only Python's standard library plus the already-installed `pi` host executable. Child tasks receive read-only tools, a root-confined working directory, a sanitized environment, and interactive approval by default.
+
+An execution lane in an isolated worktree can opt in explicitly:
+
+```bash
+python3 .pi/tools/parallel-pi.py --tasks /tmp/verify.json --cwd .agent-worktrees/review \
+  --capability execute --auto-approve
+```
+
+Use `--capability write` only for disjoint work-unit worktrees. Use `--inherit-env` only when the child genuinely requires parent-process secrets. Requested tools are rejected when they exceed the selected capability.

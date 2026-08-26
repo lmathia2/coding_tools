@@ -1,6 +1,12 @@
 # Documentation Policy
 
-Documentation is a completion gate inside `engineering-workflow` and `pr-review`, not a separate default workflow.
+Documentation is a live specification and a commit-level gate inside `engineering-workflow` and `pr-review`, not a release-end phase or separate default workflow.
+
+## Commit-level synchronization
+
+Every logical code commit contains the authoritative documentation needed to understand that version of the system. Documentation records not only what was implemented but why it exists: purpose, intent, protected goals/invariants, API methods and contracts, constraints, and relevant failure or operational behavior.
+
+When a code commit genuinely has no documentation impact, record `Docs-Impact: none — <concrete reason>` in the commit message or work-unit evidence. Do not defer known documentation changes to a later commit; amend or squash so every reviewable commit is internally coherent.
 
 ## When documentation changes
 
@@ -17,7 +23,7 @@ Update authoritative documentation when code changes affect:
 - examples/tutorials;
 - deprecation/changelog guidance.
 
-`NOT AFFECTED` is valid when the plan states a concrete reason. Do not create documentation just to satisfy a ritual.
+`NOT AFFECTED` is valid only with a concrete reason. Do not create low-value prose merely to satisfy the gate; improve the nearest authoritative specification, API reference, module README, ADR, runbook, or example.
 
 ## Quality bar
 
@@ -36,6 +42,16 @@ Do not translate obvious syntax into comments.
 ## Verification
 
 Run repository-native docs builds, doctests, examples, link checks, schema/API-reference generation, or generated-file clean-diff checks when affected. Never report an unexecuted docs check as passing.
+
+PR review checks documentation synchronization both per logical commit and across the final aggregate diff.
+
+The installed check is:
+
+```bash
+python3 .smart-harness/tools/commit_docs.py <base-ref>
+```
+
+It treats Markdown/reStructuredText/AsciiDoc and conventional documentation directories/files as documentation. Repositories with generated or unusual documentation formats may supplement it with a native check; the semantic PR lane still verifies content quality, purpose, intent, and contract accuracy.
 
 ## Product behavior specifications
 

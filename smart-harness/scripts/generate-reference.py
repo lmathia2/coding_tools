@@ -25,21 +25,16 @@ def frontmatter(path: Path) -> dict[str, str]:
     return out
 
 
-def generate() -> str:
-    version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
-    models = json.loads((ROOT / "config/models.json").read_text(encoding="utf-8"))
-    sources = json.loads((ROOT / "vendor/SOURCES.json").read_text(encoding="utf-8"))
-
-    skills = []
+def collect_skills() -> list[tuple[str, str, str]]:
+    skills: list[tuple[str, str, str]] = []
     for path in sorted((ROOT / "shared/skills").glob("*/SKILL.md")):
         fm = frontmatter(path)
         skills.append((fm.get("name", path.parent.name), fm.get("description", ""), str(path.parent.relative_to(ROOT))))
+    return skills
 
-    copilot_files = sorted(p.name for p in (ROOT / "copilot/agents").glob("*.agent.md"))
-    claude_agents = sorted(p.name for p in (ROOT / "claude-code/agents").glob("*.md"))
-    claude_commands = sorted(p.name for p in (ROOT / "claude-code/commands").glob("*.md"))
 
-    lines = [
+def header_lines(version: str, skills: list[tuple[str, str, str]], copilot_files: list[str], claude_agents: list[str], claude_commands: list[str]) -> list[str]:
+    return [
         "# Generated Smart Harness Reference",
         "",
         f"> Generated from repository-local files for version `{version}`. Do not edit by hand.",
@@ -48,13 +43,26 @@ def generate() -> str:
         "",
         f"- Shared discoverable skills: **{len(skills)}** (budget: 5)",
         f"- Copilot agent definitions: **{len(copilot_files)}** (2 visible + 5 hidden)",
-        f"- Claude Code hidden agents: **{len(claude_agents)}** (budget: 4)",
+        f"- Claude Code hidden agents: **{len(claude_agents)}** (budget: 5)",
         f"- Claude Code visible commands: **{len(claude_commands)}** (budget: 2)",
+        "",
+        "## Work-unit lifecycle",
+        "",
+        "Every implementation unit is coherent and independently committable, with explicit dependencies and ownership:",
+        "",
+        "```text",
+        "plan -> implement -> document -> simplify -> verify",
+        "```",
+        "",
+        "Live authoritative documentation travels in the same logical commit as code. Changed Python functions can be scored with `.smart-harness/tools/complexity.py`; other languages use repository-native analyzers.",
         "",
         "## Model routing",
         "",
     ]
 
+
+def model_lines(models: dict[str, object]) -> list[str]:
+    lines: list[str] = []
     for platform in ("copilot", "claude_code"):
         lines += [
             f"### {platform.replace('_', ' ').title()}",
@@ -65,31 +73,68 @@ def generate() -> str:
         for role, spec in models[platform].items():
             lines.append(f"| `{role}` | `{spec['model']}` | `{spec.get('effort', '')}` |")
         lines.append("")
+    return lines
 
-    lines += ["## Shared skills", "", "| Skill | Description | Local path |", "|---|---|---|"]
+
+def skill_lines(skills: list[tuple[str, str, str]]) -> list[str]:
+    lines = ["## Shared skills", "", "| Skill | Description | Local path |", "|---|---|---|"]
     for name, desc, path in skills:
         safe_desc = desc.replace("|", "\\|")
         lines.append(f"| `{name}` | {safe_desc} | `{path}` |")
+    return lines
 
-    lines += ["", "## Adapter files", "", "### Copilot", ""]
+
+def adapter_lines(copilot_files: list[str], claude_agents: list[str], claude_commands: list[str]) -> list[str]:
+    lines = ["", "## Adapter files", "", "### Copilot", ""]
     lines += [f"- `{name}`" for name in copilot_files]
     lines += ["", "### Claude Code hidden agents", ""]
     lines += [f"- `{name}`" for name in claude_agents]
     lines += ["", "### Claude Code commands", ""]
     lines += [f"- `{name}`" for name in claude_commands]
+    return lines
 
-    lines += ["", "## Vendored sources", "", "| Component | Pinned commit | License | Local integration |", "|---|---|---|---|"]
+
+def vendor_lines(sources: dict[str, object]) -> list[str]:
+    lines = ["", "## Vendored sources", "", "| Component | Pinned commit | License | Local integration |", "|---|---|---|---|"]
     for item in sources["components"]:
         paths = ", ".join(f"`{p}`" for p in item["local_paths"])
         lines.append(f"| {item['name']} | `{item['commit']}` | {item['license']} | {paths} |")
+    return lines
 
-    lines += [
+
+def footer_lines() -> list[str]:
+    return [
+        "",
+        "## Installed support tools",
+        "",
+        "- `.smart-harness/tools/complexity.py` — dependency-free Python function cyclomatic complexity and baseline deltas.",
+        "- `.smart-harness/tools/commit_docs.py` — commit-range documentation synchronization checks.",
+        "- `.smart-harness/install-manifest.json` — installed paths, checksums, platforms, version, and backup history.",
+        "- `.smart-harness/vendor/` — pinned provenance and license notices carried with installed artifacts.",
+        "",
+        "Installation is preflighted and transactional, uses atomic settings/manifest writes, rolls back touched paths on failure, and supports `--dry-run` and `--status`.",
         "",
         "## Runtime network dependency",
         "",
         "None. Installers copy repository-local files only. Host applications and target-project dependencies are prerequisites, not downloaded by this harness.",
         "",
     ]
+
+
+def generate() -> str:
+    version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+    models = json.loads((ROOT / "config/models.json").read_text(encoding="utf-8"))
+    sources = json.loads((ROOT / "vendor/SOURCES.json").read_text(encoding="utf-8"))
+    skills = collect_skills()
+    copilot_files = sorted(p.name for p in (ROOT / "copilot/agents").glob("*.agent.md"))
+    claude_agents = sorted(p.name for p in (ROOT / "claude-code/agents").glob("*.md"))
+    claude_commands = sorted(p.name for p in (ROOT / "claude-code/commands").glob("*.md"))
+    lines = header_lines(version, skills, copilot_files, claude_agents, claude_commands)
+    lines += model_lines(models)
+    lines += skill_lines(skills)
+    lines += adapter_lines(copilot_files, claude_agents, claude_commands)
+    lines += vendor_lines(sources)
+    lines += footer_lines()
     return "\n".join(lines)
 
 

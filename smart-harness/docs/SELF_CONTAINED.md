@@ -18,6 +18,8 @@ Runtime installers may copy files from `smart-harness/` into project or user con
 
 Host products are prerequisites: VS Code/GitHub Copilot, Claude Code, or Pi. The target project retains its own normal language/build/test dependencies.
 
+Installation is preflighted and transactional. Replaced paths are backed up, failure triggers rollback, settings and manifests use atomic writes, and `--dry-run` / `--status` expose intended or installed state. The installed support directory includes the complexity analyzer plus pinned third-party provenance and license notices.
+
 ## Vendored content
 
 All third-party-derived skill text is stored in `shared/skills/`, with pinned provenance and licenses under `vendor/`.

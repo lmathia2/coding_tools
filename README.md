@@ -11,6 +11,6 @@ The daily interface is deliberately small:
 - `Dev` / `/dev` — plan, implement, document, and verify;
 - `ReviewPR` / `/review-pr` — isolated execution-based PR review.
 
-v0.7 consolidates overlapping policies and agents around a simple default: one coordinator, one implementation context, deterministic verification; additional models run only when uncertainty or risk makes an independent perspective valuable.
+The current harness decomposes non-trivial work into coherent commit-sized units. Every implementation unit runs `plan -> implement -> document -> simplify -> verify`, keeps live documentation with the code commit, measures changed-code complexity, and uses additional models only when independence, uncertainty, or risk makes them valuable.
 
 No external skill pack, plugin, MCP server, package, or repository is installed by the harness.

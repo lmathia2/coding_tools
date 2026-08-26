@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Made `plan -> implement -> document -> simplify -> verify` mandatory for every coherent work unit and added isolated parallel work-unit guidance.
+- Added a normal-cost Claude Sonnet work-unit agent so independent commit-sized units can run concurrently without granting write tools to the fast exploration agent.
+- Made live authoritative documentation a commit-level contract covering implementation, APIs/contracts, purpose, intent, invariants, and relevant operational behavior.
+- Added a dependency-free Python cyclomatic-complexity analyzer with per-function baseline deltas and integrated it into development and PR review.
+- Made fast Copilot and Claude specialists read-only, and hardened Pi children with capability allowlists, root confinement, sanitized environments, opt-in auto-approval, and reliable timeout serialization.
+- Replaced duplicated installers with one preflighted transactional implementation supporting rollback, atomic settings updates, manifests, dry runs, status checks, and installed provenance notices.
+- Expanded CI and validation around adapter role contracts, failure paths, installation idempotency, and runtime helpers.
+
 ## 0.7.0 — Simplification release
 
 - Collapsed eleven overlapping process skills into one `engineering-workflow` skill while preserving plan-first execution, evidence-based debugging/TDD, safe parallelism, minimal design, documentation synchronization, and verification.

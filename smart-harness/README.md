@@ -18,9 +18,9 @@ The default is intentionally small:
 
 ```text
 request
-  -> proportional plan
-  -> one implementation context
-  -> deterministic verification
+  -> coherent commit-sized work units
+  -> plan -> implement -> document -> simplify -> verify per unit
+  -> integrate independent units in dependency order
   -> done
 ```
 
@@ -32,15 +32,15 @@ The harness intentionally caps its core discoverable surface:
 
 - **5 shared skills**: `engineering-workflow`, `pr-review`, `product-behavior-spec`, `skill-authoring`, `vscode`;
 - **Copilot**: 2 visible coordinators + 5 hidden specialists;
-- **Claude Code**: 2 visible commands + 4 hidden specialists;
+- **Claude Code**: 2 visible commands + 5 hidden specialists;
 - **Pi**: 2 prompts + one local parallel-child helper.
 
 CI rejects accidental re-expansion of these core budgets unless the validator is deliberately changed in the same review.
 
 ## Smart development routing
 
-- fast/tool-heavy/mechanical → Terra (Copilot) or Haiku (Claude);
-- normal implementation → Sonnet;
+- fast/tool-heavy read-only exploration, measurement, verification → Terra (Copilot) or Haiku (Claude);
+- mechanical and normal implementation → Sonnet;
 - complex implementation/debugging → Sol or Opus 4.7;
 - architecture/security/adjudication → Opus only when warranted.
 
@@ -50,14 +50,20 @@ Routine work does not automatically receive a second premium LLM review when tes
 
 `engineering-workflow` owns the default process in one place:
 
-1. understand repository facts and plan before edits;
-2. parallelize only meaningful independent work;
-3. choose the smallest correct design;
-4. debug from evidence and use pragmatic TDD where useful;
-5. update affected authoritative documentation with code;
+1. decompose non-trivial work into coherent, independently committable units;
+2. run `plan -> implement -> document -> simplify -> verify` for every unit;
+3. parallelize only independent units with disjoint ownership and isolated worktrees;
+4. keep implementation, API/contracts, purpose, intent, and invariants live in the same commit as code;
+5. score changed-function cyclomatic complexity and simplify without gaming the number;
 6. run executable verification before completion.
 
-Documentation impact is always assessed, but `NOT AFFECTED` is valid with a concrete reason. The harness does not create documentation merely to satisfy a ritual.
+Documentation impact is always assessed. A code commit with no documentation changes records `Docs-Impact: none — <reason>`. The harness does not create low-value documentation merely to satisfy a ritual.
+
+For Python, the installed dependency-free analyzer reports function scores and optional baseline deltas:
+
+```bash
+python3 .smart-harness/tools/complexity.py path/to/code.py --compare-ref <unit-start-ref>
+```
 
 ## PR review
 
@@ -103,6 +109,13 @@ Global defaults:
 
 ```bash
 bash smart-harness/install-global.sh all
+```
+
+Preview or inspect installation state:
+
+```bash
+bash smart-harness/install.sh all /path/to/project --dry-run
+bash smart-harness/install.sh all /path/to/project --status
 ```
 
 ## Models

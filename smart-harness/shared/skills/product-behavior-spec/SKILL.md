@@ -184,7 +184,7 @@ When behavior changes:
 6. update coverage and triage status;
 7. report any behavior that could not be reverified.
 
-`documentation-sync` treats an existing product behavior specification as authoritative documentation that must change with the code.
+`engineering-workflow` treats an existing product behavior specification as live authoritative documentation that must change in the same logical commit as the code.
 
 ## Completion report
 

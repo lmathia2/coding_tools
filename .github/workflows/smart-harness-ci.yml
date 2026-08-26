@@ -29,7 +29,13 @@ jobs:
         run: python3 smart-harness/scripts/validate-harness.py
 
       - name: Validate Python syntax
-        run: python3 -m compileall -q smart-harness/config smart-harness/scripts smart-harness/pi/tools smart-harness/shared/skills/product-behavior-spec/references
+        run: python3 -m compileall -q smart-harness/config smart-harness/scripts smart-harness/tools smart-harness/tests smart-harness/pi/tools smart-harness/shared/skills/product-behavior-spec/references
+
+      - name: Run harness regression tests
+        run: python3 -m unittest discover -s smart-harness/tests -v
+
+      - name: Check harness code complexity
+        run: python3 smart-harness/tools/complexity.py smart-harness/config smart-harness/scripts smart-harness/tools smart-harness/pi/tools --fail-above 20
 
       - name: Validate shell syntax
         run: |
@@ -53,11 +59,29 @@ jobs:
           test ! -e "$tmp/.github/agents/worker-terra.agent.md"
           test -f "$tmp/.claude/commands/dev.md"
           test -f "$tmp/.claude/agents/fast.md"
+          test -f "$tmp/.claude/agents/worker.md"
           test ! -e "$tmp/.claude/agents/fast-verifier.md"
           test ! -e "$tmp/.claude/agents/deep-worker.md"
           test -f "$tmp/.pi/prompts/dev.md"
           test -f "$tmp/.pi/tools/parallel-pi.py"
+          test -f "$tmp/.smart-harness/tools/complexity.py"
+          test -f "$tmp/.smart-harness/tools/commit_docs.py"
+          test -f "$tmp/.smart-harness/vendor/THIRD_PARTY_NOTICES.md"
+          test -f "$tmp/.smart-harness/install-manifest.json"
           test -f "$tmp/.claude/skills/engineering-workflow/SKILL.md"
           test -f "$tmp/.claude/skills/pr-review/SKILL.md"
           test ! -e "$tmp/.claude/skills/plan-first"
           test ! -e "$tmp/.claude/skills/ponytail"
+
+          bash smart-harness/install.sh all "$tmp" --status
+
+      - name: Smoke-test preflight failure is non-mutating
+        run: |
+          tmp="$(mktemp -d)"
+          mkdir -p "$tmp/.pi"
+          printf 'invalid-json\n' > "$tmp/.pi/settings.json"
+          if bash smart-harness/install.sh all "$tmp"; then
+            echo "installer unexpectedly accepted invalid Pi settings" >&2
+            exit 1
+          fi
+          test ! -e "$tmp/.claude"

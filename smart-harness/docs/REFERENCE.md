@@ -6,8 +6,18 @@
 
 - Shared discoverable skills: **5** (budget: 5)
 - Copilot agent definitions: **7** (2 visible + 5 hidden)
-- Claude Code hidden agents: **4** (budget: 4)
+- Claude Code hidden agents: **5** (budget: 5)
 - Claude Code visible commands: **2** (budget: 2)
+
+## Work-unit lifecycle
+
+Every implementation unit is coherent and independently committable, with explicit dependencies and ownership:
+
+```text
+plan -> implement -> document -> simplify -> verify
+```
+
+Live authoritative documentation travels in the same logical commit as code. Changed Python functions can be scored with `.smart-harness/tools/complexity.py`; other languages use repository-native analyzers.
 
 ## Model routing
 
@@ -35,8 +45,8 @@
 
 | Skill | Description | Local path |
 |---|---|---|
-| `engineering-workflow` | Default end-to-end engineering policy for coding tasks. Use for implementation, debugging, refactoring, architecture work, and maintenance: understand the repository, make a proportional plan before edits, parallelize only useful independent work, choose the smallest correct design, keep authoritative documentation synchronized, and verify with executable evidence. | `shared/skills/engineering-workflow` |
-| `pr-review` | Default deep pull-request review policy. Use for reviewing another developer's PR: plan briefly, check out the exact committed PR HEAD in an isolated worktree, run one semantic review and one executable verification lane in parallel, execute complete feasible unit/integration suites plus relevant static/runtime/docs checks, add specialist security/adversarial review only for high-risk changes, and independently challenge serious findings. | `shared/skills/pr-review` |
+| `engineering-workflow` | Default end-to-end engineering policy for coding tasks. Use for implementation, debugging, refactoring, architecture work, and maintenance: decompose work into coherent commit-sized units, run plan → implement → document → simplify → verify for every unit, keep authoritative documentation live with code, measure changed-code complexity, and verify with executable evidence. | `shared/skills/engineering-workflow` |
+| `pr-review` | Default deep pull-request review policy. Review exact PR HEAD and each logical commit in an isolated worktree, verify plan → implement → document → simplify → verify coherence, measure changed-code complexity and deltas, run semantic and executable lanes, escalate only for high-risk changes, and independently challenge serious findings. | `shared/skills/pr-review` |
 | `product-behavior-spec` | Build and maintain an outside-in product behavior specification from code, tests, and the running product. Use when asked for a product description, user-experience behavior spec, feature-by-feature behavior documentation, executable verification catalog, or when extending an existing behavior-spec directory. | `shared/skills/product-behavior-spec` |
 | `skill-authoring` | Maintenance-only workflow for creating or changing Smart Harness skills, commands, prompts, or agent policies. Use when editing the harness itself; define precise triggers and observable behavior, keep instructions minimal, pressure-test conflicts and failure cases, update documentation/provenance, and run regression validation. | `shared/skills/skill-authoring` |
 | `vscode` | Vendored Pi-compatible VS Code CLI skill for showing file and Git differences to the user. Use when a visual side-by-side comparison is helpful and the existing `code` CLI is available. | `shared/skills/vscode` |
@@ -59,6 +69,7 @@
 - `deep-reasoner.md`
 - `fast.md`
 - `top-reviewer.md`
+- `worker.md`
 
 ### Claude Code commands
 
@@ -72,6 +83,15 @@
 | Superpowers methodology adaptation | `b36e0829c6d0140e93cfef2ca599b1b07d4a7797` | MIT | `shared/skills/engineering-workflow`, `shared/skills/skill-authoring` |
 | Ponytail adaptation | `2ed6c52c9d7e5e56942508591085fd45dea277d3` | MIT | `shared/skills/engineering-workflow`, `shared/skills/pr-review` |
 | Pi VS Code skill adaptation | `90bb51cae36515a648515b633a81c0c6efc8c74d` | MIT | `shared/skills/vscode` |
+
+## Installed support tools
+
+- `.smart-harness/tools/complexity.py` — dependency-free Python function cyclomatic complexity and baseline deltas.
+- `.smart-harness/tools/commit_docs.py` — commit-range documentation synchronization checks.
+- `.smart-harness/install-manifest.json` — installed paths, checksums, platforms, version, and backup history.
+- `.smart-harness/vendor/` — pinned provenance and license notices carried with installed artifacts.
+
+Installation is preflighted and transactional, uses atomic settings/manifest writes, rolls back touched paths on failure, and supports `--dry-run` and `--status`.
 
 ## Runtime network dependency
 

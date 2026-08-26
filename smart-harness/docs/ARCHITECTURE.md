@@ -9,9 +9,10 @@ Provide one high-quality coding interface across Copilot, Claude Code, and Pi wi
 - two user-facing workflows: development and PR review;
 - quality-first model routing with token/latency discipline;
 - planning before source edits;
-- useful parallelism without agent fan-out for its own sake;
+- coherent commit-sized work units and useful parallelism without agent fan-out for its own sake;
 - smallest correct implementation;
-- authoritative documentation synchronized with behavior;
+- live authoritative documentation synchronized in every logical code commit;
+- measured changed-code complexity and an explicit simplification stage;
 - executable verification;
 - exact-HEAD isolated PR review;
 - self-contained installation.
@@ -20,9 +21,9 @@ Provide one high-quality coding interface across Copilot, Claude Code, and Pi wi
 
 ```text
 request
-  -> coordinator makes proportional plan
-  -> one implementation context
-  -> deterministic verification
+  -> coordinator defines work-unit dependency graph
+  -> each unit: plan -> implement -> document -> simplify -> verify
+  -> integrate independently completed units in dependency order
   -> completion
 ```
 
@@ -48,7 +49,7 @@ Visible: `Dev`, `ReviewPR`.
 
 Hidden specialists:
 
-- `FastTerra` — exploration, deterministic execution, mechanical edits;
+- `FastTerra` — read-only exploration, deterministic execution, and complexity measurement;
 - `WorkerSonnet` — normal implementation;
 - `WorkerSol` — complex implementation;
 - `DeepSol` — read-only debugging/challenge/PR reasoning;
@@ -62,12 +63,17 @@ Visible: `/dev`, `/review-pr`.
 
 Hidden specialists:
 
-- `smart-fast` — Haiku exploration, deterministic execution, mechanical edits;
+- `smart-fast` — read-only exploration, deterministic execution, and complexity measurement;
+- `smart-worker` — Sonnet implementation of one normal/mechanical commit-sized unit;
 - `smart-deep-reasoner` — Opus 4.7 read-only deep reasoning;
 - `smart-deep-implementer` — Opus 4.7 complex implementation;
 - `smart-top-reviewer` — Opus 4.8 architecture/security/adjudication.
 
-Normal implementation stays in the Sonnet coordinator conversation to avoid unnecessary context duplication.
+Normal implementation uses one Sonnet worker per independent commit-sized unit. This creates a real writer boundary while keeping the coordinator focused on dependency planning and integration.
+
+### Capability boundary
+
+Fast exploration agents have no structured edit/write tools, and exploration mode does not invoke shell execution. Verification necessarily executes repository commands, which may create caches or build outputs even when no source edit is intended; execution lanes therefore capture Git status before/after and use the delegated worktree. Pi additionally enforces capability allowlists, root-confined working directories, sanitized environments, and opt-in auto-approval. Prompt-level “read-only” wording is not treated as an operating-system sandbox.
 
 ### Pi
 
@@ -76,8 +82,8 @@ Visible: `/dev`, `/review-pr`. A bundled standard-library helper can run indepen
 ## Development routing
 
 ```text
-mechanical/tool-heavy -> fast
-normal                 -> Sonnet
+exploration/measurement/verification -> fast read-only
+mechanical/normal implementation     -> Sonnet
 complex/debugging      -> Sol / Opus 4.7
 architecture/security  -> Opus only when warranted
 ```
@@ -89,6 +95,7 @@ For normal low-risk work, passing behavior tests plus compiler/type/static evide
 ```text
 resolve exact base + PR HEAD
   -> detached worktree
+  -> inspect commit/work-unit coherence and live documentation
   -> parallel:
        semantic deep review
        full deterministic execution
@@ -102,11 +109,13 @@ resolve exact base + PR HEAD
 
 ## Invariants
 
-1. No source edit before a proportional plan.
-2. Parallelism requires real independence; writers require isolated ownership/worktrees.
-3. Affected authoritative documentation changes with code.
-4. Unexecuted checks are never PASS.
-5. PR review executes complete feasible configured unit and integration suites at exact PR HEAD.
-6. Premium-model fan-out is conditional on uncertainty/risk.
-7. Product behavior specification generation is explicit, never automatic.
-8. Runtime setup performs no external dependency installation.
+1. Every implementation unit runs `plan -> implement -> document -> simplify -> verify`.
+2. Non-trivial work is decomposed into coherent, independently committable units.
+3. Parallelism requires real independence; writers require isolated ownership/worktrees.
+4. Live authoritative documentation changes in the same logical commit as code, or the commit records a concrete no-impact reason.
+5. Changed-function complexity is measured and increases are explained; scores are not gamed at the expense of cohesion.
+6. Unexecuted checks are never PASS.
+7. PR review executes complete feasible configured unit and integration suites at exact PR HEAD.
+8. Premium-model fan-out is conditional on uncertainty/risk.
+9. Product behavior specification generation is explicit, never automatic.
+10. Runtime setup performs no external dependency installation.

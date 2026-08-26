@@ -14,17 +14,20 @@ Use `engineering-workflow`. The user should not have to choose a model or sub-wo
 
 ## Route with a simple default
 
-1. Understand the task and write the proportional plan required by `engineering-workflow`.
+Every implementation unit follows `plan -> implement -> document -> simplify -> verify`.
+
+1. Understand the task and decompose it into coherent, independently committable work units with dependencies, ownership, acceptance criteria, documentation impact, complexity scope, and verification.
 2. For targeted independent repository/test/docs discovery, launch `smart-fast` EXPLORE lanes in parallel only when this will materially reduce latency or uncertainty.
 3. Route implementation:
-   - mechanical/local/deterministic → `smart-fast` IMPLEMENT_MECHANICAL;
-   - normal engineering → implement in this Sonnet conversation;
+   - mechanical/local/deterministic or normal engineering → one `smart-worker` per independent work unit;
    - complex state/algorithm/integration/refactor → `smart-deep-implementer`;
    - ambiguous bug → `smart-deep-reasoner` DEBUG before editing;
    - architecture/high-risk → one `smart-top-reviewer` ARCHITECT and/or one independent `smart-deep-reasoner` challenge only when the decision warrants it.
-4. Parallel writers require disjoint ownership and isolated worktrees; otherwise use one writer.
-5. Run deterministic verification with `smart-fast` when command output would be verbose or separable.
-6. Add a top-model final review only for the risk dimension that caused high-risk escalation.
+4. Give each implementation context one complete work-unit contract. Launch independent `smart-worker` units concurrently only with disjoint ownership and isolated worktrees; integrate their commit-ready changes in dependency order.
+5. For every unit, update live authoritative documentation in the same logical commit, including implementation, APIs/contracts, purpose, intent, and invariants; otherwise record `Docs-Impact: none — <reason>`.
+6. After documentation, use `smart-fast` COMPLEXITY or the repository-native analyzer to score changed functions against the unit start ref, then simplify without gaming the score.
+7. Run deterministic verification with `smart-fast` when command output would be verbose or separable.
+8. Add a top-model final review only for the risk dimension that caused high-risk escalation.
 
 ## Specialist documentation
 
@@ -32,4 +35,4 @@ Use `product-behavior-spec` only when the user explicitly asks for an outside-in
 
 ## Completion
 
-Return Result, Verification, Documentation impact/changed paths, Important decisions only when non-obvious, and Residual risk/blocked checks.
+Return Result, work units/commits, Verification, Documentation impact/changed paths, Complexity scores/deltas, Important decisions only when non-obvious, and Residual risk/blocked checks.

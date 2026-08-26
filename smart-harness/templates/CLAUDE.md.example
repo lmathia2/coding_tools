@@ -37,12 +37,12 @@ Keep this concise and repository-specific.
 
 ## Documentation policy
 
-Documentation is part of done.
+Documentation is a live specification and part of every logical code commit.
 
 When behavior, APIs, functions, architecture, configuration, schemas, migrations, or operations change:
 
-- update the authoritative docs in the same change;
-- explain function, intent, and goals;
+- update the authoritative docs in the same commit;
+- explain implementation, function, purpose, intent, and protected goals/invariants;
 - document contracts, errors, side effects/state, and relevant failure behavior;
 - update examples, ADRs, migration/rollback, and runbooks as applicable;
 - run repository-native documentation checks.
@@ -55,4 +55,4 @@ Use `Dev` / `/dev` for development.
 
 Use `ReviewPR` / `/review-pr` for another developer's PR.
 
-Plan before editing. Parallelize independent work. Do not claim completion without executable and documentation evidence.
+Decompose non-trivial work into coherent, independently committable units with explicit dependencies and ownership. Every unit follows `plan -> implement -> document -> simplify -> verify`. Parallel writers use isolated worktrees. Do not claim completion without executable, complexity, and documentation evidence.

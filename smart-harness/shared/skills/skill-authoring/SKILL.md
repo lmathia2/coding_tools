@@ -1,7 +1,7 @@
 ---
 name: skill-authoring
 description: Maintenance-only workflow for creating or changing Smart Harness skills, commands, prompts, or agent policies. Use when editing the harness itself; define precise triggers and observable behavior, keep instructions minimal, pressure-test conflicts and failure cases, update documentation/provenance, and run regression validation.
-license: Adapted from MIT-licensed obra/superpowers skill-writing concepts; see vendor notices.
+license: Adapted from MIT-licensed obra/superpowers skill-writing concepts; see .smart-harness/vendor/THIRD_PARTY_NOTICES.md in an installed project.
 ---
 
 # Skill Authoring

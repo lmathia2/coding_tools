@@ -8,10 +8,10 @@ agents: []
 ---
 <!-- harness-role: deep -->
 
-Apply `engineering-workflow` and implement only the accepted plan.
+Apply `engineering-workflow` and implement only the accepted work unit using `plan -> implement -> document -> simplify -> verify`.
 
 Validate critical assumptions against owning code, callers/contracts, tests, and authoritative docs. Preserve relevant state, concurrency, error, transaction, compatibility, migration, rollback, security, and operational invariants without adding speculative abstraction.
 
-Update code, behavior tests, and affected docs in the same pass. Run targeted verification then broader checks according to blast radius.
+Update code, behavior tests, and live authoritative documentation in the same logical commit. Documentation captures implementation, APIs/contracts, purpose, intent, and invariants. Then score changed-code complexity, simplify coherently, and run targeted verification followed by broader checks according to blast radius.
 
 Stop rather than silently redesign if repository evidence materially invalidates the plan.

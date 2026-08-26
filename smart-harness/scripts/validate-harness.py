@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate v0.7 Smart Harness structure, simplicity budget, and core invariants."""
+"""Validate Smart Harness structure, simplicity budget, and core invariants."""
 from __future__ import annotations
 
 import json
@@ -19,6 +19,7 @@ EXPECTED_SKILLS = {
 }
 EXPECTED_CLAUDE_AGENTS = {
     "fast.md",
+    "worker.md",
     "deep-reasoner.md",
     "deep-implementer.md",
     "top-reviewer.md",
@@ -32,6 +33,22 @@ EXPECTED_COPILOT_AGENTS = {
     "worker-sol.agent.md",
     "deep-sol.agent.md",
     "security-opus.agent.md",
+}
+EXPECTED_ADAPTER_ROLES = {
+    "copilot/agents/dev.agent.md": ("copilot", "coordinator"),
+    "copilot/agents/review-pr.agent.md": ("copilot", "coordinator"),
+    "copilot/agents/fast-terra.agent.md": ("copilot", "fast"),
+    "copilot/agents/worker-sonnet.agent.md": ("copilot", "normal"),
+    "copilot/agents/worker-sol.agent.md": ("copilot", "deep"),
+    "copilot/agents/deep-sol.agent.md": ("copilot", "deep"),
+    "copilot/agents/security-opus.agent.md": ("copilot", "top"),
+    "claude-code/commands/dev.md": ("claude_code", "coordinator"),
+    "claude-code/commands/review-pr.md": ("claude_code", "coordinator"),
+    "claude-code/agents/fast.md": ("claude_code", "fast"),
+    "claude-code/agents/worker.md": ("claude_code", "normal"),
+    "claude-code/agents/deep-reasoner.md": ("claude_code", "deep"),
+    "claude-code/agents/deep-implementer.md": ("claude_code", "deep"),
+    "claude-code/agents/top-reviewer.md": ("claude_code", "top"),
 }
 LEGACY_SKILLS = {
     "codebase-map", "context-snapshot", "documentation-sync", "engineering-core",
@@ -71,11 +88,52 @@ def frontmatter_name(path: Path) -> str:
     return name.group(1).strip().strip("'\"")
 
 
-def main() -> int:
-    version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
-    if version != "0.7.0":
-        fail(f"VERSION must be 0.7.0, found {version}")
+def frontmatter(path: Path) -> dict[str, str]:
+    text = path.read_text(encoding="utf-8")
+    if not text.startswith("---\n") or "\n---\n" not in text[4:]:
+        fail(f"{path.relative_to(ROOT)} invalid frontmatter")
+    block = text[4:text.find("\n---\n", 4)]
+    values = {}
+    for line in block.splitlines():
+        if ":" in line and not line.startswith((" ", "\t")):
+            key, value = line.split(":", 1)
+            values[key.strip()] = value.strip().strip("'\"")
+    return values
 
+
+def validate_adapter_roles(models: dict[str, object]) -> None:
+    marker = re.compile(r"<!--\s*harness-role:\s*([a-z-]+)\s*-->")
+    for relative, (platform, expected_role) in EXPECTED_ADAPTER_ROLES.items():
+        path = ROOT / relative
+        roles = marker.findall(path.read_text(encoding="utf-8"))
+        if roles != [expected_role]:
+            fail(f"{relative} expected one {expected_role!r} role marker, found {roles}")
+        metadata = frontmatter(path)
+        expected_model = models[platform][expected_role]["model"]
+        if metadata.get("model") != expected_model:
+            fail(f"{relative} model drift: expected {expected_model!r}, found {metadata.get('model')!r}")
+        expected_effort = models[platform][expected_role].get("effort")
+        if platform == "claude_code" and metadata.get("effort") != expected_effort:
+            fail(f"{relative} effort drift: expected {expected_effort!r}, found {metadata.get('effort')!r}")
+
+
+def require_absent_terms(path: Path, terms: tuple[str, ...]) -> None:
+    text = path.read_text(encoding="utf-8").lower()
+    present = [term for term in terms if term.lower() in text]
+    if present:
+        fail(f"{path.relative_to(ROOT)} contains forbidden terms {present}")
+
+
+def validate_version_and_models() -> str:
+    version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+    if not re.fullmatch(r"\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", version):
+        fail(f"VERSION must be semantic, found {version!r}")
+    models = json.loads((ROOT / "config/models.json").read_text(encoding="utf-8"))
+    validate_adapter_roles(models)
+    return version
+
+
+def validate_budgets() -> None:
     skill_dirs = {p.parent.name for p in (ROOT / "shared/skills").glob("*/SKILL.md")}
     if skill_dirs != EXPECTED_SKILLS:
         fail(f"shared skill budget drift: expected {sorted(EXPECTED_SKILLS)}, found {sorted(skill_dirs)}")
@@ -96,6 +154,8 @@ def main() -> int:
     if copilot_agents != EXPECTED_COPILOT_AGENTS:
         fail(f"Copilot agent budget drift: expected {sorted(EXPECTED_COPILOT_AGENTS)}, found {sorted(copilot_agents)}")
 
+
+def validate_identities() -> None:
     # Catch duplicate Claude agent identities (the v0.6 fast-executor/fast-verifier bug).
     identities = {}
     for path in (ROOT / "claude-code/agents").glob("*.md"):
@@ -107,9 +167,13 @@ def main() -> int:
     for path in (ROOT / "shared/skills").glob("*/SKILL.md"):
         frontmatter_name(path)
 
-    require_terms(ROOT / "copilot/agents/dev.agent.md", ("engineering-workflow", "proportional plan", "verification", "documentation"))
-    require_terms(ROOT / "claude-code/commands/dev.md", ("engineering-workflow", "verification", "documentation"))
-    require_terms(ROOT / "pi/prompts/dev.md", ("engineering-workflow", "verification", "documentation"))
+
+def validate_workflow_contracts() -> None:
+    lifecycle = ("plan -> implement -> document -> simplify -> verify", "work unit", "complexity", "docs-impact")
+    require_terms(ROOT / "shared/skills/engineering-workflow/SKILL.md", lifecycle)
+    require_terms(ROOT / "copilot/agents/dev.agent.md", ("engineering-workflow", *lifecycle))
+    require_terms(ROOT / "claude-code/commands/dev.md", ("engineering-workflow", *lifecycle))
+    require_terms(ROOT / "pi/prompts/dev.md", ("engineering-workflow", *lifecycle))
 
     for path in (
         ROOT / "copilot/agents/review-pr.agent.md",
@@ -117,12 +181,17 @@ def main() -> int:
         ROOT / "pi/prompts/review-pr.md",
         ROOT / "shared/skills/pr-review/SKILL.md",
     ):
-        require_terms(path, ("worktree", "unit", "integration", "semantic", "execution"))
+        require_terms(path, ("worktree", "unit", "integration", "semantic", "execution", "complexity", "docs-impact"))
+
+    require_absent_terms(ROOT / "copilot/agents/fast-terra.agent.md", ("'edit'", "implement_mechanical"))
+    require_absent_terms(ROOT / "claude-code/agents/fast.md", ("edit,", "write", "implement_mechanical"))
 
     # Product behavior generation must remain specialist/conditional.
     require_terms(ROOT / "shared/skills/engineering-workflow/SKILL.md", ("do not create a product behavior specification unless the user asks" ,))
     require_terms(ROOT / "shared/skills/pr-review/SKILL.md", ("do not create one during review",))
 
+
+def validate_vendor() -> None:
     sources = json.loads((ROOT / "vendor/SOURCES.json").read_text(encoding="utf-8"))
     for item in sources["components"]:
         license_path = ROOT / item["license_file"]
@@ -132,8 +201,13 @@ def main() -> int:
             if not (ROOT / local).exists():
                 fail(f"vendor source points to missing local path {local}")
 
+
+def validate_runtime_independence() -> None:
     # Runtime installers/helpers must not fetch or install third-party harness dependencies.
-    runtime_files = [ROOT / "install.sh", ROOT / "install-global.sh", *list((ROOT / "pi/tools").glob("*.py"))]
+    runtime_files = [
+        ROOT / "install.sh", ROOT / "install-global.sh", ROOT / "scripts/install_harness.py",
+        *list((ROOT / "tools").glob("*.py")), *list((ROOT / "pi/tools").glob("*.py")),
+    ]
     forbidden = [
         r"git\s+clone", r"gh\s+skill\s+install", r"/plugin\s+install",
         r"copilot\s+plugin\s+install", r"pi\s+install", r"npm\s+install",
@@ -145,6 +219,8 @@ def main() -> int:
             if re.search(pattern, text, re.I):
                 fail(f"{path.relative_to(ROOT)} contains forbidden runtime install/fetch pattern {pattern}")
 
+
+def validate_removed_surfaces() -> None:
     # Old network-sync surfaces must stay gone.
     for rel in (
         "integrations/install-methodologies.sh", "integrations/upstreams.lock.json",
@@ -156,7 +232,23 @@ def main() -> int:
     if (REPO / ".github/workflows/smart-harness-upstream-sync.yml").exists():
         fail("legacy upstream sync workflow remains")
 
-    print("smart harness v0.7 validation: PASS")
+
+def validate_required_refinements() -> None:
+    for required in (ROOT / "tools/complexity.py", ROOT / "tools/commit_docs.py", ROOT / "tests/test_harness.py", ROOT / "templates/WORK_UNIT.md"):
+        if not required.exists():
+            fail(f"missing required harness component {required.relative_to(ROOT)}")
+
+
+def main() -> int:
+    version = validate_version_and_models()
+    validate_budgets()
+    validate_identities()
+    validate_workflow_contracts()
+    validate_vendor()
+    validate_runtime_independence()
+    validate_removed_surfaces()
+    validate_required_refinements()
+    print(f"smart harness {version} validation: PASS")
     return 0
 
 
