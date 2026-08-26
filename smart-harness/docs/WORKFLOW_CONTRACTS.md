@@ -59,7 +59,31 @@ Minimality is part of semantic review; it is not a separate review lane.
 
 ## Model configuration API
 
-`config/models.json` maps semantic roles (`coordinator`, `normal`, `deep`, `fast`, `top`) to provider-specific model identifiers. `config/configure-models.py` applies/checks adapter frontmatter.
+`config/models.json` schema version 2 provides named profiles. Each profile defines platform-specific `{model, reasoning}` specifications for:
+
+- workflow coordinators: `dev`, `review_pr`;
+- reusable specialist roles: `normal`, `deep`, `fast`, `top`.
+
+`model` may be `null` only for Pi, where it means inherit the current session/default model. `reasoning` is translated to Copilot CLI `reasoningEffort`, Claude Code `effort`, or Pi `thinking`.
+
+```text
+configure-models.py --list-profiles
+configure-models.py --show [--profile NAME]
+configure-models.py --profile NAME
+configure-models.py --check [--profile NAME]
+```
+
+Without `--profile`, commands resolve `active_profile`. Applying `--profile NAME` synchronizes adapter frontmatter, persists the selection, and regenerates `docs/REFERENCE.md`. With `--check`, selection is non-mutating and exits nonzero when adapter files do not match that profile.
+
+Installed Pi child API:
+
+```text
+parallel-pi.py --workflow {dev|review_pr} [--profile NAME] [--model-config PATH]
+```
+
+Each JSON task accepts `role`, `model`, and `thinking`. `role` defaults to `fast`; profile values supply missing runtime fields, and explicit task fields win. Pi's main coordinator remains controlled by the active Pi session because prompt files cannot switch the running session model.
+
+The Pi helper resolves project `.smart-harness/config/models.json` first and global `~/.smart-harness/config/models.json` second. `--model-config` overrides both locations.
 
 ## Installer API
 

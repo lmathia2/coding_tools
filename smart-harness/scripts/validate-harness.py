@@ -9,6 +9,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parent
+sys.path.insert(0, str(ROOT / "config"))
+from model_config import get_profile, load_config, resolve_spec  # noqa: E402
 
 EXPECTED_SKILLS = {
     "engineering-workflow",
@@ -28,27 +30,27 @@ EXPECTED_CLAUDE_COMMANDS = {"dev.md", "review-pr.md"}
 EXPECTED_COPILOT_AGENTS = {
     "dev.agent.md",
     "review-pr.agent.md",
-    "fast-terra.agent.md",
-    "worker-sonnet.agent.md",
-    "worker-sol.agent.md",
-    "deep-sol.agent.md",
-    "security-opus.agent.md",
+    "fast-lane.agent.md",
+    "worker-normal.agent.md",
+    "worker-deep.agent.md",
+    "deep-reasoner.agent.md",
+    "top-reviewer.agent.md",
 }
-EXPECTED_ADAPTER_ROLES = {
-    "copilot/agents/dev.agent.md": ("copilot", "coordinator"),
-    "copilot/agents/review-pr.agent.md": ("copilot", "coordinator"),
-    "copilot/agents/fast-terra.agent.md": ("copilot", "fast"),
-    "copilot/agents/worker-sonnet.agent.md": ("copilot", "normal"),
-    "copilot/agents/worker-sol.agent.md": ("copilot", "deep"),
-    "copilot/agents/deep-sol.agent.md": ("copilot", "deep"),
-    "copilot/agents/security-opus.agent.md": ("copilot", "top"),
-    "claude-code/commands/dev.md": ("claude_code", "coordinator"),
-    "claude-code/commands/review-pr.md": ("claude_code", "coordinator"),
-    "claude-code/agents/fast.md": ("claude_code", "fast"),
-    "claude-code/agents/worker.md": ("claude_code", "normal"),
-    "claude-code/agents/deep-reasoner.md": ("claude_code", "deep"),
-    "claude-code/agents/deep-implementer.md": ("claude_code", "deep"),
-    "claude-code/agents/top-reviewer.md": ("claude_code", "top"),
+EXPECTED_ADAPTER_TARGETS = {
+    "copilot/agents/dev.agent.md": ("copilot", "coordinator", "dev"),
+    "copilot/agents/review-pr.agent.md": ("copilot", "coordinator", "review_pr"),
+    "copilot/agents/fast-lane.agent.md": ("copilot", "fast", None),
+    "copilot/agents/worker-normal.agent.md": ("copilot", "normal", None),
+    "copilot/agents/worker-deep.agent.md": ("copilot", "deep", None),
+    "copilot/agents/deep-reasoner.agent.md": ("copilot", "deep", None),
+    "copilot/agents/top-reviewer.agent.md": ("copilot", "top", None),
+    "claude-code/commands/dev.md": ("claude_code", "coordinator", "dev"),
+    "claude-code/commands/review-pr.md": ("claude_code", "coordinator", "review_pr"),
+    "claude-code/agents/fast.md": ("claude_code", "fast", None),
+    "claude-code/agents/worker.md": ("claude_code", "normal", None),
+    "claude-code/agents/deep-reasoner.md": ("claude_code", "deep", None),
+    "claude-code/agents/deep-implementer.md": ("claude_code", "deep", None),
+    "claude-code/agents/top-reviewer.md": ("claude_code", "top", None),
 }
 LEGACY_SKILLS = {
     "codebase-map", "context-snapshot", "documentation-sync", "engineering-core",
@@ -101,20 +103,27 @@ def frontmatter(path: Path) -> dict[str, str]:
     return values
 
 
-def validate_adapter_roles(models: dict[str, object]) -> None:
+def validate_adapter_roles(profile: dict[str, object]) -> None:
     marker = re.compile(r"<!--\s*harness-role:\s*([a-z-]+)\s*-->")
-    for relative, (platform, expected_role) in EXPECTED_ADAPTER_ROLES.items():
+    workflow_marker = re.compile(r"<!--\s*harness-workflow:\s*([a-z-]+)\s*-->")
+    for relative, (platform, expected_role, workflow) in EXPECTED_ADAPTER_TARGETS.items():
         path = ROOT / relative
-        roles = marker.findall(path.read_text(encoding="utf-8"))
+        text = path.read_text(encoding="utf-8")
+        roles = marker.findall(text)
         if roles != [expected_role]:
             fail(f"{relative} expected one {expected_role!r} role marker, found {roles}")
+        workflows = [item.replace("-", "_") for item in workflow_marker.findall(text)]
+        expected_workflows = [workflow] if workflow else []
+        if workflows != expected_workflows:
+            fail(f"{relative} expected workflow markers {expected_workflows}, found {workflows}")
         metadata = frontmatter(path)
-        expected_model = models[platform][expected_role]["model"]
+        spec = resolve_spec(profile, platform, expected_role, workflow)
+        expected_model = spec["model"]
         if metadata.get("model") != expected_model:
             fail(f"{relative} model drift: expected {expected_model!r}, found {metadata.get('model')!r}")
-        expected_effort = models[platform][expected_role].get("effort")
-        if platform == "claude_code" and metadata.get("effort") != expected_effort:
-            fail(f"{relative} effort drift: expected {expected_effort!r}, found {metadata.get('effort')!r}")
+        effort_field = "reasoningEffort" if platform == "copilot" else "effort"
+        if metadata.get(effort_field) != spec["reasoning"]:
+            fail(f"{relative} {effort_field} drift: expected {spec['reasoning']!r}, found {metadata.get(effort_field)!r}")
 
 
 def require_absent_terms(path: Path, terms: tuple[str, ...]) -> None:
@@ -128,8 +137,9 @@ def validate_version_and_models() -> str:
     version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
     if not re.fullmatch(r"\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", version):
         fail(f"VERSION must be semantic, found {version!r}")
-    models = json.loads((ROOT / "config/models.json").read_text(encoding="utf-8"))
-    validate_adapter_roles(models)
+    config = load_config(ROOT / "config/models.json")
+    _, profile = get_profile(config)
+    validate_adapter_roles(profile)
     return version
 
 
@@ -174,6 +184,8 @@ def validate_workflow_contracts() -> None:
     require_terms(ROOT / "copilot/agents/dev.agent.md", ("engineering-workflow", *lifecycle))
     require_terms(ROOT / "claude-code/commands/dev.md", ("engineering-workflow", *lifecycle))
     require_terms(ROOT / "pi/prompts/dev.md", ("engineering-workflow", *lifecycle))
+    require_terms(ROOT / "pi/prompts/dev.md", ("harness-role: coordinator", "harness-workflow: dev"))
+    require_terms(ROOT / "pi/prompts/review-pr.md", ("harness-role: coordinator", "harness-workflow: review-pr"))
 
     for path in (
         ROOT / "copilot/agents/review-pr.agent.md",
@@ -183,7 +195,7 @@ def validate_workflow_contracts() -> None:
     ):
         require_terms(path, ("worktree", "unit", "integration", "semantic", "execution", "complexity", "docs-impact"))
 
-    require_absent_terms(ROOT / "copilot/agents/fast-terra.agent.md", ("'edit'", "implement_mechanical"))
+    require_absent_terms(ROOT / "copilot/agents/fast-lane.agent.md", ("'edit'", "implement_mechanical"))
     require_absent_terms(ROOT / "claude-code/agents/fast.md", ("edit,", "write", "implement_mechanical"))
 
     # Product behavior generation must remain specialist/conditional.

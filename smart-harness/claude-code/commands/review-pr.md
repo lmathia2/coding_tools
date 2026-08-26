@@ -5,6 +5,7 @@ model: sonnet[1m]
 effort: high
 ---
 <!-- harness-role: coordinator -->
+<!-- harness-workflow: review-pr -->
 
 # /review-pr
 

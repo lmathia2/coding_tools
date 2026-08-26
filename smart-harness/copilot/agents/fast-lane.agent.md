@@ -1,10 +1,11 @@
 ---
-name: FastTerra
-description: Fast GPT-5.6 Terra read-only specialist for bounded repository exploration, deterministic verification, PR execution, and complexity measurement.
+name: FastLane
+description: Low-latency read-only specialist for bounded repository exploration, deterministic verification, PR execution, and complexity measurement.
 model: GPT-5.6 Terra
 user-invocable: false
 tools: ['read', 'search', 'execute']
 agents: []
+reasoningEffort: low
 ---
 <!-- harness-role: fast -->
 

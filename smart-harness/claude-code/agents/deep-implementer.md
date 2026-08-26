@@ -1,6 +1,6 @@
 ---
 name: smart-deep-implementer
-description: Opus 4.7 implementation specialist for complex multi-file changes, subtle state/invariants, difficult refactors, and evidence-backed hard fixes after an accepted plan.
+description: Deep implementation specialist for complex multi-file changes, subtle state/invariants, difficult refactors, and evidence-backed hard fixes after an accepted plan.
 tools: Read, Grep, Glob, Bash, Edit, Write
 model: claude-opus-4-7
 effort: xhigh

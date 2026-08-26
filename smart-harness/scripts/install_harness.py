@@ -23,6 +23,10 @@ LEGACY_SKILLS = (
     "superpowers-methodology", "superpowers-skill-authoring", "task-ledger",
 )
 LEGACY_CLAUDE_AGENTS = ("deep-worker.md", "fast-executor.md", "fast-verifier.md", "fast-worker.md")
+LEGACY_COPILOT_AGENTS = (
+    "worker-terra.agent.md", "fast-terra.agent.md", "worker-sonnet.agent.md",
+    "worker-sol.agent.md", "deep-sol.agent.md", "security-opus.agent.md",
+)
 
 
 def exists(path: Path) -> bool:
@@ -204,7 +208,7 @@ class Installer:
             raise PermissionError(f"target directory is not writable: {self.target}")
 
     def validate_sources(self) -> None:
-        required = [ROOT / "VERSION", ROOT / "shared/skills", ROOT / "templates", ROOT / "tools/complexity.py", ROOT / "tools/commit_docs.py", ROOT / "vendor/SOURCES.json"]
+        required = [ROOT / "VERSION", ROOT / "config/models.json", ROOT / "shared/skills", ROOT / "templates", ROOT / "tools/complexity.py", ROOT / "tools/commit_docs.py", ROOT / "vendor/SOURCES.json"]
         missing = [str(path) for path in required if not path.exists()]
         if missing:
             raise FileNotFoundError(f"installer source is incomplete: {missing}")
@@ -236,7 +240,8 @@ class Installer:
 
     def install_copilot(self) -> None:
         base = self.target / (".github/agents" if self.scope == "project" else ".copilot/agents")
-        self.remove_legacy(base / "worker-terra.agent.md")
+        for name in LEGACY_COPILOT_AGENTS:
+            self.remove_legacy(base / name)
         for source in sorted((ROOT / "copilot/agents").glob("*.agent.md")):
             self.replace(source, base / source.name)
         if self.scope == "project":
@@ -275,6 +280,7 @@ class Installer:
 
     def install_support_files(self) -> None:
         support_root = self.target / ".smart-harness"
+        self.replace(ROOT / "config/models.json", support_root / "config/models.json")
         for source in sorted((ROOT / "tools").glob("*.py")):
             self.replace(source, support_root / "tools" / source.name)
         self.replace(ROOT / "vendor/SOURCES.json", support_root / "vendor/SOURCES.json")

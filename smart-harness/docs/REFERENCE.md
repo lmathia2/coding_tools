@@ -21,25 +21,40 @@ Live authoritative documentation travels in the same logical commit as code. Cha
 
 ## Model routing
 
+Active profile: **`balanced`**. Available profiles: `balanced`, `economy`, `quality`.
+
 ### Copilot
 
-| Role | Model | Effort |
+| Target | Model | Reasoning |
 |---|---|---|
-| `coordinator` | `Claude Opus 5` | `` |
-| `normal` | `Claude Sonnet 5` | `` |
-| `deep` | `GPT-5.6 Sol` | `` |
-| `fast` | `GPT-5.6 Terra` | `` |
-| `top` | `Claude Opus 5` | `` |
+| `dev.coordinator` | `Claude Opus 5` | `high` |
+| `review_pr.coordinator` | `Claude Opus 5` | `high` |
+| `normal` | `Claude Sonnet 5` | `medium` |
+| `deep` | `GPT-5.6 Sol` | `high` |
+| `fast` | `GPT-5.6 Terra` | `low` |
+| `top` | `Claude Opus 5` | `high` |
 
 ### Claude Code
 
-| Role | Model | Effort |
+| Target | Model | Reasoning |
 |---|---|---|
-| `coordinator` | `sonnet[1m]` | `high` |
+| `dev.coordinator` | `sonnet[1m]` | `high` |
+| `review_pr.coordinator` | `sonnet[1m]` | `high` |
 | `normal` | `sonnet[1m]` | `high` |
 | `deep` | `claude-opus-4-7` | `xhigh` |
 | `fast` | `haiku` | `medium` |
 | `top` | `claude-opus-4-8` | `high` |
+
+### Pi
+
+| Target | Model | Reasoning |
+|---|---|---|
+| `dev.coordinator` | `inherit` | `high` |
+| `review_pr.coordinator` | `inherit` | `high` |
+| `normal` | `inherit` | `high` |
+| `deep` | `inherit` | `xhigh` |
+| `fast` | `inherit` | `low` |
+| `top` | `inherit` | `xhigh` |
 
 ## Shared skills
 
@@ -55,13 +70,13 @@ Live authoritative documentation travels in the same logical commit as code. Cha
 
 ### Copilot
 
-- `deep-sol.agent.md`
+- `deep-reasoner.agent.md`
 - `dev.agent.md`
-- `fast-terra.agent.md`
+- `fast-lane.agent.md`
 - `review-pr.agent.md`
-- `security-opus.agent.md`
-- `worker-sol.agent.md`
-- `worker-sonnet.agent.md`
+- `top-reviewer.agent.md`
+- `worker-deep.agent.md`
+- `worker-normal.agent.md`
 
 ### Claude Code hidden agents
 
@@ -88,6 +103,7 @@ Live authoritative documentation travels in the same logical commit as code. Cha
 
 - `.smart-harness/tools/complexity.py` — dependency-free Python function cyclomatic complexity and baseline deltas.
 - `.smart-harness/tools/commit_docs.py` — commit-range documentation synchronization checks.
+- `.smart-harness/config/models.json` — installed active profile and model/reasoning defaults for Pi children.
 - `.smart-harness/install-manifest.json` — installed paths, checksums, platforms, version, and backup history.
 - `.smart-harness/vendor/` — pinned provenance and license notices carried with installed artifacts.
 

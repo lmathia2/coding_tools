@@ -27,6 +27,8 @@ complexity = load_module("complexity", HARNESS / "tools/complexity.py")
 parallel_pi = load_module("parallel_pi", HARNESS / "pi/tools/parallel-pi.py")
 installer = load_module("install_harness", HARNESS / "scripts/install_harness.py")
 commit_docs = load_module("commit_docs", HARNESS / "tools/commit_docs.py")
+model_config = load_module("model_config", HARNESS / "config/model_config.py")
+configure_models = load_module("configure_models", HARNESS / "config/configure-models.py")
 
 
 class ComplexityTests(unittest.TestCase):
@@ -112,6 +114,63 @@ class ParallelPiTests(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 parallel_pi.load_tasks(None)
 
+    def test_profile_supplies_model_and_thinking_by_role(self) -> None:
+        settings = {
+            "workflows": {"dev": {"model": "coordinator-model", "reasoning": "high"}},
+            "roles": {"fast": {"model": "fast-model", "reasoning": "low"}},
+        }
+        task = parallel_pi.apply_runtime_defaults({"name": "probe", "prompt": "probe"}, settings, "dev")
+        self.assertEqual(task["role"], "fast")
+        self.assertEqual(task["model"], "fast-model")
+        self.assertEqual(task["thinking"], "low")
+
+    def test_explicit_task_runtime_overrides_profile(self) -> None:
+        settings = {
+            "workflows": {},
+            "roles": {"deep": {"model": "profile-model", "reasoning": "high"}},
+        }
+        task = {"name": "probe", "prompt": "probe", "role": "deep", "model": "experiment", "thinking": "medium"}
+        resolved = parallel_pi.apply_runtime_defaults(task, settings, "review_pr")
+        self.assertEqual(resolved["model"], "experiment")
+        self.assertEqual(resolved["thinking"], "medium")
+
+    def test_model_config_prefers_project_then_global(self) -> None:
+        with tempfile.TemporaryDirectory() as project_raw, tempfile.TemporaryDirectory() as home_raw:
+            project = Path(project_raw)
+            home = Path(home_raw)
+            global_config = home / ".smart-harness/config/models.json"
+            global_config.parent.mkdir(parents=True)
+            global_config.write_text("{}", encoding="utf-8")
+            with mock.patch.object(parallel_pi.Path, "home", return_value=home):
+                self.assertEqual(parallel_pi.default_model_config(str(project)), global_config)
+                project_config = project / ".smart-harness/config/models.json"
+                project_config.parent.mkdir(parents=True)
+                project_config.write_text("{}", encoding="utf-8")
+                self.assertEqual(parallel_pi.default_model_config(str(project)), project_config.resolve())
+
+
+class ModelConfigurationTests(unittest.TestCase):
+    def test_repository_profiles_are_valid_and_resolvable(self) -> None:
+        config = model_config.load_config(HARNESS / "config/models.json")
+        self.assertEqual(set(config["profiles"]), {"balanced", "economy", "quality"})
+        _, balanced = model_config.get_profile(config, "balanced")
+        self.assertEqual(model_config.resolve_spec(balanced, "copilot", "coordinator", "dev")["reasoning"], "high")
+        self.assertEqual(model_config.resolve_spec(balanced, "pi", "fast")["reasoning"], "low")
+
+    def test_copilot_rewrite_translates_canonical_reasoning(self) -> None:
+        profile = {
+            "copilot": {
+                "workflows": {"dev": {"model": "Test Model", "reasoning": "medium"}},
+                "roles": {},
+            }
+        }
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "dev.agent.md"
+            path.write_text("---\nname: Test\nmodel: Old\n---\n<!-- harness-role: coordinator -->\n<!-- harness-workflow: dev -->\n", encoding="utf-8")
+            updated = configure_models.rewrite(path, "copilot", profile)
+        self.assertIn("model: Test Model", updated)
+        self.assertIn("reasoningEffort: medium", updated)
+
 
 class CommitDocumentationTests(unittest.TestCase):
     def test_code_and_documentation_in_same_commit_pass(self) -> None:
@@ -193,6 +252,7 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue((target / ".smart-harness/vendor/licenses/SUPERPOWERS-MIT.txt").exists())
             self.assertTrue((target / ".smart-harness/tools/complexity.py").exists())
             self.assertTrue((target / ".smart-harness/tools/commit_docs.py").exists())
+            self.assertTrue((target / ".smart-harness/config/models.json").exists())
 
     def test_dry_run_does_not_mutate_target(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

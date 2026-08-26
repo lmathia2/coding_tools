@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added selectable `balanced`, `economy`, and `quality` model profiles with separately configurable development/review coordinators, specialist models, and canonical reasoning strength translated across Copilot CLI, Claude Code, and Pi.
+- Renamed Copilot specialist identities around stable semantic roles so model-profile experiments cannot leave model-branded names or descriptions stale.
 - Made `plan -> implement -> document -> simplify -> verify` mandatory for every coherent work unit and added isolated parallel work-unit guidance.
 - Added a normal-cost Claude Sonnet work-unit agent so independent commit-sized units can run concurrently without granting write tools to the fast exploration agent.
 - Made live authoritative documentation a commit-level contract covering implementation, APIs/contracts, purpose, intent, invariants, and relevant operational behavior.

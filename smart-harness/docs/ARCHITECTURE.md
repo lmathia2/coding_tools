@@ -41,6 +41,21 @@ Only five discoverable shared skills are intentional:
 
 Repository mapping, context snapshots, task ledgers, Superpowers process, Ponytail minimality, and documentation synchronization are techniques inside the core workflows rather than separately discoverable skills.
 
+## Model profiles
+
+`config/models.json` is the single source of truth for model and reasoning-strength experiments. A named active profile contains platform-specific settings for each workflow coordinator (`dev`, `review_pr`) and shared specialist lane (`normal`, `deep`, `fast`, `top`). `config/configure-models.py --profile <name>` persists the selection and regenerates static Copilot/Claude adapter frontmatter; validation rejects configuration or generated-file drift.
+
+The config uses one provider-neutral `reasoning` property. Adapter translation is deliberately narrow:
+
+| Adapter | Model setting | Reasoning setting | Enforcement boundary |
+|---|---|---|---|
+| Copilot CLI | `model` | `reasoningEffort` | Per custom agent; an unavailable override falls back to the session |
+| VS Code Copilot | `model` | Session model picker | Current VS Code custom-agent frontmatter does not document per-agent effort |
+| Claude Code | `model` | `effort` | Per command/agent frontmatter |
+| Pi | `--model` | `--thinking` | Per parallel child; the coordinator inherits its active session |
+
+Pi receives the selected config at `.smart-harness/config/models.json`. Its helper resolves defaults from `--workflow` plus each task's semantic `role`; explicit per-task values take precedence for controlled experiments.
+
 ## Platform adapters
 
 ### Copilot
@@ -49,13 +64,13 @@ Visible: `Dev`, `ReviewPR`.
 
 Hidden specialists:
 
-- `FastTerra` — read-only exploration, deterministic execution, and complexity measurement;
-- `WorkerSonnet` — normal implementation;
-- `WorkerSol` — complex implementation;
-- `DeepSol` — read-only debugging/challenge/PR reasoning;
-- `SecurityOpus` — focused high-risk security/resilience.
+- `FastLane` — read-only exploration, deterministic execution, and complexity measurement;
+- `WorkerNormal` — normal implementation;
+- `WorkerDeep` — complex implementation;
+- `DeepReasoner` — read-only debugging/challenge/PR reasoning;
+- `TopReviewer` — focused high-risk security/resilience.
 
-The Opus coordinator remains pinned so Copilot can legally dispatch all configured specialist tiers.
+Agent identities are semantic rather than model-branded, so profile changes do not make delegation names or descriptions stale.
 
 ### Claude Code
 
@@ -64,12 +79,12 @@ Visible: `/dev`, `/review-pr`.
 Hidden specialists:
 
 - `smart-fast` — read-only exploration, deterministic execution, and complexity measurement;
-- `smart-worker` — Sonnet implementation of one normal/mechanical commit-sized unit;
-- `smart-deep-reasoner` — Opus 4.7 read-only deep reasoning;
-- `smart-deep-implementer` — Opus 4.7 complex implementation;
-- `smart-top-reviewer` — Opus 4.8 architecture/security/adjudication.
+- `smart-worker` — normal/mechanical implementation of one commit-sized unit;
+- `smart-deep-reasoner` — read-only deep reasoning;
+- `smart-deep-implementer` — complex implementation;
+- `smart-top-reviewer` — architecture/security/adjudication.
 
-Normal implementation uses one Sonnet worker per independent commit-sized unit. This creates a real writer boundary while keeping the coordinator focused on dependency planning and integration.
+Normal implementation uses one configured normal worker per independent commit-sized unit. This creates a real writer boundary while keeping the coordinator focused on dependency planning and integration.
 
 ### Capability boundary
 
@@ -83,9 +98,9 @@ Visible: `/dev`, `/review-pr`. A bundled standard-library helper can run indepen
 
 ```text
 exploration/measurement/verification -> fast read-only
-mechanical/normal implementation     -> Sonnet
-complex/debugging      -> Sol / Opus 4.7
-architecture/security  -> Opus only when warranted
+mechanical/normal implementation     -> normal
+complex/debugging                    -> deep
+architecture/security               -> top only when warranted
 ```
 
 For normal low-risk work, passing behavior tests plus compiler/type/static evidence can complete the task without another premium semantic review.

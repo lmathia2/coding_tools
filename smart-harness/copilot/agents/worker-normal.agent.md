@@ -1,10 +1,11 @@
 ---
-name: WorkerSonnet
-description: Default Claude Sonnet 5 implementation worker for normal engineering after an accepted plan.
+name: WorkerNormal
+description: Default implementation specialist for normal engineering after an accepted plan.
 model: Claude Sonnet 5
 user-invocable: false
 tools: ['read', 'search', 'edit', 'execute']
 agents: []
+reasoningEffort: medium
 ---
 <!-- harness-role: normal -->
 

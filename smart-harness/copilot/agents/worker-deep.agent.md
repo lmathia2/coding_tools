@@ -1,10 +1,11 @@
 ---
-name: WorkerSol
-description: GPT-5.6 Sol implementation specialist for complex multi-file changes, subtle state/invariants, difficult refactors, and evidence-backed hard fixes after an accepted plan.
+name: WorkerDeep
+description: Deep implementation specialist for complex multi-file changes, subtle state/invariants, difficult refactors, and evidence-backed hard fixes after an accepted plan.
 model: GPT-5.6 Sol
 user-invocable: false
 tools: ['read', 'search', 'edit', 'execute']
 agents: []
+reasoningEffort: high
 ---
 <!-- harness-role: deep -->
 

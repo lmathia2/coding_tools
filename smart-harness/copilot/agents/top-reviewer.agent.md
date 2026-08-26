@@ -1,10 +1,11 @@
 ---
-name: SecurityOpus
-description: Focused Claude Opus 5 read-only reviewer for security, resilience, and other high-consequence boundaries changed by a PR or implementation.
+name: TopReviewer
+description: Highest-confidence read-only reviewer for security, resilience, and other high-consequence boundaries changed by a PR or implementation.
 model: Claude Opus 5
 user-invocable: false
 tools: ['read', 'search', 'execute']
 agents: []
+reasoningEffort: high
 ---
 <!-- harness-role: top -->
 

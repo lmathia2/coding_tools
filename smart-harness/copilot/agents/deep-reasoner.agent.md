@@ -1,10 +1,11 @@
 ---
-name: DeepSol
-description: Read-only GPT-5.6 Sol specialist for ambiguous debugging, independent architecture challenge, integrated PR semantic/adversarial review, and serious-finding verification.
+name: DeepReasoner
+description: Read-only deep specialist for ambiguous debugging, independent architecture challenge, integrated PR semantic/adversarial review, and serious-finding verification.
 model: GPT-5.6 Sol
 user-invocable: false
 tools: ['read', 'search', 'execute']
 agents: []
+reasoningEffort: high
 ---
 <!-- harness-role: deep -->
 

@@ -1,6 +1,6 @@
 ---
 name: smart-top-reviewer
-description: Highest-confidence Opus 4.8 read-only specialist for architecture adjudication, focused security/resilience review, and high-consequence implementation review.
+description: Highest-confidence read-only specialist for architecture adjudication, focused security/resilience review, and high-consequence implementation review.
 tools: Read, Grep, Glob, Bash
 model: claude-opus-4-8
 effort: high

@@ -39,10 +39,10 @@ CI rejects accidental re-expansion of these core budgets unless the validator is
 
 ## Smart development routing
 
-- fast/tool-heavy read-only exploration, measurement, verification → Terra (Copilot) or Haiku (Claude);
-- mechanical and normal implementation → Sonnet;
-- complex implementation/debugging → Sol or Opus 4.7;
-- architecture/security/adjudication → Opus only when warranted.
+- fast/tool-heavy read-only exploration, measurement, and verification → configured `fast` lane;
+- mechanical and normal implementation → configured `normal` lane;
+- complex implementation/debugging → configured `deep` lane;
+- architecture/security/adjudication → configured `top` lane only when warranted.
 
 Routine work does not automatically receive a second premium LLM review when tests/compiler/static evidence are strong.
 
@@ -120,18 +120,24 @@ bash smart-harness/install.sh all /path/to/project --status
 
 ## Models
 
-Edit only:
+Model and reasoning choices live in one versioned file:
 
 ```text
 smart-harness/config/models.json
 ```
 
-Then:
+It contains selectable `balanced`, `economy`, and `quality` profiles. List, inspect, activate, or verify them with:
 
 ```bash
-python3 smart-harness/config/configure-models.py
+python3 smart-harness/config/configure-models.py --list-profiles
+python3 smart-harness/config/configure-models.py --show --profile quality
+python3 smart-harness/config/configure-models.py --profile economy
 python3 smart-harness/config/configure-models.py --check
 ```
+
+Activating a profile updates `active_profile`, regenerates Copilot and Claude Code frontmatter, and refreshes the generated reference. Each profile configures the `dev` and `review_pr` coordinators separately plus the reusable `normal`, `deep`, `fast`, and `top` specialist lanes. Copy a profile under a new name to run a custom model experiment.
+
+The canonical `reasoning` field maps to Copilot CLI `reasoningEffort`, Claude Code `effort`, and Pi `thinking`. VS Code currently applies configured agent models but manages thinking effort at the chat-session model picker, so it may ignore the Copilot CLI effort field. Pi installs the config at `.smart-harness/config/models.json`; parallel tasks select a semantic `role`, while explicit task-level `model` and `thinking` values override the profile.
 
 ## Documentation
 

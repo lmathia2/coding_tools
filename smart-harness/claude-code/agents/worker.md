@@ -1,6 +1,6 @@
 ---
 name: smart-worker
-description: Sonnet implementation specialist for one normal or mechanical commit-sized work unit with isolated ownership and the full plan → implement → document → simplify → verify lifecycle.
+description: Default implementation specialist for one normal or mechanical commit-sized work unit with isolated ownership and the full plan → implement → document → simplify → verify lifecycle.
 tools: Read, Grep, Glob, Bash, Edit, Write
 model: sonnet[1m]
 effort: high

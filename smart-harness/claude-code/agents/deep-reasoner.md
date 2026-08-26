@@ -1,6 +1,6 @@
 ---
 name: smart-deep-reasoner
-description: Read-only Opus 4.7 specialist for ambiguous debugging, independent architecture challenge, integrated PR semantic/adversarial review, and serious-finding verification.
+description: Read-only deep specialist for ambiguous debugging, independent architecture challenge, integrated PR semantic/adversarial review, and serious-finding verification.
 tools: Read, Grep, Glob, Bash
 model: claude-opus-4-7
 effort: xhigh

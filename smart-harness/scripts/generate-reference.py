@@ -5,8 +5,11 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sys
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "config"))
+from model_config import get_profile, load_config  # noqa: E402
 
 
 def frontmatter(path: Path) -> dict[str, str]:
@@ -61,17 +64,22 @@ def header_lines(version: str, skills: list[tuple[str, str, str]], copilot_files
     ]
 
 
-def model_lines(models: dict[str, object]) -> list[str]:
-    lines: list[str] = []
-    for platform in ("copilot", "claude_code"):
+def model_lines(config: dict[str, object]) -> list[str]:
+    active, profile = get_profile(config)
+    available = ", ".join(f"`{name}`" for name in sorted(config["profiles"]))
+    lines = [f"Active profile: **`{active}`**. Available profiles: {available}.", ""]
+    for platform in ("copilot", "claude_code", "pi"):
         lines += [
             f"### {platform.replace('_', ' ').title()}",
             "",
-            "| Role | Model | Effort |",
+            "| Target | Model | Reasoning |",
             "|---|---|---|",
         ]
-        for role, spec in models[platform].items():
-            lines.append(f"| `{role}` | `{spec['model']}` | `{spec.get('effort', '')}` |")
+        settings = profile[platform]
+        for workflow, spec in settings["workflows"].items():
+            lines.append(f"| `{workflow}.coordinator` | `{spec.get('model') or 'inherit'}` | `{spec['reasoning']}` |")
+        for role, spec in settings["roles"].items():
+            lines.append(f"| `{role}` | `{spec.get('model') or 'inherit'}` | `{spec['reasoning']}` |")
         lines.append("")
     return lines
 
@@ -109,6 +117,7 @@ def footer_lines() -> list[str]:
         "",
         "- `.smart-harness/tools/complexity.py` — dependency-free Python function cyclomatic complexity and baseline deltas.",
         "- `.smart-harness/tools/commit_docs.py` — commit-range documentation synchronization checks.",
+        "- `.smart-harness/config/models.json` — installed active profile and model/reasoning defaults for Pi children.",
         "- `.smart-harness/install-manifest.json` — installed paths, checksums, platforms, version, and backup history.",
         "- `.smart-harness/vendor/` — pinned provenance and license notices carried with installed artifacts.",
         "",
@@ -123,7 +132,7 @@ def footer_lines() -> list[str]:
 
 def generate() -> str:
     version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
-    models = json.loads((ROOT / "config/models.json").read_text(encoding="utf-8"))
+    models = load_config(ROOT / "config/models.json")
     sources = json.loads((ROOT / "vendor/SOURCES.json").read_text(encoding="utf-8"))
     skills = collect_skills()
     copilot_files = sorted(p.name for p in (ROOT / "copilot/agents").glob("*.agent.md"))
