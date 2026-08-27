@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import importlib.util
 import io
 import json
@@ -28,6 +29,7 @@ parallel_pi = load_module("parallel_pi", HARNESS / "pi/tools/parallel-pi.py")
 installer = load_module("install_harness", HARNESS / "scripts/install_harness.py")
 commit_docs = load_module("commit_docs", HARNESS / "tools/commit_docs.py")
 check_gate = load_module("check_gate", HARNESS / "tools/check.py")
+experiments = load_module("experiments", HARNESS / "tools/experiments.py")
 model_config = load_module("model_config", HARNESS / "config/model_config.py")
 configure_models = load_module("configure_models", HARNESS / "config/configure-models.py")
 
@@ -94,6 +96,7 @@ class ParallelPiTests(unittest.TestCase):
             result = parallel_pi.run_task({"name": "probe", "prompt": "probe"}, ".", "pi")
         self.assertEqual(result["stdout"], "partial stdout")
         self.assertEqual(result["stderr"], "partial stderr")
+        self.assertGreaterEqual(result["duration_seconds"], 0)
         json.dumps(result)
 
     def test_read_only_capability_rejects_bash(self) -> None:
@@ -254,6 +257,58 @@ class LifecycleGateTests(unittest.TestCase):
                 check_gate.safe_command_cwd(Path(raw), "../outside")
 
 
+class ExperimentTests(unittest.TestCase):
+    def test_profile_resolves_model_and_reasoning(self) -> None:
+        profile, spec = experiments.read_profile(
+            HARNESS / "config/models.json", "quality", "pi", "deep", "dev"
+        )
+        self.assertEqual(profile, "quality")
+        self.assertIn("model", spec)
+        self.assertEqual(spec["reasoning"], "xhigh")
+
+    def test_append_and_load_preserve_optional_measurements(self) -> None:
+        metadata = {
+            "workflow": "dev", "role": "normal", "platform": "pi",
+            "profile": "balanced", "model": None, "reasoning": "medium",
+        }
+        record = experiments.make_record(
+            metadata,
+            status="pass",
+            verification="pass",
+            duration_seconds=2.5,
+            complexity_before=9,
+            complexity_after=6,
+        )
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "experiments.jsonl"
+            experiments.append_records(path, [record])
+            loaded = experiments.load_records(path)
+        self.assertEqual(loaded[0]["complexity_delta"], -3)
+        self.assertIsNone(loaded[0]["cost_usd"])
+
+    def test_comparison_reports_observed_sample_counts(self) -> None:
+        records = [
+            {"profile": "quality", "status": "pass", "verification": "pass", "duration_seconds": 10},
+            {"profile": "quality", "status": "fail", "verification": "unknown", "duration_seconds": None},
+        ]
+        summary = experiments.summarize(records, "profile")[0]
+        self.assertEqual(summary["outcome"], {"reported": 2, "rate": 0.5})
+        self.assertEqual(summary["verification"], {"reported": 1, "rate": 1.0})
+        self.assertEqual(summary["metrics"]["duration_seconds"], {"reported": 1, "average": 10.0})
+
+    def test_pi_result_import_uses_measured_duration(self) -> None:
+        args = argparse.Namespace(workflow="dev", profile="economy")
+        record = experiments.pi_record(
+            args,
+            {
+                "name": "probe", "role": "fast", "model": "test", "thinking": "low",
+                "returncode": 0, "timed_out": False, "duration_seconds": 1.25,
+            },
+        )
+        self.assertEqual(record["status"], "pass")
+        self.assertEqual(record["duration_seconds"], 1.25)
+
+
 class InstallerTests(unittest.TestCase):
     def test_invalid_pi_settings_fail_before_mutation(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -304,6 +359,7 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue((target / ".smart-harness/tools/complexity.py").exists())
             self.assertTrue((target / ".smart-harness/tools/commit_docs.py").exists())
             self.assertTrue((target / ".smart-harness/tools/check.py").exists())
+            self.assertTrue((target / ".smart-harness/tools/experiments.py").exists())
             self.assertTrue((target / ".smart-harness/config/models.json").exists())
             self.assertTrue((target / ".smart-harness/config/checks.json").exists())
 

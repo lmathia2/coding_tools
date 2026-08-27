@@ -208,7 +208,7 @@ class Installer:
             raise PermissionError(f"target directory is not writable: {self.target}")
 
     def validate_sources(self) -> None:
-        required = [ROOT / "VERSION", ROOT / "config/models.json", ROOT / "config/checks.json", ROOT / "shared/skills", ROOT / "templates", ROOT / "tools/complexity.py", ROOT / "tools/commit_docs.py", ROOT / "tools/check.py", ROOT / "vendor/SOURCES.json"]
+        required = [ROOT / "VERSION", ROOT / "config/models.json", ROOT / "config/checks.json", ROOT / "shared/skills", ROOT / "templates", ROOT / "tools/complexity.py", ROOT / "tools/commit_docs.py", ROOT / "tools/check.py", ROOT / "tools/experiments.py", ROOT / "vendor/SOURCES.json"]
         missing = [str(path) for path in required if not path.exists()]
         if missing:
             raise FileNotFoundError(f"installer source is incomplete: {missing}")

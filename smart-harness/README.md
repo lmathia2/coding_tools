@@ -210,6 +210,17 @@ Activating a profile updates `active_profile`, regenerates Copilot and Claude Co
 
 After changing the active profile, rerun the relevant project or global installer so already-installed adapters receive the new settings.
 
+Record evidence when comparing profiles instead of choosing from impressions alone:
+
+```bash
+python3 .smart-harness/tools/experiments.py record \
+  --workflow dev --role normal --platform claude_code --profile quality \
+  --status pass --verification pass --duration-seconds 84 --complexity-before 12 --complexity-after 8
+python3 .smart-harness/tools/experiments.py compare --group-by profile
+```
+
+The append-only log lives under ignored `.agent-state/` by default. Tokens, cost, defects, and rework are optional; missing host telemetry remains visibly unreported rather than being estimated. The `run` subcommand times a command, and `import-pi` converts measured `parallel-pi.py` child results into the same schema.
+
 The canonical `reasoning` field maps to Copilot CLI `reasoningEffort`, Claude Code `effort`, and Pi `thinking`. VS Code currently applies configured agent models but manages thinking effort at the chat-session model picker, so it may ignore the Copilot CLI effort field. Pi installs the config at `.smart-harness/config/models.json`; parallel tasks select a semantic `role`, while explicit task-level `model` and `thinking` values override the profile.
 
 ## Documentation

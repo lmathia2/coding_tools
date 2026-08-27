@@ -25,3 +25,11 @@ python3 .pi/tools/parallel-pi.py --tasks /tmp/verify.json --cwd .agent-worktrees
 ```
 
 Use `--capability write` only for disjoint work-unit worktrees. Use `--inherit-env` only when the child genuinely requires parent-process secrets. Requested tools are rejected when they exceed the selected capability.
+
+Each result includes measured `duration_seconds`. To retain comparable per-child model evidence, save the JSON output and import it with the installed experiment tool:
+
+```bash
+python3 .pi/tools/parallel-pi.py --tasks /tmp/tasks.json --cwd . --workflow dev > /tmp/pi-results.json
+python3 .smart-harness/tools/experiments.py import-pi /tmp/pi-results.json --workflow dev --profile quality
+python3 .smart-harness/tools/experiments.py compare --group-by profile
+```

@@ -56,6 +56,8 @@ The config uses one provider-neutral `reasoning` property. Adapter translation i
 
 Pi receives the selected config at `.smart-harness/config/models.json`. Its helper resolves defaults from `--workflow` plus each task's semantic `role`; explicit per-task values take precedence for controlled experiments.
 
+Experiment evidence is deliberately separate from profile configuration. Profiles express intended routing; `.agent-state/model-experiments.jsonl` records observed outcomes. The comparison tool groups records without imputing unavailable host telemetry, so a profile with one reported cost is not presented as having the same evidence quality as a profile with twenty reported costs.
+
 ## Platform adapters
 
 ### Copilot

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added append-only model experiment records and profile/model/role comparisons with honest per-metric sample counts, optional token/cost/quality evidence, command timing, and Pi child-result import.
+- Added a deterministic committed-range lifecycle gate for per-commit documentation evidence, changed-function complexity, configured project checks, JSON automation output, and PR CI.
 - Added a README getting-started guide covering prerequisites, project-local and global installation, host discovery paths, first use, verification, upgrades, and model-profile deployment.
 - Added selectable `balanced`, `economy`, and `quality` model profiles with separately configurable development/review coordinators, specialist models, and canonical reasoning strength translated across Copilot CLI, Claude Code, and Pi.
 - Renamed Copilot specialist identities around stable semantic roles so model-profile experiments cannot leave model-branded names or descriptions stale.

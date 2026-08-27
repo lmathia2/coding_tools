@@ -76,6 +76,7 @@ jobs:
           test -f "$tmp/.smart-harness/tools/complexity.py"
           test -f "$tmp/.smart-harness/tools/commit_docs.py"
           test -f "$tmp/.smart-harness/tools/check.py"
+          test -f "$tmp/.smart-harness/tools/experiments.py"
           test -f "$tmp/.smart-harness/config/models.json"
           test -f "$tmp/.smart-harness/config/checks.json"
           test -f "$tmp/.smart-harness/vendor/THIRD_PARTY_NOTICES.md"

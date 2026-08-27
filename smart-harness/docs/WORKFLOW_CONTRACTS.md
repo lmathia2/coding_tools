@@ -97,6 +97,19 @@ Each JSON task accepts `role`, `model`, and `thinking`. `role` defaults to `fast
 
 The Pi helper resolves project `.smart-harness/config/models.json` first and global `~/.smart-harness/config/models.json` second. `--model-config` overrides both locations.
 
+### Model experiment evidence
+
+`.smart-harness/tools/experiments.py` stores append-only JSONL records under `.agent-state/model-experiments.jsonl` by default. A record identifies workflow, semantic role, platform, profile, resolved model, and reasoning strength. It can also carry duration, reported tokens/cost, verification outcome, complexity before/after, review defects, and rework. Unreported provider telemetry stays `null`, and comparison output includes the observed sample count for every metric.
+
+```text
+experiments.py record --workflow dev --role normal --platform claude_code --profile quality --status pass --verification pass
+experiments.py run --workflow dev --role fast --platform pi --profile economy -- <command>
+experiments.py import-pi <parallel-pi-results.json> --workflow dev --profile economy
+experiments.py compare --group-by profile [--format json]
+```
+
+`run` measures an external command without a shell and propagates its exit status. A zero exit records successful execution, but verification remains `unknown` unless explicitly supplied because command success alone does not prove the implementation contract.
+
 ## Installer API
 
 ```text

@@ -15,6 +15,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import time
 from typing import Any
 
 PREFIX = """You are a bounded specialist child in a larger engineering workflow.
@@ -144,6 +145,7 @@ def run_task(
     lifecycle = "For implementation, run plan -> implement -> document -> simplify -> verify and return one commit-ready unit.\n\n" if capability == "write" else ""
     cmd.append(PREFIX + lifecycle + str(task["prompt"]))
     timeout = int(task.get("timeout_seconds", 900))
+    started = time.monotonic()
     try:
         completed = subprocess.run(
             cmd,
@@ -164,6 +166,7 @@ def run_task(
             "stdout": completed.stdout,
             "stderr": completed.stderr,
             "timed_out": False,
+            "duration_seconds": round(time.monotonic() - started, 6),
         }
     except subprocess.TimeoutExpired as exc:
         return {
@@ -176,6 +179,7 @@ def run_task(
             "stdout": decode_output(exc.stdout),
             "stderr": decode_output(exc.stderr),
             "timed_out": True,
+            "duration_seconds": round(time.monotonic() - started, 6),
         }
 
 
