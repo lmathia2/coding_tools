@@ -1,0 +1,20 @@
+{
+  "name": "wysiwyship",
+  "description": "What you spec is what you ship: plan, implement, document, simplify, verify, and explain with deterministic evidence.",
+  "version": "0.10.0",
+  "author": {
+    "name": "lmathia2"
+  },
+  "repository": "https://github.com/lmathia2/coding_tools",
+  "keywords": [
+    "sdlc",
+    "coding-workflow",
+    "code-review",
+    "complexity",
+    "documentation",
+    "eli5"
+  ],
+  "agents": "agents/",
+  "skills": "skills/",
+  "hooks": "hooks.json"
+}

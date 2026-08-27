@@ -4,16 +4,16 @@
     "name": "lmathia2"
   },
   "metadata": {
-    "description": "Cross-host engineering workflow plugins from coding_tools",
-    "version": "0.9.0",
-    "pluginRoot": "./smart-harness/packages"
+    "description": "WYSIWYShip cross-host engineering workflows",
+    "version": "0.10.0",
+    "pluginRoot": "./wysiwyship/packages"
   },
   "plugins": [
     {
-      "name": "smart-harness",
-      "description": "Plan, implement, document, simplify, verify, and explain completed projects with deterministic evidence.",
-      "version": "0.9.0",
-      "source": "./smart-harness/packages/claude"
+      "name": "wysiwyship",
+      "description": "What you spec is what you ship: plan, implement, document, simplify, verify, and explain with deterministic evidence.",
+      "version": "0.10.0",
+      "source": "./wysiwyship/packages/claude"
     }
   ]
 }

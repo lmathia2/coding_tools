@@ -1,10 +1,10 @@
-# Coding Tools
+# WYSIWYShip
 
-Reusable coding-agent tools and orchestration configurations.
+*What you spec is what you ship.*
 
-## Smart Harness
+**Plan it. Prove it. Just ship.**
 
-[`smart-harness/`](smart-harness/README.md) is the single self-contained harness for VS Code/GitHub Copilot, Claude Code, and Pi.
+[`wysiwyship/`](wysiwyship/README.md) is a self-contained engineering workflow for VS Code/GitHub Copilot, Claude Code, and Pi.
 
 The daily interface is deliberately small:
 

@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "documentation": {
+    "enabled": true
+  },
+  "complexity": {
+    "enabled": true,
+    "fail_above": 20
+  },
+  "commands": [
+    {
+      "name": "model-configuration",
+      "argv": ["python3", "wysiwyship/config/configure-models.py", "--check"]
+    },
+    {
+      "name": "generated-reference",
+      "argv": ["python3", "wysiwyship/scripts/generate-reference.py", "--check"]
+    },
+    {
+      "name": "harness-invariants",
+      "argv": ["python3", "wysiwyship/scripts/validate-harness.py"]
+    },
+    {
+      "name": "regression-tests",
+      "argv": ["python3", "-m", "unittest", "discover", "-s", "wysiwyship/tests", "-v"]
+    }
+  ],
+  "repository": {
+    "require_clean": false
+  },
+  "work_units": {
+    "enabled": true,
+    "require_complete": false
+  }
+}

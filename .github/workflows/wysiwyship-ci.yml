@@ -1,0 +1,108 @@
+name: WYSIWYShip CI
+
+on:
+  push:
+    paths:
+      - 'wysiwyship/**'
+      - '.github/workflows/wysiwyship-ci.yml'
+  pull_request:
+    paths:
+      - 'wysiwyship/**'
+      - '.github/workflows/wysiwyship-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check model configuration
+        run: python3 wysiwyship/config/configure-models.py --check
+
+      - name: Check generated reference
+        run: python3 wysiwyship/scripts/generate-reference.py --check
+
+      - name: Check generated native packages
+        run: python3 wysiwyship/scripts/build_packages.py --check
+
+      - name: Validate simplicity and workflow invariants
+        run: python3 wysiwyship/scripts/validate-harness.py
+
+      - name: Validate Python syntax
+        run: python3 -m compileall -q wysiwyship/config wysiwyship/scripts wysiwyship/tools wysiwyship/tests wysiwyship/pi/tools wysiwyship/shared/skills/product-behavior-spec/references
+
+      - name: Run harness regression tests
+        run: python3 -m unittest discover -s wysiwyship/tests -v
+
+      - name: Check harness code complexity
+        run: python3 wysiwyship/tools/complexity.py wysiwyship/config wysiwyship/scripts wysiwyship/tools wysiwyship/pi/tools --fail-above 20
+
+      - name: Smoke-test deterministic lifecycle gate
+        if: github.event_name == 'pull_request'
+        run: python3 wysiwyship/tools/check.py "${{ github.event.pull_request.base.sha }}" --head HEAD --config wysiwyship/config/checks.wysiwyship.json
+
+      - name: Validate shell syntax
+        run: |
+          bash -n wysiwyship/install.sh
+          bash -n wysiwyship/install-global.sh
+
+      - name: Smoke-test local all-platform installation
+        run: |
+          tmp="$(mktemp -d)"
+          git -C "$tmp" init
+
+          # Seed v0.6 paths to prove the upgrader actually removes them.
+          mkdir -p "$tmp/.claude/skills/plan-first" "$tmp/.claude/skills/ponytail" "$tmp/.claude/agents" "$tmp/.github/agents"
+          touch "$tmp/.claude/skills/plan-first/SKILL.md" "$tmp/.claude/skills/ponytail/SKILL.md"
+          touch "$tmp/.claude/agents/fast-verifier.md" "$tmp/.claude/agents/deep-worker.md"
+          touch "$tmp/.github/agents/fast-terra.agent.md" "$tmp/.github/agents/worker-sonnet.agent.md"
+
+          bash wysiwyship/install.sh all "$tmp"
+
+          test -f "$tmp/.github/agents/dev.agent.md"
+          test -f "$tmp/.github/agents/fast-lane.agent.md"
+          test ! -e "$tmp/.github/agents/worker-terra.agent.md"
+          test ! -e "$tmp/.github/agents/fast-terra.agent.md"
+          test ! -e "$tmp/.github/agents/worker-sonnet.agent.md"
+          test -f "$tmp/.claude/commands/dev.md"
+          test -f "$tmp/.claude/agents/fast.md"
+          test -f "$tmp/.claude/agents/worker.md"
+          test ! -e "$tmp/.claude/agents/fast-verifier.md"
+          test ! -e "$tmp/.claude/agents/deep-worker.md"
+          test -f "$tmp/.pi/prompts/dev.md"
+          test -f "$tmp/.pi/tools/parallel-pi.py"
+          test -f "$tmp/.wysiwyship/tools/complexity.py"
+          test -f "$tmp/.wysiwyship/tools/commit_docs.py"
+          test -f "$tmp/.wysiwyship/tools/check.py"
+          test -f "$tmp/.wysiwyship/tools/experiments.py"
+          test -f "$tmp/.wysiwyship/tools/work_units.py"
+          test -f "$tmp/.wysiwyship/tools/hook_check.py"
+          test -f "$tmp/.wysiwyship/tools/spec_bridge.py"
+          test -f "$tmp/.wysiwyship/config/models.json"
+          test -f "$tmp/.wysiwyship/config/checks.json"
+          test -f "$tmp/.github/hooks/wysiwyship.json"
+          test -f "$tmp/.claude/settings.json"
+          test -f "$tmp/.wysiwyship/vendor/THIRD_PARTY_NOTICES.md"
+          test -f "$tmp/.wysiwyship/install-manifest.json"
+          test -f "$tmp/.claude/skills/engineering-workflow/SKILL.md"
+          test -f "$tmp/.claude/skills/pr-review/SKILL.md"
+          test ! -e "$tmp/.claude/skills/plan-first"
+          test ! -e "$tmp/.claude/skills/ponytail"
+
+          bash wysiwyship/install.sh all "$tmp" --status
+
+      - name: Smoke-test preflight failure is non-mutating
+        run: |
+          tmp="$(mktemp -d)"
+          mkdir -p "$tmp/.pi"
+          printf 'invalid-json\n' > "$tmp/.pi/settings.json"
+          if bash wysiwyship/install.sh all "$tmp"; then
+            echo "installer unexpectedly accepted invalid Pi settings" >&2
+            exit 1
+          fi
+          test ! -e "$tmp/.claude"

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Project ELI5"
-  short_description: "Explain finished projects with visual stories"
-  default_prompt: "Use $eli5 to explain this completed coding project with a self-contained visual walkthrough."

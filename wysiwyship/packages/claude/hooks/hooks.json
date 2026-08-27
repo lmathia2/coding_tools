@@ -1,0 +1,21 @@
+{
+  "description": "Verify an explicitly active WYSIWYShip work unit before stopping.",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/tools/hook_check.py",
+              "--host",
+              "claude"
+            ],
+            "timeout": 600
+          }
+        ]
+      }
+    ]
+  }
+}

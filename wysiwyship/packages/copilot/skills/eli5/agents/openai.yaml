@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project ELI5"
+  short_description: "Learn a project’s what, how, and why"
+  default_prompt: "Use $eli5 to teach me what changed, how this completed coding project works, and why it was designed that way."
