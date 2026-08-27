@@ -1,0 +1,41 @@
+{
+  "schema_version": 2,
+  "policy": "All third-party-derived runtime guidance required by the harness is stored locally. v0.7 folds overlapping methodology concepts into the core engineering and PR-review skills instead of exposing separate default skills.",
+  "components": [
+    {
+      "name": "Superpowers methodology adaptation",
+      "source": "https://github.com/obra/superpowers",
+      "commit": "b36e0829c6d0140e93cfef2ca599b1b07d4a7797",
+      "license": "MIT",
+      "license_file": "vendor/licenses/SUPERPOWERS-MIT.txt",
+      "local_paths": [
+        "shared/skills/engineering-workflow",
+        "shared/skills/skill-authoring"
+      ],
+      "mode": "concepts curated and adapted into core workflow; no hooks, plugin manifests, telemetry, scripts, marketplace, or runtime dependency"
+    },
+    {
+      "name": "Ponytail adaptation",
+      "source": "https://github.com/DietrichGebert/ponytail",
+      "commit": "2ed6c52c9d7e5e56942508591085fd45dea277d3",
+      "license": "MIT",
+      "license_file": "vendor/licenses/PONYTAIL-MIT.txt",
+      "local_paths": [
+        "shared/skills/engineering-workflow",
+        "shared/skills/pr-review"
+      ],
+      "mode": "minimal-correct-solution concepts folded into implementation and semantic review; no separate review lane or plugin runtime"
+    },
+    {
+      "name": "Pi VS Code skill adaptation",
+      "source": "https://github.com/badlogic/pi-skills",
+      "commit": "90bb51cae36515a648515b633a81c0c6efc8c74d",
+      "license": "MIT",
+      "license_file": "vendor/licenses/PI-SKILLS-MIT.txt",
+      "local_paths": [
+        "shared/skills/vscode"
+      ],
+      "mode": "single dependency-free utility skill"
+    }
+  ]
+}

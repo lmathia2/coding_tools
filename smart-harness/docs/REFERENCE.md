@@ -1,6 +1,6 @@
 # Generated Smart Harness Reference
 
-> Generated from repository-local files for version `0.7.0`. Do not edit by hand.
+> Generated from repository-local files for version `0.8.0`. Do not edit by hand.
 
 ## Simplicity budget
 

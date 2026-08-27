@@ -144,3 +144,12 @@ install-global.sh {copilot|claude|pi|both|all} [--dry-run|--status]
 ```
 
 The thin shell entry points share one Python implementation. It preflights before mutation, atomically writes settings, rolls back touched paths on failure, preserves unrelated customizations, records checksums in an install manifest, and supports dry-run/status inspection.
+
+## Native package build API
+
+```text
+build_packages.py
+build_packages.py --check
+```
+
+The builder regenerates `packages/copilot` and `packages/claude` only from canonical sources and the active model profile. Copilot uses a root `plugin.json`; Claude uses `.claude-plugin/plugin.json` plus the repository marketplace catalog. `--check` builds into a temporary directory and fails on missing, unexpected, or changed generated files.

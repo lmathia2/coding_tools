@@ -1,4 +1,4 @@
-# Smart Harness v0.7
+# Smart Harness v0.8
 
 A self-contained, low-friction engineering harness for VS Code/GitHub Copilot, Claude Code, and Pi.
 
@@ -81,6 +81,21 @@ bash smart-harness/install-global.sh all --status
 ```
 
 Global installation uses `~/.copilot/agents`, `~/.claude/{commands,agents,skills}`, and `~/.pi/agent`. Host precedence rules differ when the same customization exists in both scopes, so avoid conflicting global and project definitions unless that override is intentional.
+
+### Native plugin alternative
+
+For personal reuse where repository-local configuration is unnecessary, install the generated native bundle:
+
+```bash
+copilot plugin install lmathia2/coding_tools:smart-harness/packages/copilot
+
+claude plugin marketplace add lmathia2/coding_tools
+claude plugin install smart-harness@coding-tools
+```
+
+The plugin bundles are generated from the same canonical agents, skills, tools, model profile, and checks as the installer. Claude commands are namespaced (for example `/smart-harness:dev`). Copilot keeps the `Dev` and `ReviewPR` agent names. The selected model profile is fixed at package build time; edit `config/models.json`, apply the profile, and rebuild to publish a different routing experiment.
+
+Use the project installer when policies/configuration should travel with the target repository, when Pi is required, or when project-local discovery names (`/dev`) are preferred. Do not install both forms for the same host unless you intentionally want project files to take precedence over plugin components.
 
 Discovery behavior is documented upstream for [Copilot custom agents and skills](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference), [Claude Code skills and commands](https://code.claude.com/docs/en/slash-commands), and [Pi settings](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/settings.md).
 

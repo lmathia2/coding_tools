@@ -27,6 +27,9 @@ jobs:
       - name: Check generated reference
         run: python3 smart-harness/scripts/generate-reference.py --check
 
+      - name: Check generated native packages
+        run: python3 smart-harness/scripts/build_packages.py --check
+
       - name: Validate v0.7 simplicity and workflow invariants
         run: python3 smart-harness/scripts/validate-harness.py
 

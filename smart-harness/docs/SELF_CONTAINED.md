@@ -2,7 +2,7 @@
 
 ## Function
 
-Make the Smart Harness usable from one repository without downloading skills, plugins, extensions, MCP servers, or helper repositories at runtime.
+Make the Smart Harness usable from one reviewed repository without runtime dependency fetching.
 
 ## Intent
 
@@ -10,7 +10,9 @@ A reviewed commit in `coding_tools` should completely determine the harness beha
 
 ## Contract
 
-Runtime installers may copy files from `smart-harness/` into project or user configuration directories. They must not:
+The project/global installers copy files from `smart-harness/` into project or user configuration directories and remain fully offline. Native Copilot/Claude plugin installation may fetch this repository through the host's normal trusted plugin mechanism; the installed bundle itself must not fetch dependencies or helper repositories.
+
+Runtime code must not:
 
 - run `git clone`, `gh skill install`, plugin/marketplace install commands, `pi install`, npm/pip package installation, curl/wget downloads, or remote execution;
 - silently fetch newer third-party content;
@@ -18,7 +20,7 @@ Runtime installers may copy files from `smart-harness/` into project or user con
 
 Host products are prerequisites: VS Code/GitHub Copilot, Claude Code, or Pi. The target project retains its own normal language/build/test dependencies.
 
-Installation is preflighted and transactional. Replaced paths are backed up, failure triggers rollback, settings and manifests use atomic writes, and `--dry-run` / `--status` expose intended or installed state. The installed support directory includes the complexity analyzer plus pinned third-party provenance and license notices.
+Installation is preflighted and transactional. Replaced paths are backed up, failure triggers rollback, settings and manifests use atomic writes, and `--dry-run` / `--status` expose intended or installed state. Generated native packages carry the same agents, skills, tools, configuration, provenance, and notices; CI rejects package drift.
 
 ## Vendored content
 

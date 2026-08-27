@@ -1,0 +1,19 @@
+{
+  "name": "coding-tools",
+  "owner": {
+    "name": "lmathia2"
+  },
+  "metadata": {
+    "description": "Cross-host engineering workflow plugins from coding_tools",
+    "version": "0.8.0",
+    "pluginRoot": "./smart-harness/packages"
+  },
+  "plugins": [
+    {
+      "name": "smart-harness",
+      "description": "Plan, implement, document, simplify, and verify with configurable model routing and deterministic evidence.",
+      "version": "0.8.0",
+      "source": "./smart-harness/packages/claude"
+    }
+  ]
+}

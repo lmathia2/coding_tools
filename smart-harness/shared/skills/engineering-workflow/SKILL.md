@@ -1,6 +1,6 @@
 ---
 name: engineering-workflow
-description: Default end-to-end engineering policy for coding tasks. Use for implementation, debugging, refactoring, architecture work, and maintenance: decompose work into coherent commit-sized units, run plan → implement → document → simplify → verify for every unit, keep authoritative documentation live with code, measure changed-code complexity, and verify with executable evidence.
+description: "Default end-to-end engineering policy for coding tasks. Use for implementation, debugging, refactoring, architecture work, and maintenance: decompose work into coherent commit-sized units, run plan → implement → document → simplify → verify for every unit, keep authoritative documentation live with code, measure changed-code complexity, and verify with executable evidence."
 license: Includes concepts adapted from MIT-licensed obra/superpowers and DietrichGebert/ponytail; see .smart-harness/vendor/THIRD_PARTY_NOTICES.md in an installed project.
 ---
 

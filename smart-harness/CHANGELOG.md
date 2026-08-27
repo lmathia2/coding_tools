@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 0.8.0 — Evidence and interoperability release
+
+- Added reproducible native Copilot and Claude Code plugin bundles plus a Claude marketplace catalog; retained the project/global installer as the cross-host and Pi baseline.
 - Added a read-only-preview/explicit-import bridge from accepted Spec Kit, OpenSpec, and BMAD task artifacts into optional Smart Harness work units without replacing upstream spec workflows.
 - Added an optional resumable work-unit ledger with immutable base refs, dependency/ownership validation, ordered lifecycle evidence, active-unit gates, and no-op-by-default Copilot/Claude stop hooks.
 - Added append-only model experiment records and profile/model/role comparisons with honest per-metric sample counts, optional token/cost/quality evidence, command timing, and Pi child-result import.

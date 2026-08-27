@@ -1,6 +1,6 @@
 ---
 description: Default PR review command. Reviews exact PR HEAD in an isolated worktree using one semantic lane plus one executable lane, escalating to adversarial/security specialists only for high-risk changes.
-argument-hint: [base-ref] [PR intent/details]
+argument-hint: "[base-ref] [PR intent/details]"
 model: sonnet[1m]
 effort: high
 ---

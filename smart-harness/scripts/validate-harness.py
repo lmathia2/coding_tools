@@ -251,6 +251,22 @@ def validate_required_refinements() -> None:
             fail(f"missing required harness component {required.relative_to(ROOT)}")
 
 
+def validate_native_packages(version: str) -> None:
+    manifests = (
+        ROOT / "packages/copilot/plugin.json",
+        ROOT / "packages/claude/.claude-plugin/plugin.json",
+        REPO / ".claude-plugin/marketplace.json",
+    )
+    for path in manifests:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        observed = data.get("version") or data.get("metadata", {}).get("version")
+        if observed != version:
+            fail(f"{path.relative_to(REPO)} version drift: expected {version}, found {observed}")
+    marketplace = json.loads((REPO / ".claude-plugin/marketplace.json").read_text(encoding="utf-8"))
+    if marketplace.get("plugins", [{}])[0].get("version") != version:
+        fail(".claude-plugin/marketplace.json plugin entry version drift")
+
+
 def main() -> int:
     version = validate_version_and_models()
     validate_budgets()
@@ -260,6 +276,7 @@ def main() -> int:
     validate_runtime_independence()
     validate_removed_surfaces()
     validate_required_refinements()
+    validate_native_packages(version)
     print(f"smart harness {version} validation: PASS")
     return 0
 

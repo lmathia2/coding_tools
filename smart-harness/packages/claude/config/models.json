@@ -1,0 +1,120 @@
+{
+  "schema_version": 2,
+  "active_profile": "balanced",
+  "profiles": {
+    "balanced": {
+      "copilot": {
+        "workflows": {
+          "dev": {"model": "Claude Opus 5", "reasoning": "high"},
+          "review_pr": {"model": "Claude Opus 5", "reasoning": "high"}
+        },
+        "roles": {
+          "normal": {"model": "Claude Sonnet 5", "reasoning": "medium"},
+          "deep": {"model": "GPT-5.6 Sol", "reasoning": "high"},
+          "fast": {"model": "GPT-5.6 Terra", "reasoning": "low"},
+          "top": {"model": "Claude Opus 5", "reasoning": "high"}
+        }
+      },
+      "claude_code": {
+        "workflows": {
+          "dev": {"model": "sonnet[1m]", "reasoning": "high"},
+          "review_pr": {"model": "sonnet[1m]", "reasoning": "high"}
+        },
+        "roles": {
+          "normal": {"model": "sonnet[1m]", "reasoning": "high"},
+          "deep": {"model": "claude-opus-4-7", "reasoning": "xhigh"},
+          "fast": {"model": "haiku", "reasoning": "medium"},
+          "top": {"model": "claude-opus-4-8", "reasoning": "high"}
+        }
+      },
+      "pi": {
+        "workflows": {
+          "dev": {"model": null, "reasoning": "high", "notes": "Coordinator inherits the active Pi session model."},
+          "review_pr": {"model": null, "reasoning": "high", "notes": "Coordinator inherits the active Pi session model."}
+        },
+        "roles": {
+          "normal": {"model": null, "reasoning": "high"},
+          "deep": {"model": null, "reasoning": "xhigh"},
+          "fast": {"model": null, "reasoning": "low"},
+          "top": {"model": null, "reasoning": "xhigh"}
+        }
+      }
+    },
+    "economy": {
+      "copilot": {
+        "workflows": {
+          "dev": {"model": "Claude Sonnet 5", "reasoning": "medium"},
+          "review_pr": {"model": "Claude Sonnet 5", "reasoning": "medium"}
+        },
+        "roles": {
+          "normal": {"model": "Claude Sonnet 5", "reasoning": "medium"},
+          "deep": {"model": "GPT-5.6 Sol", "reasoning": "high"},
+          "fast": {"model": "GPT-5.6 Terra", "reasoning": "low"},
+          "top": {"model": "Claude Opus 5", "reasoning": "high"}
+        }
+      },
+      "claude_code": {
+        "workflows": {
+          "dev": {"model": "sonnet[1m]", "reasoning": "medium"},
+          "review_pr": {"model": "sonnet[1m]", "reasoning": "medium"}
+        },
+        "roles": {
+          "normal": {"model": "sonnet[1m]", "reasoning": "medium"},
+          "deep": {"model": "claude-opus-4-7", "reasoning": "high"},
+          "fast": {"model": "haiku", "reasoning": "low"},
+          "top": {"model": "claude-opus-4-8", "reasoning": "high"}
+        }
+      },
+      "pi": {
+        "workflows": {
+          "dev": {"model": null, "reasoning": "medium", "notes": "Coordinator inherits the active Pi session model."},
+          "review_pr": {"model": null, "reasoning": "medium", "notes": "Coordinator inherits the active Pi session model."}
+        },
+        "roles": {
+          "normal": {"model": null, "reasoning": "medium"},
+          "deep": {"model": null, "reasoning": "high"},
+          "fast": {"model": null, "reasoning": "low"},
+          "top": {"model": null, "reasoning": "high"}
+        }
+      }
+    },
+    "quality": {
+      "copilot": {
+        "workflows": {
+          "dev": {"model": "Claude Opus 5", "reasoning": "high"},
+          "review_pr": {"model": "Claude Opus 5", "reasoning": "high"}
+        },
+        "roles": {
+          "normal": {"model": "GPT-5.6 Sol", "reasoning": "high"},
+          "deep": {"model": "GPT-5.6 Sol", "reasoning": "high"},
+          "fast": {"model": "Claude Sonnet 5", "reasoning": "medium"},
+          "top": {"model": "Claude Opus 5", "reasoning": "high"}
+        }
+      },
+      "claude_code": {
+        "workflows": {
+          "dev": {"model": "claude-opus-4-8", "reasoning": "high"},
+          "review_pr": {"model": "claude-opus-4-8", "reasoning": "high"}
+        },
+        "roles": {
+          "normal": {"model": "sonnet[1m]", "reasoning": "xhigh"},
+          "deep": {"model": "claude-opus-4-8", "reasoning": "xhigh"},
+          "fast": {"model": "sonnet[1m]", "reasoning": "medium"},
+          "top": {"model": "claude-opus-4-8", "reasoning": "xhigh"}
+        }
+      },
+      "pi": {
+        "workflows": {
+          "dev": {"model": null, "reasoning": "xhigh", "notes": "Coordinator inherits the active Pi session model."},
+          "review_pr": {"model": null, "reasoning": "xhigh", "notes": "Coordinator inherits the active Pi session model."}
+        },
+        "roles": {
+          "normal": {"model": null, "reasoning": "high"},
+          "deep": {"model": null, "reasoning": "xhigh"},
+          "fast": {"model": null, "reasoning": "medium"},
+          "top": {"model": null, "reasoning": "xhigh"}
+        }
+      }
+    }
+  }
+}

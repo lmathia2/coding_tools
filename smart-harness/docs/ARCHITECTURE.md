@@ -100,6 +100,10 @@ Fast exploration agents have no structured edit/write tools, and exploration mod
 
 Visible: `/dev`, `/review-pr`. A bundled standard-library helper can run independent Pi print-mode children concurrently; no external extension is required.
 
+## Distribution surfaces
+
+The transactional installer remains the cross-host baseline and is the only Pi distribution. `scripts/build_packages.py` derives versioned Copilot and Claude Code plugin directories from the same canonical source tree. Generated package checks make drift a CI failure; package files are not edited directly. Plugin path placeholders point tools and hooks at their cached bundle, while operational state continues to live in the current repository's ignored `.agent-state/`.
+
 ## Development routing
 
 ```text

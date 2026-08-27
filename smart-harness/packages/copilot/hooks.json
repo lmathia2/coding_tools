@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hooks": {
+    "agentStop": [
+      {
+        "type": "command",
+        "bash": "python3 \"${PLUGIN_ROOT}/tools/hook_check.py\" --host copilot",
+        "powershell": "python \"${PLUGIN_ROOT}/tools/hook_check.py\" --host copilot",
+        "cwd": ".",
+        "timeoutSec": 600
+      }
+    ]
+  }
+}

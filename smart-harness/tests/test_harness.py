@@ -35,6 +35,7 @@ hook_check = load_module("hook_check", HARNESS / "tools/hook_check.py")
 spec_bridge = load_module("spec_bridge", HARNESS / "tools/spec_bridge.py")
 model_config = load_module("model_config", HARNESS / "config/model_config.py")
 configure_models = load_module("configure_models", HARNESS / "config/configure-models.py")
+package_builder = load_module("build_packages", HARNESS / "scripts/build_packages.py")
 
 
 class ComplexityTests(unittest.TestCase):
@@ -418,6 +419,26 @@ class SpecBridgeTests(unittest.TestCase):
             self.assertEqual(created[1]["dependencies"], [created[0]["id"]])
             self.assertEqual(created[0]["source"], {"framework": "spec-kit", "path": "specs/001-auth/tasks.md"})
             self.assertEqual(work_units.active_unit(root)["id"], created[0]["id"])
+
+
+class PackageBuilderTests(unittest.TestCase):
+    def test_builds_native_manifests_and_rewrites_runtime_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            output = Path(raw) / "packages"
+            package_builder.build(output)
+            copilot = json.loads((output / "copilot/plugin.json").read_text(encoding="utf-8"))
+            claude = json.loads((output / "claude/.claude-plugin/plugin.json").read_text(encoding="utf-8"))
+            skill = (output / "claude/skills/engineering-workflow/SKILL.md").read_text(encoding="utf-8")
+        self.assertEqual(copilot["version"], package_builder.VERSION)
+        self.assertEqual(claude["version"], package_builder.VERSION)
+        self.assertIn("${CLAUDE_PLUGIN_ROOT}/tools/check.py", skill)
+        self.assertNotIn(".smart-harness/tools/check.py", skill)
+
+    def test_committed_packages_match_canonical_sources(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            expected = Path(raw) / "packages"
+            package_builder.build(expected)
+            self.assertEqual(package_builder.compare_directories(expected, HARNESS / "packages"), [])
 
 
 class InstallerTests(unittest.TestCase):

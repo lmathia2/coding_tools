@@ -1,0 +1,19 @@
+{
+  "name": "smart-harness",
+  "description": "Plan, implement, document, simplify, and verify with configurable model routing and deterministic evidence.",
+  "version": "0.8.0",
+  "author": {
+    "name": "lmathia2"
+  },
+  "repository": "https://github.com/lmathia2/coding_tools",
+  "keywords": [
+    "sdlc",
+    "coding-workflow",
+    "code-review",
+    "complexity",
+    "documentation"
+  ],
+  "agents": "agents/",
+  "skills": "skills/",
+  "hooks": "hooks.json"
+}
