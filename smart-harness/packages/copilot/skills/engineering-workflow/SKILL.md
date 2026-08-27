@@ -160,6 +160,12 @@ python3 "${PLUGIN_ROOT}/tools/check.py" <unit-start-ref> --head HEAD
 
 Use `--active` when an active work-unit ledger supplies the immutable base ref. Before a commit exists, run the applicable component checks and report the commit-range gate as `NOT EXECUTED`; do not point the gate at a range that omits the working-tree change.
 
+## 9. Explain every completed project
+
+After all work units are integrated and the committed-range gate passes, invoke the `eli5` skill before final handoff. This is mandatory for every successful development workflow. Generate and check the dependency-free visual explainer under `.agent-state/eli5/` unless the user requests a versioned documentation path, then include its path and audience in the completion report.
+
+Do not run the completion explainer for blocked or incomplete work. The project is not complete if the explainer fails to render or validate. The ELI5 artifact is a post-verification handoff, not a substitute for live authoritative documentation or executable evidence.
+
 ## Completion
 
 Return concise:
@@ -169,5 +175,6 @@ Return concise:
 - Verification (exact commands/results)
 - Documentation impact and changed paths
 - Complexity scores/deltas and simplification decisions
+- ELI5 audience, slide count, verification, and artifact path
 - Important decisions only when non-obvious
 - Residual risk / blocked checks

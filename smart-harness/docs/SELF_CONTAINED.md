@@ -24,7 +24,7 @@ Installation is preflighted and transactional. Replaced paths are backed up, fai
 
 ## Vendored content
 
-All third-party-derived skill text is stored in `shared/skills/`, with pinned provenance and licenses under `vendor/`.
+All third-party-derived skill text, renderer assets, and scripts are stored in `shared/skills/`, with pinned provenance and licenses under `vendor/`. The ELI5 visual renderer emits a single offline HTML file and never loads a CDN, remote font, package, analytics endpoint, or source repository.
 
 Updates are deliberate code changes: review upstream, copy/adapt the required material, update `vendor/SOURCES.json`, docs/changelog, regenerate the reference, and run CI.
 

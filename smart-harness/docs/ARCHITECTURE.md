@@ -6,7 +6,7 @@ Provide one high-quality coding interface across Copilot, Claude Code, and Pi wi
 
 ## Goals
 
-- two user-facing workflows: development and PR review;
+- two user-facing coordination workflows, development and PR review, plus an explicit/automatic project explanation skill;
 - quality-first model routing with token/latency discipline;
 - planning before source edits;
 - coherent commit-sized work units and useful parallelism without agent fan-out for its own sake;
@@ -24,6 +24,8 @@ request
   -> coordinator defines work-unit dependency graph
   -> each unit: plan -> implement -> document -> simplify -> verify
   -> integrate independently completed units in dependency order
+  -> committed-range gate
+  -> ELI5 visual handoff
   -> completion
 ```
 
@@ -35,19 +37,22 @@ The spec bridge is one-way intake from accepted Spec Kit, OpenSpec, or BMAD impl
 
 ## Shared policy
 
-Only five discoverable shared skills are intentional:
+Only six discoverable shared skills are intentional:
 
-1. `engineering-workflow` — all ordinary coding process: plan, routing principles, parallelism, minimal design, debugging/TDD, documentation, verification;
-2. `pr-review` — worktree-based semantic + executable review and high-risk escalation;
-3. `product-behavior-spec` — explicit specialist outside-in product documentation;
-4. `skill-authoring` — maintenance-only harness policy;
-5. `vscode` — optional local visual diff utility.
+1. `engineering-workflow` — all ordinary coding process: plan, routing principles, parallelism, minimal design, debugging/TDD, documentation, verification, and successful-completion handoff;
+2. `eli5` — evidence-based, audience-calibrated project explanation plus a dependency-free visual HTML artifact;
+3. `pr-review` — worktree-based semantic + executable review and high-risk escalation;
+4. `product-behavior-spec` — explicit specialist outside-in product documentation;
+5. `skill-authoring` — maintenance-only harness policy;
+6. `vscode` — optional local visual diff utility.
 
 Repository mapping, context snapshots, task ledgers, Superpowers process, Ponytail minimality, and documentation synchronization are techniques inside the core workflows rather than separately discoverable skills.
 
 ## Model profiles
 
 `config/models.json` is the single source of truth for model and reasoning-strength experiments. A named active profile contains platform-specific settings for each workflow coordinator (`dev`, `review_pr`) and shared specialist lane (`normal`, `deep`, `fast`, `top`). `config/configure-models.py --profile <name>` persists the selection and regenerates static Copilot/Claude adapter frontmatter; validation rejects configuration or generated-file drift.
+
+The automatic ELI5 handoff runs in the configured `dev` coordinator after verification; an explicit `/eli5` invocation uses the host session model. The renderer itself is deterministic and model-independent.
 
 The config uses one provider-neutral `reasoning` property. Adapter translation is deliberately narrow:
 
@@ -145,3 +150,4 @@ resolve exact base + PR HEAD
 9. Product behavior specification generation is explicit, never automatic.
 10. Runtime setup performs no external dependency installation.
 11. Installed stop hooks are inert unless an active work-unit pointer exists.
+12. Every successful development workflow produces and verifies a local ELI5 visual handoff after the committed-range gate passes.

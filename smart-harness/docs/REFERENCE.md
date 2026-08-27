@@ -1,10 +1,10 @@
 # Generated Smart Harness Reference
 
-> Generated from repository-local files for version `0.8.0`. Do not edit by hand.
+> Generated from repository-local files for version `0.9.0`. Do not edit by hand.
 
 ## Simplicity budget
 
-- Shared discoverable skills: **5** (budget: 5)
+- Shared discoverable skills: **6** (budget: 5)
 - Copilot agent definitions: **7** (2 visible + 5 hidden)
 - Claude Code hidden agents: **5** (budget: 5)
 - Claude Code visible commands: **2** (budget: 2)
@@ -60,6 +60,7 @@ Active profile: **`balanced`**. Available profiles: `balanced`, `economy`, `qual
 
 | Skill | Description | Local path |
 |---|---|---|
+| `eli5` | Explain a completed coding project or technical change for a chosen audience and produce a polished, dependency-free visual HTML walkthrough. Use when the user invokes /eli5, asks to explain a project simply or to a particular role/age, or when a Smart Harness development workflow has completed successfully and needs its mandatory post-completion explanation. | `shared/skills/eli5` |
 | `engineering-workflow` | Default end-to-end engineering policy for coding tasks. Use for implementation, debugging, refactoring, architecture work, and maintenance: decompose work into coherent commit-sized units, run plan → implement → document → simplify → verify for every unit, keep authoritative documentation live with code, measure changed-code complexity, and verify with executable evidence. | `shared/skills/engineering-workflow` |
 | `pr-review` | Default deep pull-request review policy. Review exact PR HEAD and each logical commit in an isolated worktree, verify plan → implement → document → simplify → verify coherence, measure changed-code complexity and deltas, run semantic and executable lanes, escalate only for high-risk changes, and independently challenge serious findings. | `shared/skills/pr-review` |
 | `product-behavior-spec` | Build and maintain an outside-in product behavior specification from code, tests, and the running product. Use when asked for a product description, user-experience behavior spec, feature-by-feature behavior documentation, executable verification catalog, or when extending an existing behavior-spec directory. | `shared/skills/product-behavior-spec` |
@@ -98,6 +99,8 @@ Active profile: **`balanced`**. Available profiles: `balanced`, `economy`, `qual
 | Superpowers methodology adaptation | `b36e0829c6d0140e93cfef2ca599b1b07d4a7797` | MIT | `shared/skills/engineering-workflow`, `shared/skills/skill-authoring` |
 | Ponytail adaptation | `2ed6c52c9d7e5e56942508591085fd45dea277d3` | MIT | `shared/skills/engineering-workflow`, `shared/skills/pr-review` |
 | Pi VS Code skill adaptation | `90bb51cae36515a648515b633a81c0c6efc8c74d` | MIT | `shared/skills/vscode` |
+| ELI5 adaptation | `a766623b062331fdde53467001379b4ddf3acc2f` | MIT | `shared/skills/eli5/SKILL.md`, `shared/skills/eli5/references/story-format.md` |
+| Frontend Slides adaptation | `9906a34d640d2111f724544cbc50f7f130569ae1` | MIT | `shared/skills/eli5/assets/project-eli5-template.html`, `shared/skills/eli5/scripts/render_explainer.py`, `shared/skills/eli5/SKILL.md` |
 
 ## Installed support tools
 

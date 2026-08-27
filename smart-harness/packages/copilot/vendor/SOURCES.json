@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "policy": "All third-party-derived runtime guidance required by the harness is stored locally. v0.7 folds overlapping methodology concepts into the core engineering and PR-review skills instead of exposing separate default skills.",
+  "policy": "All third-party-derived runtime guidance and assets required by the harness are stored locally. Adaptations have no runtime dependency on their source repositories.",
   "components": [
     {
       "name": "Superpowers methodology adaptation",
@@ -36,6 +36,31 @@
         "shared/skills/vscode"
       ],
       "mode": "single dependency-free utility skill"
+    },
+    {
+      "name": "ELI5 adaptation",
+      "source": "https://github.com/dreambigou/eli5",
+      "commit": "a766623b062331fdde53467001379b4ddf3acc2f",
+      "license": "MIT",
+      "license_file": "vendor/licenses/ELI5-MIT.txt",
+      "local_paths": [
+        "shared/skills/eli5/SKILL.md",
+        "shared/skills/eli5/references/story-format.md"
+      ],
+      "mode": "audience-calibration and explanation structure adapted for verified coding-project handoff; no runtime dependency"
+    },
+    {
+      "name": "Frontend Slides adaptation",
+      "source": "https://github.com/zarazhangrui/frontend-slides",
+      "commit": "9906a34d640d2111f724544cbc50f7f130569ae1",
+      "license": "MIT",
+      "license_file": "vendor/licenses/FRONTEND-SLIDES-MIT.txt",
+      "local_paths": [
+        "shared/skills/eli5/assets/project-eli5-template.html",
+        "shared/skills/eli5/scripts/render_explainer.py",
+        "shared/skills/eli5/SKILL.md"
+      ],
+      "mode": "fixed-stage, visual-hierarchy, animation, navigation, print, and reduced-motion patterns adapted into a single offline explainer renderer"
     }
   ]
 }

@@ -55,4 +55,4 @@ Use `Dev` / `/dev` for development.
 
 Use `ReviewPR` / `/review-pr` for another developer's PR.
 
-Decompose non-trivial work into coherent, independently committable units with explicit dependencies and ownership. Every unit follows `plan -> implement -> document -> simplify -> verify`. Parallel writers use isolated worktrees. Do not claim completion without executable, complexity, and documentation evidence.
+Decompose non-trivial work into coherent, independently committable units with explicit dependencies and ownership. Every unit follows `plan -> implement -> document -> simplify -> verify`. Parallel writers use isolated worktrees. Do not claim completion without executable, complexity, and documentation evidence. After the committed-range gate passes, invoke `eli5` and include the checked visual handoff path.

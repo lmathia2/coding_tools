@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.9.0 — Visual project explanations
+
+- Added a self-contained `eli5` skill that reads verified code, tests, live documentation, contracts, and completion evidence; calibrates its explanation to the audience; and preserves honest limitations.
+- Added a Python-standard-library renderer and bundled visual template that produce one offline 1920×1080 HTML explainer with editorial layouts, diagrams/cards/metrics, keyboard/touch navigation, print support, and reduced-motion behavior.
+- Made the ELI5 visual handoff mandatory after the committed-range gate passes in every successful Copilot, Claude Code, and Pi development workflow, while keeping blocked/incomplete work from being presented as done.
+- Vendored pinned MIT provenance and licenses for `dreambigou/eli5` and `zarazhangrui/frontend-slides`; no upstream repository, package manager, CDN, hosted font, or runtime network request is required.
+
 ## 0.8.0 — Evidence and interoperability release
 
 - Added reproducible native Copilot and Claude Code plugin bundles plus a Claude marketplace catalog; retained the project/global installer as the cross-host and Pi baseline.

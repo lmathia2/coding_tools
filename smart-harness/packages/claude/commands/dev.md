@@ -30,6 +30,7 @@ Every implementation unit follows `plan -> implement -> document -> simplify -> 
 7. Run deterministic verification with `smart-harness:smart-fast` when command output would be verbose or separable.
 8. For a committed unit, run `${CLAUDE_PLUGIN_ROOT}/tools/check.py <unit-start-ref> --head HEAD` (or `--active`) as the composed lifecycle gate; before commit, report that range gate as `NOT EXECUTED` and run its applicable components.
 9. Add a top-model final review only for the risk dimension that caused high-risk escalation.
+10. After all units are integrated and the range gate passes, invoke `smart-harness:eli5` and generate its checked visual explainer under `.agent-state/eli5/`. A successful development run is not complete without the artifact path and audience in the handoff.
 
 ## Specialist documentation
 
@@ -37,4 +38,4 @@ Use `smart-harness:product-behavior-spec` only when the user explicitly asks for
 
 ## Completion
 
-Return Result, work units/commits, Verification, Documentation impact/changed paths, Complexity scores/deltas, Important decisions only when non-obvious, and Residual risk/blocked checks.
+Return Result, work units/commits, Verification, Documentation impact/changed paths, Complexity scores/deltas, ELI5 artifact/audience, Important decisions only when non-obvious, and Residual risk/blocked checks.

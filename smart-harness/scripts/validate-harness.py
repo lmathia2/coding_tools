@@ -13,6 +13,7 @@ sys.path.insert(0, str(ROOT / "config"))
 from model_config import get_profile, load_config, resolve_spec  # noqa: E402
 
 EXPECTED_SKILLS = {
+    "eli5",
     "engineering-workflow",
     "pr-review",
     "product-behavior-spec",
@@ -184,6 +185,13 @@ def validate_workflow_contracts() -> None:
     require_terms(ROOT / "copilot/agents/dev.agent.md", ("engineering-workflow", *lifecycle))
     require_terms(ROOT / "claude-code/commands/dev.md", ("engineering-workflow", *lifecycle))
     require_terms(ROOT / "pi/prompts/dev.md", ("engineering-workflow", *lifecycle))
+    for path in (
+        ROOT / "shared/skills/engineering-workflow/SKILL.md",
+        ROOT / "copilot/agents/dev.agent.md",
+        ROOT / "claude-code/commands/dev.md",
+        ROOT / "pi/prompts/dev.md",
+    ):
+        require_terms(path, ("eli5", ".agent-state/eli5", "not complete"))
     require_terms(ROOT / "pi/prompts/dev.md", ("harness-role: coordinator", "harness-workflow: dev"))
     require_terms(ROOT / "pi/prompts/review-pr.md", ("harness-role: coordinator", "harness-workflow: review-pr"))
 
@@ -201,6 +209,8 @@ def validate_workflow_contracts() -> None:
     # Product behavior generation must remain specialist/conditional.
     require_terms(ROOT / "shared/skills/engineering-workflow/SKILL.md", ("do not create a product behavior specification unless the user asks" ,))
     require_terms(ROOT / "shared/skills/pr-review/SKILL.md", ("do not create one during review",))
+
+    require_terms(ROOT / "shared/skills/eli5/SKILL.md", ("completed coding project", "dependency-free", "1920×1080", "reduced-motion"))
 
 
 def validate_vendor() -> None:
@@ -231,6 +241,12 @@ def validate_runtime_independence() -> None:
             if re.search(pattern, text, re.I):
                 fail(f"{path.relative_to(ROOT)} contains forbidden runtime install/fetch pattern {pattern}")
 
+    eli5_template = ROOT / "shared/skills/eli5/assets/project-eli5-template.html"
+    template_text = eli5_template.read_text(encoding="utf-8").lower()
+    for marker in ("http://", "https://", "<script src=", '<link rel="stylesheet"'):
+        if marker in template_text:
+            fail(f"ELI5 template contains external dependency marker {marker}")
+
 
 def validate_removed_surfaces() -> None:
     # Old network-sync surfaces must stay gone.
@@ -246,7 +262,7 @@ def validate_removed_surfaces() -> None:
 
 
 def validate_required_refinements() -> None:
-    for required in (ROOT / "tools/complexity.py", ROOT / "tools/commit_docs.py", ROOT / "tools/check.py", ROOT / "tools/experiments.py", ROOT / "tools/work_units.py", ROOT / "tools/hook_check.py", ROOT / "tools/spec_bridge.py", ROOT / "copilot/hooks/smart-harness.json", ROOT / "config/checks.json", ROOT / "tests/test_harness.py", ROOT / "templates/WORK_UNIT.md"):
+    for required in (ROOT / "tools/complexity.py", ROOT / "tools/commit_docs.py", ROOT / "tools/check.py", ROOT / "tools/experiments.py", ROOT / "tools/work_units.py", ROOT / "tools/hook_check.py", ROOT / "tools/spec_bridge.py", ROOT / "copilot/hooks/smart-harness.json", ROOT / "config/checks.json", ROOT / "tests/test_harness.py", ROOT / "templates/WORK_UNIT.md", ROOT / "shared/skills/eli5/scripts/render_explainer.py", ROOT / "shared/skills/eli5/assets/project-eli5-template.html"):
         if not required.exists():
             fail(f"missing required harness component {required.relative_to(ROOT)}")
 

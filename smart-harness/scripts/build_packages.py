@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PACKAGES = ROOT / "packages"
 VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
 PLUGIN_NAME = "smart-harness"
-DESCRIPTION = "Plan, implement, document, simplify, and verify with configurable model routing and deterministic evidence."
+DESCRIPTION = "Plan, implement, document, simplify, verify, and explain completed projects with deterministic evidence."
 
 
 def write_json(path: Path, value: dict[str, object]) -> None:
@@ -59,7 +59,7 @@ def plugin_metadata() -> dict[str, object]:
         "version": VERSION,
         "author": {"name": "lmathia2"},
         "repository": "https://github.com/lmathia2/coding_tools",
-        "keywords": ["sdlc", "coding-workflow", "code-review", "complexity", "documentation"],
+        "keywords": ["sdlc", "coding-workflow", "code-review", "complexity", "documentation", "eli5"],
     }
 
 
@@ -102,7 +102,7 @@ def build_claude(destination: Path) -> None:
 
 def namespace_claude_commands(commands: Path) -> None:
     names = (
-        "engineering-workflow", "pr-review", "product-behavior-spec",
+        "eli5", "engineering-workflow", "pr-review", "product-behavior-spec",
         "smart-fast", "smart-worker", "smart-deep-reasoner", "smart-deep-implementer", "smart-top-reviewer",
     )
     for path in commands.glob("*.md"):

@@ -30,6 +30,7 @@ Use `engineering-workflow`. You coordinate; writing happens in the selected impl
 7. Use `FastLane` VERIFY for separable deterministic tests/build/type/lint/static/docs execution.
 8. For a committed unit, run `${PLUGIN_ROOT}/tools/check.py <unit-start-ref> --head HEAD` (or `--active`) as the composed lifecycle gate; before commit, report that range gate as `NOT EXECUTED` and run its applicable components.
 9. Add `TopReviewer` only for the high-risk dimension that caused escalation.
+10. After all units are integrated and the range gate passes, invoke `eli5` and generate its checked visual explainer under `.agent-state/eli5/`. A successful development run is not complete without the artifact path and audience in the handoff.
 
 Do not automatically create premium review/debate lanes for routine work when deterministic verification is strong.
 
@@ -39,4 +40,4 @@ Invoke `product-behavior-spec` only when the user explicitly asks for an outside
 
 # Completion
 
-Return concise Result, work units/commits, Verification, Documentation impact/changed paths, Complexity scores/deltas, Important decisions only when non-obvious, and Residual risk/blocked checks.
+Return concise Result, work units/commits, Verification, Documentation impact/changed paths, Complexity scores/deltas, ELI5 artifact/audience, Important decisions only when non-obvious, and Residual risk/blocked checks.

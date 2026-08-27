@@ -36,6 +36,47 @@ spec_bridge = load_module("spec_bridge", HARNESS / "tools/spec_bridge.py")
 model_config = load_module("model_config", HARNESS / "config/model_config.py")
 configure_models = load_module("configure_models", HARNESS / "config/configure-models.py")
 package_builder = load_module("build_packages", HARNESS / "scripts/build_packages.py")
+eli5_renderer = load_module("eli5_renderer", HARNESS / "shared/skills/eli5/scripts/render_explainer.py")
+
+
+class Eli5RendererTests(unittest.TestCase):
+    def story(self) -> dict[str, object]:
+        return {
+            "title": "A safer release gate",
+            "subtitle": "What changed and why it helps",
+            "audience": "Curious teammate",
+            "summary": "The project checks the important promises before a release is called complete.",
+            "slides": [
+                {"title": "The old problem", "bullets": ["Checks could be scattered"], "accent": "coral"},
+                {
+                    "title": "Think of a preflight checklist",
+                    "analogy": {"title": "A pilot's checklist", "body": "One ordered list catches omissions.", "boundary": "Software checks can be automated."},
+                    "accent": "mint",
+                },
+                {
+                    "title": "Proof",
+                    "metrics": [{"value": "8/8", "label": "checks passed", "detail": "Clean repository"}],
+                    "accent": "gold",
+                },
+            ],
+            "closing": {"title": "The takeaway", "body": "The release evidence is now repeatable.", "next_steps": ["Keep project checks current"]},
+        }
+
+    def test_renders_offline_fixed_stage_document(self) -> None:
+        story = self.story()
+        story["summary"] = "Safe even with </script><script>alert('no')</script> text."
+        document = eli5_renderer.render_document(story)
+        self.assertIn('class="deck-stage"', document)
+        self.assertIn("prefers-reduced-motion", document)
+        self.assertIn("\\u003c/script\\u003e", document)
+        self.assertNotIn("https://", document.lower())
+        self.assertNotIn("<script src=", document.lower())
+
+    def test_rejects_overloaded_slides(self) -> None:
+        story = self.story()
+        story["slides"][0]["bullets"] = [str(index) for index in range(6)]
+        with self.assertRaisesRegex(ValueError, "at most 5"):
+            eli5_renderer.render_document(story)
 
 
 class ComplexityTests(unittest.TestCase):

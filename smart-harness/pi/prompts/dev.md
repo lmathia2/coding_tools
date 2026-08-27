@@ -20,7 +20,8 @@ Every implementation unit follows `plan -> implement -> document -> simplify -> 
 6. After documentation, score changed functions with `.smart-harness/tools/complexity.py --compare-ref <unit-start-ref>` or the repository-native analyzer, and simplify without gaming the score.
 7. Run targeted then broader feasible unit/integration/e2e/build/type/lint/static/docs checks according to blast radius.
 8. For a committed unit, run `.smart-harness/tools/check.py <unit-start-ref> --head HEAD` (or `--active`) as the composed lifecycle gate; before commit, report that range gate as `NOT EXECUTED` and run its applicable components.
+9. After all units are integrated and the range gate passes, invoke `eli5` and generate its checked visual explainer under `.agent-state/eli5/`. A successful development run is not complete without the artifact path and audience in the handoff.
 
 Use `product-behavior-spec` only when the user explicitly asks for an outside-in product behavior specification. If one already exists and the task changes behavior it covers, update only the affected artifacts as normal documentation.
 
-Return Result, work units/commits, Verification, Documentation impact/changed paths, Complexity scores/deltas, Important decisions only when non-obvious, and Residual risk/blocked checks.
+Return Result, work units/commits, Verification, Documentation impact/changed paths, Complexity scores/deltas, ELI5 artifact/audience, Important decisions only when non-obvious, and Residual risk/blocked checks.

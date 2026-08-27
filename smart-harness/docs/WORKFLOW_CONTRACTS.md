@@ -21,7 +21,8 @@ One dependable entry point with model and workflow selection hidden from the use
 7. Measure changed-function cyclomatic complexity against the unit start ref when feasible, simplify coherently, and explain scores above 10 or material increases.
 8. Execute proportional behavior/unit/integration/runtime/static/docs checks.
 9. Escalate to another premium perspective only for material uncertainty or high risk.
-10. Report exact evidence and residual risk.
+10. After the committed-range gate passes, invoke `eli5`, render and check the visual explainer, and report its audience and path.
+11. Report exact evidence and residual risk.
 
 ### Deterministic lifecycle gate
 
@@ -72,6 +73,12 @@ Fast models perform read-only exploration, measurement, and verification. Implem
 ### Product behavior specification
 
 The full `product-behavior-spec` workflow runs only when explicitly requested. Existing behavior specs are maintained like other authoritative docs when a code change affects them.
+
+### Project ELI5 completion handoff
+
+Every successful `Dev` / `/dev` run invokes the shared `eli5` skill after all code units are integrated and the committed range passes. The skill derives claims from implementation, tests, live documentation, contracts, and verification evidence; adapts depth and analogy to the audience; writes story JSON under `.agent-state/eli5/`; and uses its bundled `render_explainer.py` plus local HTML template to emit a single dependency-free file.
+
+The default ignored output avoids making the repository dirty after the final gate. A user-requested versioned output belongs in the affected documentation commit and must pass the normal documentation and range gates. Blocked or incomplete development does not produce a misleading completion deck. A renderer or validation failure means the successful development handoff is not complete.
 
 ## ReviewPR / `/review-pr`
 

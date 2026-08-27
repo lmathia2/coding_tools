@@ -1,14 +1,14 @@
-# Smart Harness v0.8
+# Smart Harness v0.9
 
 A self-contained, low-friction engineering harness for VS Code/GitHub Copilot, Claude Code, and Pi.
 
 ## Two things to remember
 
-| Product | Development | PR review |
-|---|---|---|
-| Copilot | `Dev` | `ReviewPR` |
-| Claude Code | `/dev` | `/review-pr` |
-| Pi | `/dev` | `/review-pr` |
+| Product | Development | PR review | Explain a project |
+|---|---|---|---|
+| Copilot | `Dev` | `ReviewPR` | `eli5` skill |
+| Claude Code | `/dev` | `/review-pr` | `/eli5` |
+| Pi | `/dev` | `/review-pr` | `/eli5` |
 
 Everything else is routing and evidence gathering.
 
@@ -43,9 +43,9 @@ The project-local install creates or updates:
 
 | Host | Discovery files | What becomes available |
 |---|---|---|
-| GitHub Copilot | `.github/agents/`, `.github/skills/`, shared `.claude/skills/` | `Dev` and `ReviewPR` custom agents |
-| Claude Code | `.claude/commands/`, `.claude/agents/`, `.claude/skills/` | `/dev`, `/review-pr`, and their specialists |
-| Pi | `.pi/prompts/`, `.pi/tools/`, `.pi/settings.json` | `/dev`, `/review-pr`, shared skills, and parallel children |
+| GitHub Copilot | `.github/agents/`, `.github/skills/`, shared `.claude/skills/` | `Dev`, `ReviewPR`, and the `eli5` skill |
+| Claude Code | `.claude/commands/`, `.claude/agents/`, `.claude/skills/` | `/dev`, `/review-pr`, `/eli5`, and their specialists |
+| Pi | `.pi/prompts/`, `.pi/tools/`, `.pi/settings.json` | `/dev`, `/review-pr`, `/eli5`, shared skills, and parallel children |
 | All hosts | `.smart-harness/` | Model profile, complexity/documentation tools, templates, provenance, and install manifest |
 
 Project-local installation is recommended because the workflow definitions travel with the codebase and can be reviewed with other project changes.
@@ -54,9 +54,9 @@ Project-local installation is recommended because the workflow definitions trave
 
 Open the project root in a new host session, or reload the current session so customization discovery runs again. Then use:
 
-- GitHub Copilot: select the `Dev` agent for implementation or `ReviewPR` for pull-request review.
-- Claude Code: run `/dev <task>` or `/review-pr <base-ref and intent>`.
-- Pi: run `/dev <task>` or `/review-pr <base-ref and intent>`.
+- GitHub Copilot: select the `Dev` agent for implementation or `ReviewPR` for pull-request review; invoke `eli5` explicitly for an explanation-only run.
+- Claude Code: run `/dev <task>`, `/review-pr <base-ref and intent>`, or `/eli5 <project and audience>`.
+- Pi: run `/dev <task>`, `/review-pr <base-ref and intent>`, or `/eli5 <project and audience>`.
 
 If a command or agent does not appear, confirm the host was opened at the installed project root and check the paths in the table above.
 
@@ -108,6 +108,8 @@ request
   -> coherent commit-sized work units
   -> plan -> implement -> document -> simplify -> verify per unit
   -> integrate independent units in dependency order
+  -> deterministic range gate
+  -> ELI5 visual handoff
   -> done
 ```
 
@@ -117,7 +119,7 @@ Only add another agent/model when an independent answer can materially change qu
 
 The harness intentionally caps its core discoverable surface:
 
-- **5 shared skills**: `engineering-workflow`, `pr-review`, `product-behavior-spec`, `skill-authoring`, `vscode`;
+- **6 shared skills**: `engineering-workflow`, `eli5`, `pr-review`, `product-behavior-spec`, `skill-authoring`, `vscode`;
 - **Copilot**: 2 visible coordinators + 5 hidden specialists;
 - **Claude Code**: 2 visible commands + 5 hidden specialists;
 - **Pi**: 2 prompts + one local parallel-child helper.
@@ -142,7 +144,8 @@ Routine work does not automatically receive a second premium LLM review when tes
 3. parallelize only independent units with disjoint ownership and isolated worktrees;
 4. keep implementation, API/contracts, purpose, intent, and invariants live in the same commit as code;
 5. score changed-function cyclomatic complexity and simplify without gaming the number;
-6. run executable verification before completion.
+6. run executable verification before completion;
+7. after the committed-range gate passes, run `eli5` and produce a checked visual project handoff.
 
 Documentation impact is always assessed. A code commit with no documentation changes records `Docs-Impact: none — <reason>`. The harness does not create low-value documentation merely to satisfy a ritual.
 
@@ -185,6 +188,14 @@ python3 .smart-harness/tools/spec_bridge.py import specs/001-auth/tasks.md --acc
 ```
 
 Import is explicit and one-way. The upstream artifact remains authoritative; the bridge preserves its task IDs/path, imports only checklist execution state, and never invokes or replaces the framework's specification, validation, apply, or archive workflow.
+
+## Project ELI5 handoff
+
+Every successful development workflow finishes by invoking the bundled `eli5` skill. It reads the verified implementation, tests, live documentation, public contracts, and completion evidence; calibrates the explanation for the requested audience; and produces a 5–9 slide visual walkthrough under ignored `.agent-state/eli5/` by default.
+
+The renderer is Python-standard-library only and emits one offline HTML file with all CSS, JavaScript, content, and fonts resolved locally. It uses a fixed 1920×1080 stage, strong editorial hierarchy, diagrams/cards/metrics, keyboard and touch navigation, print layout, and reduced-motion support. It makes no CDN, package-manager, analytics, or runtime network request.
+
+Run it explicitly at any time with `/eli5 <project or change and audience>`. To preserve an explainer as authoritative project documentation, request a versioned output path such as `docs/project-eli5.html`; otherwise the automatic post-development artifact stays outside the commit under `.agent-state/eli5/`.
 
 ## PR review
 
