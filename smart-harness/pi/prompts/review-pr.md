@@ -16,8 +16,9 @@ Use `pr-review`.
    - semantic architecture/correctness/wiring/contracts/tests/docs/simplicity review;
    - execution lane with complete feasible unit and integration suites plus relevant runtime/static/docs checks.
 4. Check each implementation commit for coherent `plan -> implement -> document -> simplify -> verify` evidence, live documentation in the same commit (or `Docs-Impact: none — <reason>`), and changed-function complexity score/delta.
-5. Add adversarial and security/resilience reasoning only for HIGH_RISK changes.
-6. Independently attempt to falsify candidate BLOCKER/MAJOR findings before publishing high severity.
-7. Report recommendation and exact execution evidence, then clean up worktrees.
+5. Run `.smart-harness/tools/check.py <base> --head <exact-pr-head>` as the composed deterministic range gate when installed, plus any additional repository-native checks required by the blast radius.
+6. Add adversarial and security/resilience reasoning only for HIGH_RISK changes.
+7. Independently attempt to falsify candidate BLOCKER/MAJOR findings before publishing high severity.
+8. Report recommendation and exact execution evidence, then clean up worktrees.
 
 Check existing product-behavior documentation only when the PR changes behavior it covers. Do not create a product behavior specification during review.

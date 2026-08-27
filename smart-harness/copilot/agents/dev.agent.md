@@ -28,7 +28,8 @@ Use `engineering-workflow`. You coordinate; writing happens in the selected impl
 5. For every unit, update live authoritative documentation in the same logical commit, including implementation, APIs/contracts, purpose, intent, and invariants; otherwise record `Docs-Impact: none — <reason>`.
 6. After documentation, use `FastLane` COMPLEXITY or the repository-native analyzer to score changed functions against the unit start ref, then simplify without gaming the score.
 7. Use `FastLane` VERIFY for separable deterministic tests/build/type/lint/static/docs execution.
-8. Add `TopReviewer` only for the high-risk dimension that caused escalation.
+8. For a committed unit, run `.smart-harness/tools/check.py <unit-start-ref> --head HEAD` (or `--active`) as the composed lifecycle gate; before commit, report that range gate as `NOT EXECUTED` and run its applicable components.
+9. Add `TopReviewer` only for the high-risk dimension that caused escalation.
 
 Do not automatically create premium review/debate lanes for routine work when deterministic verification is strong.
 

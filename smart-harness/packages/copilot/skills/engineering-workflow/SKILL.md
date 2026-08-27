@@ -152,6 +152,14 @@ For high-risk work, add one focused independent semantic review of the risk dime
 
 Never turn `NOT EXECUTED` into `PASS`.
 
+For a committed work unit, finish verification with the composed deterministic range gate so documentation sync, changed-function complexity, configured checks, and optional ledger evidence are evaluated under one contract:
+
+```bash
+python3 "${PLUGIN_ROOT}/tools/check.py" <unit-start-ref> --head HEAD
+```
+
+Use `--active` when an active work-unit ledger supplies the immutable base ref. Before a commit exists, run the applicable component checks and report the commit-range gate as `NOT EXECUTED`; do not point the gate at a range that omits the working-tree change.
+
 ## Completion
 
 Return concise:

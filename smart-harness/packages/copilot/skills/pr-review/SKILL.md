@@ -42,6 +42,8 @@ Discover authoritative commands from repository/CI configuration. Run:
 - applicable docs build/doctest/example/link/generated-reference checks.
 - changed-function cyclomatic complexity using `${PLUGIN_ROOT}/tools/complexity.py --compare-ref <base>` for Python, or the repository-native equivalent for other languages.
 
+When Smart Harness is installed, run `${PLUGIN_ROOT}/tools/check.py <base> --head <exact-pr-head>` as the composed deterministic range gate. Treat its documentation-sync, complexity, configured-check, and optional ledger results as the shared execution contract; retain additional repository-native checks required by the PR's blast radius.
+
 Parallelize independent checks only when they do not contend for databases, ports, fixtures, accounts, devices, or mutable external state.
 
 If a repository already has a product behavior specification, check it **only when the PR changes behavior covered by that specification**. Do not create one during review.

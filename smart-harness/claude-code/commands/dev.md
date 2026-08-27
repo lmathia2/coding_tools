@@ -28,7 +28,8 @@ Every implementation unit follows `plan -> implement -> document -> simplify -> 
 5. For every unit, update live authoritative documentation in the same logical commit, including implementation, APIs/contracts, purpose, intent, and invariants; otherwise record `Docs-Impact: none — <reason>`.
 6. After documentation, use `smart-fast` COMPLEXITY or the repository-native analyzer to score changed functions against the unit start ref, then simplify without gaming the score.
 7. Run deterministic verification with `smart-fast` when command output would be verbose or separable.
-8. Add a top-model final review only for the risk dimension that caused high-risk escalation.
+8. For a committed unit, run `.smart-harness/tools/check.py <unit-start-ref> --head HEAD` (or `--active`) as the composed lifecycle gate; before commit, report that range gate as `NOT EXECUTED` and run its applicable components.
+9. Add a top-model final review only for the risk dimension that caused high-risk escalation.
 
 ## Specialist documentation
 
