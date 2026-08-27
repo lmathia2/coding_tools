@@ -13,11 +13,20 @@ Task: $ARGUMENTS
 
 Use `engineering-workflow`. The user should not have to choose a model or sub-workflow.
 
+## Planning grill and lock
+
+Before decomposition or source edits, run the planning grill defined by `engineering-workflow`.
+
+- Default to an interactive interview: inspect repository evidence first, then ask high-value questions that resolve goals, acceptance, in/out scope, alternatives, assumptions, and relevant constraints. Include a recommended answer and tradeoff; iterate until the user locks the plan.
+- If the first task argument is exactly `auto` or `--auto`, remove that token, pose the same questions to yourself, answer from evidence or the smallest reversible assumption, record them, and lock the plan without routine user input.
+- Record mode, iterations, gate, key decisions, scope, assumptions, open questions, ambiguity assessment, and plan lock before creating work units.
+- After lock, execute rapidly and autonomously. Reopen only the invalidated decision when evidence breaks the plan, scope/contracts must materially change, or new authority is required; then relock and resume.
+
 ## Route with a simple default
 
 Every implementation unit follows `plan -> implement -> document -> simplify -> verify`.
 
-1. Understand the task and decompose it into coherent, independently committable work units with dependencies, ownership, acceptance criteria, documentation impact, complexity scope, and verification.
+1. Use the locked decision record to decompose the task into coherent, independently committable work units with dependencies, ownership, acceptance criteria, documentation impact, complexity scope, and verification.
 2. For targeted independent repository/test/docs discovery, launch `smart-fast` EXPLORE lanes in parallel only when this will materially reduce latency or uncertainty.
 3. Route implementation:
    - mechanical/local/deterministic or normal engineering → one `smart-worker` per independent work unit;
@@ -38,4 +47,4 @@ Use `product-behavior-spec` only when the user explicitly asks for an outside-in
 
 ## Completion
 
-Return Result, work units/commits, Verification, Documentation impact/changed paths, Complexity scores/deltas, ELI5 artifact/audience, Important decisions only when non-obvious, and Residual risk/blocked checks.
+Return Result, planning grill mode/iterations/key decisions/assumptions/boundaries and any re-entry, work units/commits, Verification, Documentation impact/changed paths, Complexity scores/deltas, ELI5 artifact/audience, and Residual risk/blocked checks.

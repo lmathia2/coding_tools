@@ -12,17 +12,31 @@ One dependable entry point with model and workflow selection hidden from the use
 
 ### Contract
 
-1. Decompose non-trivial work into coherent, independently committable units with dependencies, ownership, acceptance criteria, documentation impact, complexity scope, and verification.
-2. Run `plan -> implement -> document -> simplify -> verify` for every implementation unit.
-3. Use repository evidence to resolve ownership, callers/contracts, tests, and documentation impact.
-4. Route to the cheapest capable implementation path.
-5. Parallelize independent units only when it improves latency or reduces anchoring/uncertainty; parallel writers use isolated worktrees and disjoint ownership.
-6. Update live authoritative documentation in the same logical commit, including implementation, APIs/contracts, purpose, intent, and invariants; otherwise record `Docs-Impact: none — <reason>`.
-7. Measure changed-function cyclomatic complexity against the unit start ref when feasible, simplify coherently, and explain scores above 10 or material increases.
-8. Execute proportional behavior/unit/integration/runtime/static/docs checks.
-9. Escalate to another premium perspective only for material uncertainty or high risk.
-10. After the committed-range gate passes, invoke `eli5`, render and check the visual explainer, and report its audience and path.
-11. Report exact evidence and residual risk.
+1. Before decomposition or source edits, run an evidence-first planning grill that resolves Goals, Acceptance, Boundaries, Alternatives, Assumptions, and relevant constraints/failure behavior.
+2. In default interactive mode, ask high-value questions with recommendations and tradeoffs until the user locks the plan. When the first task argument is exactly `auto` or `--auto`, pose and answer the same questions internally, record the evidence/assumptions, and lock without routine user input.
+3. Record planning mode, iterations, gate, key decisions, in/out scope, assumptions, open questions, ambiguity assessment, and plan lock. Accepted upstream specifications use `imported` mode.
+4. Decompose the locked plan into coherent, independently committable units with dependencies, ownership, acceptance criteria, documentation impact, complexity scope, and verification.
+5. Run `plan -> implement -> document -> simplify -> verify` for every implementation unit.
+6. After lock, execute rapidly and autonomously. Reopen only the invalidated decision if evidence breaks a material assumption/criterion, scope or contracts must expand, consequences materially change, or new authority is required; append the decision, increment iterations, relock, and resume.
+7. Use repository evidence to resolve ownership, callers/contracts, tests, and documentation impact.
+8. Route to the cheapest capable implementation path.
+9. Parallelize independent units only when it improves latency or reduces anchoring/uncertainty; parallel writers use isolated worktrees and disjoint ownership.
+10. Update live authoritative documentation in the same logical commit, including implementation, APIs/contracts, purpose, intent, and invariants; otherwise record `Docs-Impact: none — <reason>`.
+11. Measure changed-function cyclomatic complexity against the unit start ref when feasible, simplify coherently, and explain scores above 10 or material increases.
+12. Execute proportional behavior/unit/integration/runtime/static/docs checks.
+13. Escalate to another premium perspective only for material uncertainty or high risk.
+14. After the committed-range gate passes, invoke `eli5`, render and check the visual explainer, and report its audience and path.
+15. Report exact evidence and residual risk.
+
+### Planning grill, lock, and re-entry
+
+The grill belongs inside the `plan` stage rather than becoming another required top-level workflow. This keeps `Dev` / `/dev` as the single implementation entry point while making requirements discovery unavoidable.
+
+Interactive planning may use several rounds. Questions are ordered by their ability to prevent rework, asked only after repository facts have been inspected, and include a recommended answer plus downstream tradeoff. The user gets one final plan-lock checkpoint. `enough` or `good enough` may end the interview, but the resulting gate is recorded as `user-override` with remaining ambiguity visible.
+
+`auto` is an answer mode, not a shortcut. The coordinator writes down each material question and its self-selected answer, preferring repository evidence, accepted project conventions, and the smallest reversible interpretation. It labels assumptions and cannot grant itself new authority for destructive/external actions or material scope expansion.
+
+Once locked, ordinary implementation decisions, test failures, refactors, model routing, and local integration are handled without further questions. A genuine plan-breaking event reopens only the affected decision; the coordinator does not restart the entire interview.
 
 ### Deterministic lifecycle gate
 
@@ -38,10 +52,10 @@ Exit status `0` means all checks passed, `1` means a check failed, and `2` means
 
 ### Resumable work-unit state and hooks
 
-The optional ledger is for complex, long, parallel, or handoff-prone tasks; routine fixes need no ledger. `work_units.py init` resolves the unit's base ref to an immutable commit and stores acceptance criteria, dependencies, owners/owned paths, documentation impact, source artifact, and lifecycle evidence under ignored `.agent-state/work-units/`. `advance` accepts evidence only in `plan -> implement -> document -> simplify -> verify` order. Dependencies must complete and active ownership cannot overlap before implementation starts.
+The optional ledger is for complex, long, parallel, or handoff-prone tasks; routine fixes need no ledger. `work_units.py init` resolves the unit's base ref to an immutable commit and stores the locked planning mode/gate/iterations/decisions/scope/assumptions, acceptance criteria, dependencies, owners/owned paths, documentation impact, source artifact, and lifecycle evidence under ignored `.agent-state/work-units/`. Schema-v2 records require at least one key decision; existing schema-v1 state remains readable. `advance` accepts evidence only in `plan -> implement -> document -> simplify -> verify` order. Dependencies must complete and active ownership cannot overlap before implementation starts.
 
 ```text
-work_units.py init ID --title TITLE --goal GOAL --acceptance CRITERION --owns PATH --base-ref REF --docs-impact required --doc-path PATH --activate
+work_units.py init ID --title TITLE --goal GOAL --acceptance CRITERION --owns PATH --base-ref REF --planning-mode interactive --planning-gate pass --decision "D1: resolution" --in-scope SCOPE --out-of-scope BOUNDARY --docs-impact required --doc-path PATH --activate
 work_units.py ready | list | show [ID] | validate
 work_units.py advance ID --evidence EVIDENCE [--commit SHA]
 check.py --active
@@ -65,7 +79,7 @@ spec_bridge.py import PATH --accepted [--owner NAME] [--activate-first]
 ### Normal-case cost shape
 
 ```text
-coordinator + one implementation context + deterministic verification
+collaborative planning grill + plan lock + autonomous coordinator/implementation + deterministic verification
 ```
 
 Fast models perform read-only exploration, measurement, and verification. Implementation stays in the normal or deep writing context. Deep/top models are exceptional paths.
@@ -109,7 +123,7 @@ Minimality is part of semantic review; it is not a separate review lane.
 - workflow coordinators: `dev`, `review_pr`;
 - reusable specialist roles: `normal`, `deep`, `fast`, `top`.
 
-`model` may be `null` only for Pi, where it means inherit the current session/default model. `reasoning` is translated to Copilot CLI `reasoningEffort`, Claude Code `effort`, or Pi `thinking`.
+`model` may be `null` for any platform and means inherit the current session/default model. `reasoning` is translated to Codex `model_reasoning_effort`, Copilot CLI `reasoningEffort`, Claude Code `effort`, or Pi `thinking`.
 
 ```text
 configure-models.py --list-profiles
@@ -136,6 +150,7 @@ The Pi helper resolves project `.wysiwyship/config/models.json` first and global
 
 ```text
 experiments.py record --workflow dev --role normal --platform claude_code --profile quality --status pass --verification pass
+experiments.py record --workflow dev --role deep --platform codex --profile detected --status pass --verification pass
 experiments.py run --workflow dev --role fast --platform pi --profile economy -- <command>
 experiments.py import-pi <parallel-pi-results.json> --workflow dev --profile economy
 experiments.py compare --group-by profile [--format json]
@@ -146,11 +161,13 @@ experiments.py compare --group-by profile [--format json]
 ## Installer API
 
 ```text
-install.sh {copilot|claude|pi|both|all} <project> [--dry-run|--status]
-install-global.sh {copilot|claude|pi|both|all} [--dry-run|--status]
+install.sh {codex|copilot|claude|pi|both|all} <project> [--dry-run|--status|--no-model-discovery]
+install-global.sh {codex|copilot|claude|pi|both|all} [--dry-run|--status|--no-model-discovery]
 ```
 
 The thin shell entry points share one Python implementation. It preflights before mutation, atomically writes settings, rolls back touched paths on failure, preserves unrelated customizations, records checksums in an install manifest, and supports dry-run/status inspection.
+
+Unless disabled, preflight also scans local host capabilities and creates an installed `detected` model profile. Codex `model/list` is authoritative for the signed-in Codex catalog and supported reasoning levels; installed custom specialists use those routes while the workflow coordinator inherits the active Codex session because a skill cannot replace its parent model. Claude Code `availableModels` settings are treated as explicit restrictions. Copilot/VS Code presence can be detected, but its effective signed-in model picker is not exposed through a supported non-interactive API, so those routes inherit the active session. No paid inference probe is run. The human-readable report and `.wysiwyship/model-discovery.json` identify host/version, evidence class, models, selected routes, fallbacks, and limitations.
 
 ## Native package build API
 

@@ -10,6 +10,7 @@ External methodologies are no longer exposed as separate default skills when the
 - Ponytail minimal-correct-solution concepts are folded into `engineering-workflow` and the simplicity dimension of `pr-review`; there is no separate Ponytail execution/review lane.
 - The dependency-free VS Code diff utility remains `vscode`.
 - The audience-calibration structure from `dreambigou/eli5` and fixed-stage visual presentation patterns from `zarazhangrui/frontend-slides` are combined in the local `eli5` skill and offline renderer.
+- The evidence-first interview discipline associated with public `grill-me` / `grilling` skills is independently implemented as a planning subroutine inside `engineering-workflow`; no external skill or separate command is required. See `vendor/INSPIRATIONS.md`.
 - `product-behavior-spec` is an original WYSIWYShip implementation conceptually inspired by Steve Ruiz's public gist; see `vendor/INSPIRATIONS.md`.
 
 ## Selection principles

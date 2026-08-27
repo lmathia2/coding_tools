@@ -36,7 +36,7 @@ def collect_skills() -> list[tuple[str, str, str]]:
     return skills
 
 
-def header_lines(version: str, skills: list[tuple[str, str, str]], copilot_files: list[str], claude_agents: list[str], claude_commands: list[str]) -> list[str]:
+def header_lines(version: str, skills: list[tuple[str, str, str]], codex_agents: list[str], copilot_files: list[str], claude_agents: list[str], claude_commands: list[str]) -> list[str]:
     return [
         "# Generated WYSIWYShip Reference",
         "",
@@ -46,14 +46,17 @@ def header_lines(version: str, skills: list[tuple[str, str, str]], copilot_files
         "",
         "## Simplicity budget",
         "",
-        f"- Shared discoverable skills: **{len(skills)}** (budget: 5)",
+        f"- Shared discoverable skills: **{len(skills)}** (budget: 6)",
+        f"- Codex specialist definitions: **{len(codex_agents)}** (budget: 4)",
         f"- Copilot agent definitions: **{len(copilot_files)}** (2 visible + 5 hidden)",
         f"- Claude Code hidden agents: **{len(claude_agents)}** (budget: 5)",
         f"- Claude Code visible commands: **{len(claude_commands)}** (budget: 2)",
         "",
         "## Work-unit lifecycle",
         "",
-        "Every implementation unit is coherent and independently committable, with explicit dependencies and ownership:",
+        "Every development request starts with an evidence-first planning grill and an explicit human or auto plan lock. After lock, execution is rapid and low-interruption unless a material decision is invalidated or new authority is required.",
+        "",
+        "Every implementation unit is coherent and independently committable, with explicit planning decisions, dependencies, and ownership:",
         "",
         "```text",
         "plan -> implement -> document -> simplify -> verify",
@@ -70,7 +73,7 @@ def model_lines(config: dict[str, object]) -> list[str]:
     active, profile = get_profile(config)
     available = ", ".join(f"`{name}`" for name in sorted(config["profiles"]))
     lines = [f"Active profile: **`{active}`**. Available profiles: {available}.", ""]
-    for platform in ("copilot", "claude_code", "pi"):
+    for platform in ("codex", "copilot", "claude_code", "pi"):
         lines += [
             f"### {platform.replace('_', ' ').title()}",
             "",
@@ -94,8 +97,10 @@ def skill_lines(skills: list[tuple[str, str, str]]) -> list[str]:
     return lines
 
 
-def adapter_lines(copilot_files: list[str], claude_agents: list[str], claude_commands: list[str]) -> list[str]:
-    lines = ["", "## Adapter files", "", "### Copilot", ""]
+def adapter_lines(codex_agents: list[str], copilot_files: list[str], claude_agents: list[str], claude_commands: list[str]) -> list[str]:
+    lines = ["", "## Adapter files", "", "### Codex specialists", ""]
+    lines += [f"- `{name}`" for name in codex_agents]
+    lines += ["", "### Copilot", ""]
     lines += [f"- `{name}`" for name in copilot_files]
     lines += ["", "### Claude Code hidden agents", ""]
     lines += [f"- `{name}`" for name in claude_agents]
@@ -119,11 +124,12 @@ def footer_lines() -> list[str]:
         "",
         "- `.wysiwyship/tools/complexity.py` — dependency-free Python function cyclomatic complexity and baseline deltas.",
         "- `.wysiwyship/tools/commit_docs.py` — commit-range documentation synchronization checks.",
-        "- `.wysiwyship/config/models.json` — installed active profile and model/reasoning defaults for Pi children.",
+        "- `.wysiwyship/config/models.json` — installed active profile and model/reasoning routes for every host.",
+        "- `.wysiwyship/model-discovery.json` — installer evidence, account-visible capabilities, fallbacks, and limitations when discovery is enabled.",
         "- `.wysiwyship/install-manifest.json` — installed paths, checksums, platforms, version, and backup history.",
         "- `.wysiwyship/vendor/` — pinned provenance and license notices carried with installed artifacts.",
         "",
-        "Installation is preflighted and transactional, uses atomic settings/manifest writes, rolls back touched paths on failure, and supports `--dry-run` and `--status`.",
+        "Installation is preflighted and transactional, uses atomic settings/manifest writes, rolls back touched paths on failure, and supports `--dry-run`, `--status`, and `--no-model-discovery`.",
         "",
         "## Runtime network dependency",
         "",
@@ -137,13 +143,14 @@ def generate() -> str:
     models = load_config(ROOT / "config/models.json")
     sources = json.loads((ROOT / "vendor/SOURCES.json").read_text(encoding="utf-8"))
     skills = collect_skills()
+    codex_agents = sorted(p.name for p in (ROOT / "codex/agents").glob("*.toml"))
     copilot_files = sorted(p.name for p in (ROOT / "copilot/agents").glob("*.agent.md"))
     claude_agents = sorted(p.name for p in (ROOT / "claude-code/agents").glob("*.md"))
     claude_commands = sorted(p.name for p in (ROOT / "claude-code/commands").glob("*.md"))
-    lines = header_lines(version, skills, copilot_files, claude_agents, claude_commands)
+    lines = header_lines(version, skills, codex_agents, copilot_files, claude_agents, claude_commands)
     lines += model_lines(models)
     lines += skill_lines(skills)
-    lines += adapter_lines(copilot_files, claude_agents, claude_commands)
+    lines += adapter_lines(codex_agents, copilot_files, claude_agents, claude_commands)
     lines += vendor_lines(sources)
     lines += footer_lines()
     return "\n".join(lines)

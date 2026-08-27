@@ -2,18 +2,21 @@
 
 *What you spec is what you ship. Plan it. Prove it. Just ship.*
 
-> Generated from repository-local files for version `0.10.0`. Do not edit by hand.
+> Generated from repository-local files for version `0.11.0`. Do not edit by hand.
 
 ## Simplicity budget
 
-- Shared discoverable skills: **6** (budget: 5)
+- Shared discoverable skills: **6** (budget: 6)
+- Codex specialist definitions: **4** (budget: 4)
 - Copilot agent definitions: **7** (2 visible + 5 hidden)
 - Claude Code hidden agents: **5** (budget: 5)
 - Claude Code visible commands: **2** (budget: 2)
 
 ## Work-unit lifecycle
 
-Every implementation unit is coherent and independently committable, with explicit dependencies and ownership:
+Every development request starts with an evidence-first planning grill and an explicit human or auto plan lock. After lock, execution is rapid and low-interruption unless a material decision is invalidated or new authority is required.
+
+Every implementation unit is coherent and independently committable, with explicit planning decisions, dependencies, and ownership:
 
 ```text
 plan -> implement -> document -> simplify -> verify
@@ -24,6 +27,17 @@ Live authoritative documentation travels in the same logical commit as code. Cha
 ## Model routing
 
 Active profile: **`balanced`**. Available profiles: `balanced`, `economy`, `quality`.
+
+### Codex
+
+| Target | Model | Reasoning |
+|---|---|---|
+| `dev.coordinator` | `inherit` | `high` |
+| `review_pr.coordinator` | `inherit` | `high` |
+| `normal` | `gpt-5.6-terra` | `medium` |
+| `deep` | `gpt-5.6-sol` | `high` |
+| `fast` | `gpt-5.6-luna` | `low` |
+| `top` | `gpt-5.6-sol` | `high` |
 
 ### Copilot
 
@@ -63,13 +77,20 @@ Active profile: **`balanced`**. Available profiles: `balanced`, `economy`, `qual
 | Skill | Description | Local path |
 |---|---|---|
 | `eli5` | Explain a completed coding project or technical change to a curious developer through its what, how, and why, and produce a polished, dependency-free visual HTML walkthrough. Use when the user invokes /eli5, asks to understand a project's purpose and implementation, or when a WYSIWYShip development workflow has completed successfully and needs its mandatory post-completion explanation. | `shared/skills/eli5` |
-| `engineering-workflow` | Default end-to-end engineering policy for coding tasks. Use for implementation, debugging, refactoring, architecture work, and maintenance: decompose work into coherent commit-sized units, run plan → implement → document → simplify → verify for every unit, keep authoritative documentation live with code, measure changed-code complexity, and verify with executable evidence. | `shared/skills/engineering-workflow` |
+| `engineering-workflow` | Default end-to-end engineering policy for coding tasks. Use for implementation, debugging, refactoring, architecture work, and maintenance: grill and lock the plan, decompose work into coherent commit-sized units, run plan → implement → document → simplify → verify for every unit, keep authoritative documentation live with code, measure changed-code complexity, and verify with executable evidence. | `shared/skills/engineering-workflow` |
 | `pr-review` | Default deep pull-request review policy. Review exact PR HEAD and each logical commit in an isolated worktree, verify plan → implement → document → simplify → verify coherence, measure changed-code complexity and deltas, run semantic and executable lanes, escalate only for high-risk changes, and independently challenge serious findings. | `shared/skills/pr-review` |
 | `product-behavior-spec` | Build and maintain an outside-in product behavior specification from code, tests, and the running product. Use when asked for a product description, user-experience behavior spec, feature-by-feature behavior documentation, executable verification catalog, or when extending an existing behavior-spec directory. | `shared/skills/product-behavior-spec` |
 | `skill-authoring` | Maintenance-only workflow for creating or changing WYSIWYShip skills, commands, prompts, or agent policies. Use when editing the harness itself; define precise triggers and observable behavior, keep instructions minimal, pressure-test conflicts and failure cases, update documentation/provenance, and run regression validation. | `shared/skills/skill-authoring` |
 | `vscode` | Vendored Pi-compatible VS Code CLI skill for showing file and Git differences to the user. Use when a visual side-by-side comparison is helpful and the existing `code` CLI is available. | `shared/skills/vscode` |
 
 ## Adapter files
+
+### Codex specialists
+
+- `wysiwyship-deep.toml`
+- `wysiwyship-fast.toml`
+- `wysiwyship-reviewer.toml`
+- `wysiwyship-worker.toml`
 
 ### Copilot
 
@@ -108,11 +129,12 @@ Active profile: **`balanced`**. Available profiles: `balanced`, `economy`, `qual
 
 - `.wysiwyship/tools/complexity.py` — dependency-free Python function cyclomatic complexity and baseline deltas.
 - `.wysiwyship/tools/commit_docs.py` — commit-range documentation synchronization checks.
-- `.wysiwyship/config/models.json` — installed active profile and model/reasoning defaults for Pi children.
+- `.wysiwyship/config/models.json` — installed active profile and model/reasoning routes for every host.
+- `.wysiwyship/model-discovery.json` — installer evidence, account-visible capabilities, fallbacks, and limitations when discovery is enabled.
 - `.wysiwyship/install-manifest.json` — installed paths, checksums, platforms, version, and backup history.
 - `.wysiwyship/vendor/` — pinned provenance and license notices carried with installed artifacts.
 
-Installation is preflighted and transactional, uses atomic settings/manifest writes, rolls back touched paths on failure, and supports `--dry-run` and `--status`.
+Installation is preflighted and transactional, uses atomic settings/manifest writes, rolls back touched paths on failure, and supports `--dry-run`, `--status`, and `--no-model-discovery`.
 
 ## Runtime network dependency
 

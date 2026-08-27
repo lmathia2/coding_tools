@@ -1,6 +1,6 @@
 ---
 name: engineering-workflow
-description: "Default end-to-end engineering policy for coding tasks. Use for implementation, debugging, refactoring, architecture work, and maintenance: decompose work into coherent commit-sized units, run plan → implement → document → simplify → verify for every unit, keep authoritative documentation live with code, measure changed-code complexity, and verify with executable evidence."
+description: "Default end-to-end engineering policy for coding tasks. Use for implementation, debugging, refactoring, architecture work, and maintenance: grill and lock the plan, decompose work into coherent commit-sized units, run plan → implement → document → simplify → verify for every unit, keep authoritative documentation live with code, measure changed-code complexity, and verify with executable evidence."
 license: Includes concepts adapted from MIT-licensed obra/superpowers and DietrichGebert/ponytail; see .wysiwyship/vendor/THIRD_PARTY_NOTICES.md in an installed project.
 ---
 
@@ -20,15 +20,21 @@ Every implementation unit follows this invariant, without skipping or reordering
 plan -> implement -> document -> simplify -> verify
 ```
 
-## 1. Understand, then plan
+## 1. Grill, lock, then plan execution
 
-No source edit before a plan. Scale the plan to risk:
+No source edit before a locked plan. Read [references/planning-grill.md](references/planning-grill.md) and run its planning interview before work-unit decomposition.
+
+- **Interactive by default:** inspect repository evidence, then ask high-value questions that resolve goals, acceptance, in/out scope, alternatives, assumptions, relevant constraints, and failure behavior. Provide a recommendation and tradeoff with each question. Several iterations are expected when they prevent downstream rework.
+- **Auto when explicitly requested:** if the first task argument is exactly `auto` or `--auto`, pose the same material questions to yourself, answer from repository evidence and the smallest reversible assumptions, and record the results. Auto mode changes who answers; it does not skip the grill or broaden authority.
+- **Decision record:** before decomposition, explicitly record mode, iteration count, gate, key question/resolution decisions, in scope, out of scope, assumptions, open questions, a Goals/Acceptance/Boundaries/Alternatives/Assumptions ambiguity assessment, and the plan lock.
+
+Scale the resulting execution plan to risk:
 
 - **Mechanical:** 1–3 steps.
 - **Normal:** acceptance criteria, owning code/callers/contracts, implementation steps, tests, and documentation impact.
 - **Complex/high-risk:** additionally capture invariants, alternatives, compatibility/migration/rollback, security/resilience, dependencies, and one independent challenge when useful.
 
-Resolve repository facts by reading code/tests/configuration. Ask the user only when product intent remains materially ambiguous.
+Resolve repository facts by reading code/tests/configuration. In interactive mode, ask the user only when product intent remains materially ambiguous. In auto mode, make and record the smallest reversible assumption unless doing so would change the requested outcome or require new authority.
 
 Decompose non-trivial work into the smallest coherent, independently committable units. Each unit records:
 
@@ -42,9 +48,11 @@ Decompose non-trivial work into the smallest coherent, independently committable
 
 One unit should produce one reviewable commit or commit-ready change. Do not split code from its tests or documentation merely to create more parallelism. Commit only when the user or repository workflow authorizes it.
 
+Once the user approves the decision record, or auto mode locks it, execution should be rapid and autonomous. Do not ask for routine implementation decisions already bounded by the plan. Reopen only the invalidated decision when evidence disproves a material assumption or acceptance criterion, scope/public contracts must expand, consequences materially change, or new authority is required; then append the decision, increment the iteration count, relock, and resume.
+
 If the repository already contains an accepted Spec Kit `tasks.md`, OpenSpec change `tasks.md`, or BMAD implementation story/spec, treat that artifact as authoritative planning input. Preview its translation with `.wysiwyship/tools/spec_bridge.py`; import ledger units only with explicit acceptance. Do not regenerate, reinterpret, or replace the upstream specification workflow.
 
-If execution disproves a plan assumption, revise the plan before continuing.
+If execution disproves a plan assumption, use the focused planning re-entry rule above before continuing.
 
 ## 2. Spend tokens where they change the answer
 
@@ -65,11 +73,13 @@ Keep work sequential when it has unmet dependencies or shared mutable state.
 
 Parallel writers require disjoint ownership, isolated branches/worktrees, one accountable agent per unit, and an explicit integration step. Each agent receives the same unit contract and runs the complete `plan -> implement -> document -> simplify -> verify` cycle. Otherwise use one writer.
 
-For complex, long, parallel, or resumable tasks, give every lane the same compact evidence and use `.wysiwyship/tools/work_units.py` to persist dependencies, ownership, lifecycle evidence, documentation impact, verification, and commit SHA under ignored `.agent-state/work-units/`. Activate one unit so installed stop hooks can enforce its lifecycle gate. Do not create ledger state for routine fixes where it adds no handoff value.
+For complex, long, parallel, or resumable tasks, give every lane the same compact evidence and use `.wysiwyship/tools/work_units.py` to persist the locked planning decisions, dependencies, ownership, lifecycle evidence, documentation impact, verification, and commit SHA under ignored `.agent-state/work-units/`. Activate one unit so installed stop hooks can enforce its lifecycle gate. Do not create ledger state for routine fixes where it adds no handoff value.
 
 ```bash
 python3 .wysiwyship/tools/work_units.py init <id> --title <title> --goal <goal> \
-  --acceptance <criterion> --owns <path> --base-ref HEAD --docs-impact required --doc-path <path> --activate
+  --acceptance <criterion> --owns <path> --base-ref HEAD \
+  --planning-mode interactive --planning-gate pass --decision "D1: accepted approach" \
+  --in-scope <scope> --out-of-scope <boundary> --docs-impact required --doc-path <path> --activate
 python3 .wysiwyship/tools/work_units.py advance <id> --evidence <stage-evidence>
 python3 .wysiwyship/tools/check.py --active
 python3 .wysiwyship/tools/work_units.py close
@@ -172,6 +182,7 @@ Return concise:
 
 - Result
 - Work units / commits and dependency order
+- Planning grill mode, iterations, key decisions, assumptions, boundaries, and lock/re-entry events
 - Verification (exact commands/results)
 - Documentation impact and changed paths
 - Complexity scores/deltas and simplification decisions

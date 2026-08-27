@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "WYSIWYShip cross-host engineering workflows",
-    "version": "0.10.0",
+    "version": "0.11.0",
     "pluginRoot": "./wysiwyship/packages"
   },
   "plugins": [
     {
       "name": "wysiwyship",
       "description": "What you spec is what you ship: plan, implement, document, simplify, verify, and explain with deterministic evidence.",
-      "version": "0.10.0",
+      "version": "0.11.0",
       "source": "./wysiwyship/packages/claude"
     }
   ]

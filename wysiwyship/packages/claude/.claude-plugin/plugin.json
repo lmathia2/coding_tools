@@ -3,7 +3,7 @@
   "displayName": "WYSIWYShip",
   "name": "wysiwyship",
   "description": "What you spec is what you ship: plan, implement, document, simplify, verify, and explain with deterministic evidence.",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "author": {
     "name": "lmathia2"
   },

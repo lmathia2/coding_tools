@@ -5,6 +5,26 @@
 - Observable outcome:
 - Acceptance criteria:
 
+## Planning grill and lock
+
+- Mode: `interactive` / `auto` / `imported`
+- Iterations:
+- Gate: `pass` / `user-override`
+- Locked at:
+
+### Key decisions
+
+- `D1 [Goals|Acceptance|Boundaries|Alternatives|Assumptions]` Question → resolution — evidence/tradeoff:
+
+### Scope and uncertainty
+
+- In scope:
+- Out of scope:
+- Assumptions (evidence, confidence, consequence if false):
+- Open questions (must be non-blocking after lock):
+- Ambiguity assessment for Goals / Acceptance / Boundaries / Alternatives / Assumptions:
+- Planning re-entry triggers:
+
 ## Dependencies and ownership
 
 - Depends on:
@@ -13,7 +33,7 @@
 
 ## Plan
 
-Repository facts, contracts, invariants, and the smallest correct approach.
+Repository facts, contracts, invariants, and the smallest correct approach derived from the locked decision record.
 
 ## Implementation
 

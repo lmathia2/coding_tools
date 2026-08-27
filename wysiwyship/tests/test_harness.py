@@ -35,6 +35,7 @@ hook_check = load_module("hook_check", HARNESS / "tools/hook_check.py")
 spec_bridge = load_module("spec_bridge", HARNESS / "tools/spec_bridge.py")
 model_config = load_module("model_config", HARNESS / "config/model_config.py")
 configure_models = load_module("configure_models", HARNESS / "config/configure-models.py")
+model_discovery = load_module("model_discovery", HARNESS / "config/model_discovery.py")
 package_builder = load_module("build_packages", HARNESS / "scripts/build_packages.py")
 eli5_renderer = load_module("eli5_renderer", HARNESS / "shared/skills/eli5/scripts/render_explainer.py")
 
@@ -211,6 +212,7 @@ class ModelConfigurationTests(unittest.TestCase):
         _, balanced = model_config.get_profile(config, "balanced")
         self.assertEqual(model_config.resolve_spec(balanced, "copilot", "coordinator", "dev")["reasoning"], "high")
         self.assertEqual(model_config.resolve_spec(balanced, "pi", "fast")["reasoning"], "low")
+        self.assertEqual(model_config.resolve_spec(balanced, "codex", "fast")["model"], "gpt-5.6-luna")
 
     def test_copilot_rewrite_translates_canonical_reasoning(self) -> None:
         profile = {
@@ -225,6 +227,67 @@ class ModelConfigurationTests(unittest.TestCase):
             updated = configure_models.rewrite(path, "copilot", profile)
         self.assertIn("model: Test Model", updated)
         self.assertIn("reasoningEffort: medium", updated)
+
+    def test_codex_rewrite_translates_model_and_reasoning(self) -> None:
+        profile = {
+            "codex": {
+                "workflows": {},
+                "roles": {"fast": {"model": "gpt-test-fast", "reasoning": "low"}},
+            }
+        }
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "fast.toml"
+            path.write_text('name = "fast"\nmodel = "old"\nmodel_reasoning_effort = "high"\n# harness-role: fast\n', encoding="utf-8")
+            updated = configure_models.rewrite(path, "codex", profile)
+        self.assertIn('model = "gpt-test-fast"', updated)
+        self.assertIn('model_reasoning_effort = "low"', updated)
+
+
+class ModelDiscoveryTests(unittest.TestCase):
+    def test_codex_uses_account_visible_model_list(self) -> None:
+        entries = [
+                {"model": "gpt-5.6-sol", "isDefault": True, "supportedReasoningEfforts": [
+                    {"reasoningEffort": "low"}, {"reasoningEffort": "high"},
+                ]},
+                {"model": "gpt-5.6-luna", "supportedReasoningEfforts": [{"reasoningEffort": "low"}]},
+            ]
+
+        def run(argv, **kwargs):
+            if argv[-1] == "--version":
+                return subprocess.CompletedProcess(argv, 0, "codex-cli 1.0\n", "")
+            return subprocess.CompletedProcess(argv, 0, "", "")
+
+        result = model_discovery.discover_codex(
+            lambda name: "/bin/codex" if name == "codex" else None,
+            run,
+            lambda executable: entries,
+        )
+        self.assertEqual(result["evidence"], "account-visible")
+        self.assertEqual([item["id"] for item in result["models"]], ["gpt-5.6-sol", "gpt-5.6-luna"])
+
+    def test_adaptive_profile_routes_only_evidenced_models(self) -> None:
+        base = {
+            "codex": {
+                "workflows": {"dev": {"model": "old", "reasoning": "xhigh"}, "review_pr": {"model": "old", "reasoning": "high"}},
+                "roles": {name: {"model": "old", "reasoning": "high"} for name in ("normal", "deep", "fast", "top")},
+            },
+            "copilot": {
+                "workflows": {"dev": {"model": "old", "reasoning": "high"}, "review_pr": {"model": "old", "reasoning": "high"}},
+                "roles": {name: {"model": "old", "reasoning": "high"} for name in ("normal", "deep", "fast", "top")},
+            },
+        }
+        report = {"hosts": {
+            "codex": {"evidence": "account-visible", "models": [
+                {"id": "gpt-5.6-sol", "default": True, "reasoning": ["low", "high"]},
+                {"id": "gpt-5.6-luna", "default": False, "reasoning": ["low"]},
+            ]},
+            "copilot": {"evidence": "session-inheritance", "models": []},
+        }}
+        profile = model_discovery.adaptive_profile(base, report)
+        self.assertEqual(profile["codex"]["roles"]["fast"]["model"], "gpt-5.6-luna")
+        self.assertIsNone(profile["codex"]["workflows"]["dev"]["model"])
+        self.assertEqual(profile["codex"]["workflows"]["dev"]["reasoning"], "xhigh")
+        self.assertIsNone(profile["copilot"]["roles"]["deep"]["model"])
 
 
 class CommitDocumentationTests(unittest.TestCase):
@@ -376,6 +439,11 @@ class WorkUnitTests(unittest.TestCase):
             acceptance=["contract is tested"], depends_on=[], owner=["worker-a"], owns=["src/api.py"],
             base_ref="HEAD", docs_impact="required", doc_path=["docs/api.md"], docs_reason=None,
             source_framework=None, source_path=None, activate=True,
+            planning_mode="interactive", planning_gate="pass", planning_iterations=2,
+            decision=["D1 [Boundaries]: preserve the public response shape"],
+            in_scope=["API validation"], out_of_scope=["client redesign"],
+            assumption=["Existing response consumers require compatibility"], open_question=[],
+            ambiguity=["Boundaries: clear — public response shape is preserved"],
         )
 
     def test_lifecycle_resolves_base_and_requires_ordered_evidence(self) -> None:
@@ -387,6 +455,11 @@ class WorkUnitTests(unittest.TestCase):
                 work_units.initialize_command(args)
             unit = work_units.load_unit(root, args.unit_id)
             self.assertEqual(unit["base_ref"], base)
+            self.assertEqual(unit["schema_version"], 2)
+            self.assertEqual(unit["planning"]["mode"], "interactive")
+            self.assertEqual(unit["planning"]["iterations"], 2)
+            self.assertTrue(unit["planning"]["locked_at"])
+            self.assertEqual(unit["planning"]["decisions"], args.decision)
             for stage in work_units.STAGES[:-1]:
                 advance = argparse.Namespace(root=str(root), unit_id=args.unit_id, evidence=f"{stage} evidence", commit=None)
                 with mock.patch("builtins.print"):
@@ -394,6 +467,30 @@ class WorkUnitTests(unittest.TestCase):
             self.assertEqual(work_units.active_unit(root)["stage"], "complete")
             self.assertEqual(hook_check.evaluate(root, {}), {})
             self.assertFalse(work_units.active_pointer(root).exists())
+
+    def test_planning_record_requires_a_key_decision(self) -> None:
+        args = self.unit_args(Path("."))
+        args.decision = []
+        unit = work_units.new_unit(args)
+        self.assertIn(
+            "planning.decisions must record at least one key decision",
+            work_units.validation_errors(unit),
+        )
+
+    def test_auto_planning_record_is_valid(self) -> None:
+        args = self.unit_args(Path("."))
+        args.planning_mode = "auto"
+        args.assumption = ["Use the smallest reversible behavior"]
+        unit = work_units.new_unit(args)
+        self.assertEqual(work_units.validation_errors(unit), [])
+        self.assertEqual(unit["planning"]["mode"], "auto")
+
+    def test_schema_one_work_unit_remains_valid(self) -> None:
+        args = self.unit_args(Path("."))
+        unit = work_units.new_unit(args)
+        unit["schema_version"] = 1
+        unit.pop("planning")
+        self.assertEqual(work_units.validation_errors(unit), [])
 
     def test_dependency_blocks_implementation(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -465,6 +562,8 @@ class SpecBridgeTests(unittest.TestCase):
             created = spec_bridge.import_preview(root, plan, "worker-a", True)
             self.assertEqual(created[1]["dependencies"], [created[0]["id"]])
             self.assertEqual(created[0]["source"], {"framework": "spec-kit", "path": "specs/001-auth/tasks.md"})
+            self.assertEqual(created[0]["planning"]["mode"], "imported")
+            self.assertIn("Accepted spec-kit artifact", created[0]["planning"]["decisions"][0])
             self.assertEqual(work_units.active_unit(root)["id"], created[0]["id"])
 
 
@@ -571,7 +670,10 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue((target / ".wysiwyship/tools/spec_bridge.py").exists())
             self.assertTrue((target / ".wysiwyship/config/models.json").exists())
             self.assertTrue((target / ".wysiwyship/config/checks.json").exists())
+            self.assertTrue((target / ".wysiwyship/model-discovery.json").exists())
             self.assertTrue((target / ".github/hooks/wysiwyship.json").exists())
+            self.assertTrue((target / ".agents/skills/engineering-workflow/SKILL.md").exists())
+            self.assertTrue((target / ".codex/agents/wysiwyship-worker.toml").exists())
             settings = json.loads((target / ".claude/settings.json").read_text(encoding="utf-8"))
             self.assertEqual(settings["hooks"]["Stop"][0]["hooks"][0]["command"], installer.CLAUDE_HOOK_COMMAND)
 
@@ -605,6 +707,25 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue((target / ".pi/agent/prompts/dev.md").exists())
             self.assertTrue((target / ".pi/agent/wysiwyship/parallel-pi.py").exists())
             self.assertTrue((target / ".claude/skills/engineering-workflow/SKILL.md").exists())
+
+    def test_discovery_configures_codex_and_records_report(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            target = Path(raw)
+            report = {"schema_version": 1, "hosts": {"codex": {
+                "host": "codex", "installed": True, "version": "codex-cli 1.0",
+                "evidence": "account-visible", "current_model": None, "notes": [],
+                "models": [
+                    {"id": "gpt-5.6-sol", "default": True, "reasoning": ["low", "medium", "high", "xhigh"]},
+                    {"id": "gpt-5.6-luna", "default": False, "reasoning": ["low"]},
+                ],
+            }}}
+            with mock.patch.object(installer, "discover", return_value=report):
+                installer.Installer("project", "codex", target, False, True).run()
+            config = json.loads((target / ".wysiwyship/config/models.json").read_text(encoding="utf-8"))
+            fast = (target / ".codex/agents/wysiwyship-fast.toml").read_text(encoding="utf-8")
+            self.assertEqual(config["active_profile"], "detected")
+            self.assertIn('model = "gpt-5.6-luna"', fast)
+            self.assertTrue((target / ".wysiwyship/model-discovery.json").exists())
 
 
 if __name__ == "__main__":

@@ -1,0 +1,8 @@
+name = "wysiwyship_deep"
+description = "Deep implementation and reasoning lane for subtle state, algorithms, and integrations."
+model = "gpt-5.6-sol"
+model_reasoning_effort = "high"
+developer_instructions = """
+Handle a bounded high-complexity work unit. Trace contracts and failure modes before editing, keep documentation live with code, simplify without changing behavior, and verify proportionally to risk.
+"""
+# harness-role: deep

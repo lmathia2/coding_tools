@@ -15,8 +15,14 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "config"))
+from adapter_config import rewrite_text  # noqa: E402
+from model_config import get_profile, load_config  # noqa: E402
+from model_discovery import adaptive_profile, discover, report_lines  # noqa: E402
+
 VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
-PLATFORMS = {"copilot", "claude", "pi", "both", "all"}
+PLATFORMS = {"codex", "copilot", "claude", "pi", "both", "all"}
+MANIFEST_PLATFORMS = {"codex", "copilot", "claude", "pi"}
 LEGACY_SKILLS = (
     "codebase-map", "context-snapshot", "documentation-sync", "engineering-core",
     "parallel-work", "plan-first", "ponytail", "ponytail-review",
@@ -121,8 +127,8 @@ def load_json_object(path: Path) -> dict[str, Any]:
 def validate_manifest_data(data: dict[str, Any], path: Path) -> None:
     if data.get("schema_version") != 1:
         raise ValueError(f"{path}: unsupported or missing schema_version")
-    if not isinstance(data.get("platforms"), list) or not all(item in {"copilot", "claude", "pi"} for item in data["platforms"]):
-        raise ValueError(f"{path}: platforms must contain only copilot, claude, or pi")
+    if not isinstance(data.get("platforms"), list) or not all(item in MANIFEST_PLATFORMS for item in data["platforms"]):
+        raise ValueError(f"{path}: platforms must contain only {sorted(MANIFEST_PLATFORMS)}")
     if not isinstance(data.get("backup_history"), list) or not all(isinstance(item, str) for item in data["backup_history"]):
         raise ValueError(f"{path}: backup_history must be an array of paths")
     outputs = data.get("outputs")
@@ -141,7 +147,7 @@ def validate_manifest_output(output: object, manifest: Path) -> None:
 
 
 class Installer:
-    def __init__(self, scope: str, platform: str, target: Path, dry_run: bool) -> None:
+    def __init__(self, scope: str, platform: str, target: Path, dry_run: bool, discover_models: bool = False) -> None:
         self.scope = scope
         self.platform = platform
         self.target = target.resolve()
@@ -150,6 +156,9 @@ class Installer:
         self.snapshot_paths: set[Path] = set()
         self.outputs: set[Path] = set()
         self.backup_root: Path | None = None
+        self.discover_models = discover_models
+        self.model_report: dict[str, Any] | None = None
+        self.profile: dict[str, Any] | None = None
 
     def selected(self, platform: str) -> bool:
         return self.platform == platform or self.platform == "all" or (self.platform == "both" and platform in {"copilot", "claude"})
@@ -229,7 +238,7 @@ class Installer:
             raise PermissionError(f"target directory is not writable: {self.target}")
 
     def validate_sources(self) -> None:
-        required = [ROOT / "VERSION", ROOT / "config/models.json", ROOT / "config/checks.json", ROOT / "shared/skills", ROOT / "templates", ROOT / "copilot/hooks/wysiwyship.json", ROOT / "tools/complexity.py", ROOT / "tools/commit_docs.py", ROOT / "tools/check.py", ROOT / "tools/experiments.py", ROOT / "tools/work_units.py", ROOT / "tools/hook_check.py", ROOT / "tools/spec_bridge.py", ROOT / "vendor/SOURCES.json"]
+        required = [ROOT / "VERSION", ROOT / "config/models.json", ROOT / "config/checks.json", ROOT / "config/model_discovery.py", ROOT / "shared/skills", ROOT / "templates", ROOT / "codex/agents", ROOT / "copilot/hooks/wysiwyship.json", ROOT / "tools/complexity.py", ROOT / "tools/commit_docs.py", ROOT / "tools/check.py", ROOT / "tools/experiments.py", ROOT / "tools/work_units.py", ROOT / "tools/hook_check.py", ROOT / "tools/spec_bridge.py", ROOT / "vendor/SOURCES.json"]
         missing = [str(path) for path in required if not path.exists()]
         if missing:
             raise FileNotFoundError(f"installer source is incomplete: {missing}")
@@ -263,12 +272,29 @@ class Installer:
         return self.target / (".pi/settings.json" if self.scope == "project" else ".pi/agent/settings.json")
 
     def install_shared(self) -> None:
-        skill_root = self.target / ".claude/skills"
-        for name in LEGACY_SKILLS:
-            self.remove_legacy(skill_root / name)
-        for source in sorted((ROOT / "shared/skills").iterdir()):
-            if source.is_dir():
-                self.replace(source, skill_root / source.name)
+        roots = []
+        if any(self.selected(platform) for platform in ("copilot", "claude", "pi")):
+            roots.append(self.target / ".claude/skills")
+        if self.selected("codex"):
+            roots.append(self.target / ".agents/skills")
+        for skill_root in roots:
+            for name in LEGACY_SKILLS:
+                self.remove_legacy(skill_root / name)
+            for source in sorted((ROOT / "shared/skills").iterdir()):
+                if source.is_dir():
+                    self.replace(source, skill_root / source.name)
+
+    def install_adapter(self, source: Path, destination: Path, platform: str) -> None:
+        if self.profile is None:
+            self.replace(source, destination)
+            return
+        configured = rewrite_text(source, source.read_text(encoding="utf-8"), platform, self.profile)
+        self.write_text(destination, configured)
+
+    def install_codex(self) -> None:
+        base = self.target / ".codex/agents"
+        for source in sorted((ROOT / "codex/agents").glob("*.toml")):
+            self.install_adapter(source, base / source.name, "codex")
 
     def remove_previous_brand(self) -> None:
         """Remove paths exclusively owned by the pre-0.10 product identity."""
@@ -283,7 +309,7 @@ class Installer:
         for name in LEGACY_COPILOT_AGENTS:
             self.remove_legacy(base / name)
         for source in sorted((ROOT / "copilot/agents").glob("*.agent.md")):
-            self.replace(source, base / source.name)
+            self.install_adapter(source, base / source.name, "copilot")
         if self.scope == "project":
             self.replace(ROOT / "copilot/github-skills/code-review", self.target / ".github/skills/code-review")
             self.replace(ROOT / "copilot/hooks/wysiwyship.json", self.target / ".github/hooks/wysiwyship.json")
@@ -293,9 +319,9 @@ class Installer:
         for name in LEGACY_CLAUDE_AGENTS:
             self.remove_legacy(agent_root / name)
         for source in sorted((ROOT / "claude-code/agents").glob("*.md")):
-            self.replace(source, agent_root / source.name)
+            self.install_adapter(source, agent_root / source.name, "claude_code")
         for source in sorted((ROOT / "claude-code/commands").glob("*.md")):
-            self.replace(source, self.target / ".claude/commands" / source.name)
+            self.install_adapter(source, self.target / ".claude/commands" / source.name, "claude_code")
         if self.scope == "project":
             self.install_claude_hook()
 
@@ -337,8 +363,19 @@ class Installer:
 
     def install_support_files(self) -> None:
         support_root = self.target / ".wysiwyship"
-        self.replace(ROOT / "config/models.json", support_root / "config/models.json")
+        if self.profile is None:
+            self.replace(ROOT / "config/models.json", support_root / "config/models.json")
+            disabled = {"schema_version": 1, "disabled": True, "hosts": {}}
+            self.write_text(support_root / "model-discovery.json", json.dumps(disabled, indent=2) + "\n")
+        else:
+            config = load_config(ROOT / "config/models.json")
+            config["profiles"]["detected"] = self.profile
+            config["active_profile"] = "detected"
+            self.write_text(support_root / "config/models.json", json.dumps(config, indent=2) + "\n")
+            self.write_text(support_root / "model-discovery.json", json.dumps(self.model_report, indent=2) + "\n")
         self.replace(ROOT / "config/checks.json", support_root / "config/checks.json")
+        for source in sorted((ROOT / "config").glob("*.py")):
+            self.replace(source, support_root / "config" / source.name)
         for source in sorted((ROOT / "tools").glob("*.py")):
             self.replace(source, support_root / "tools" / source.name)
         self.replace(ROOT / "vendor/SOURCES.json", support_root / "vendor/SOURCES.json")
@@ -387,7 +424,7 @@ class Installer:
         return outputs
 
     def manifest_platforms(self, previous: dict[str, Any]) -> list[str]:
-        selected = {"copilot", "claude", "pi"} if self.platform == "all" else ({"copilot", "claude"} if self.platform == "both" else {self.platform})
+        selected = MANIFEST_PLATFORMS if self.platform == "all" else ({"copilot", "claude"} if self.platform == "both" else {self.platform})
         selected.update(previous.get("platforms", []))
         return sorted(selected)
 
@@ -430,9 +467,15 @@ class Installer:
 
     def run(self) -> None:
         self.preflight()
+        if self.discover_models:
+            self.model_report = discover(self.target)
+            _, base = get_profile(load_config(ROOT / "config/models.json"))
+            self.profile = adaptive_profile(base, self.model_report)
         try:
             self.remove_previous_brand()
             self.install_shared()
+            if self.selected("codex"):
+                self.install_codex()
             if self.selected("copilot"):
                 self.install_copilot()
             if self.selected("claude"):
@@ -480,6 +523,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("target", nargs="?")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--status", action="store_true")
+    parser.add_argument("--no-model-discovery", action="store_true", help="install static model routes without scanning local hosts")
     return parser.parse_args()
 
 
@@ -495,12 +539,14 @@ def main() -> int:
         target = Path.home()
     if args.status:
         return print_status(target.resolve())
-    installer = Installer(args.scope, args.platform, target, args.dry_run)
+    installer = Installer(args.scope, args.platform, target, args.dry_run, not args.no_model_discovery)
     installer.run()
     mode = "dry run complete" if args.dry_run else "installation complete"
     print(f"\nWYSIWYShip {VERSION} {mode} ({args.scope}, {args.platform}).")
     if installer.backup_root:
         print(f"Backup: {installer.backup_root}")
+    if installer.model_report:
+        print("\n" + "\n".join(report_lines(installer.model_report, installer.profile)))
     return 0
 
 

@@ -2,7 +2,15 @@
 
 ## Unreleased
 
+## 0.11.0 — Planning grill and execution lock
+
+- Added first-class Codex installation through `.agents/skills` and `.codex/agents`, with semantic fast/normal/deep/top specialists that use the existing Codex account.
+- Added default installer-time model discovery and an explicit setup report: Codex uses account-visible `model/list` capabilities, Claude Code honors configured model restrictions, Copilot/VS Code safely inherits its session picker, and `--no-model-discovery` retains a static/offline path.
 - Made every ELI5 explanation target a curious developer and explicitly teach what changed, how the implementation works, and why the design choices exist; requested audience variants now adjust emphasis without dropping those layers.
+- Added an evidence-first planning grill inside every `Dev` / `/dev` plan stage, covering goals, acceptance, boundaries, alternatives, assumptions, and relevant constraints before work-unit decomposition.
+- Added interactive multi-round planning with recommendations/tradeoffs and one explicit plan lock, plus `auto` / `--auto` mode that poses and answers the same questions from repository evidence and reversible assumptions.
+- Made post-lock execution deliberately rapid and low-interruption; planning reopens only for an invalidated material decision, necessary scope/contract expansion, materially changed consequences, or new authority.
+- Added schema-v2 work-unit planning records for mode, iterations, gate, key decisions, in/out scope, assumptions, open questions, ambiguity assessment, and lock timestamp while retaining schema-v1 compatibility.
 
 ## 0.10.0 — WYSIWYShip
 

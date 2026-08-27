@@ -3,6 +3,18 @@
   "active_profile": "balanced",
   "profiles": {
     "balanced": {
+      "codex": {
+        "workflows": {
+          "dev": {"model": null, "reasoning": "high", "notes": "Coordinator inherits the active Codex session model."},
+          "review_pr": {"model": null, "reasoning": "high", "notes": "Coordinator inherits the active Codex session model."}
+        },
+        "roles": {
+          "normal": {"model": "gpt-5.6-terra", "reasoning": "medium"},
+          "deep": {"model": "gpt-5.6-sol", "reasoning": "high"},
+          "fast": {"model": "gpt-5.6-luna", "reasoning": "low"},
+          "top": {"model": "gpt-5.6-sol", "reasoning": "high"}
+        }
+      },
       "copilot": {
         "workflows": {
           "dev": {"model": "Claude Opus 5", "reasoning": "high"},
@@ -41,6 +53,18 @@
       }
     },
     "economy": {
+      "codex": {
+        "workflows": {
+          "dev": {"model": null, "reasoning": "medium", "notes": "Coordinator inherits the active Codex session model."},
+          "review_pr": {"model": null, "reasoning": "medium", "notes": "Coordinator inherits the active Codex session model."}
+        },
+        "roles": {
+          "normal": {"model": "gpt-5.6-terra", "reasoning": "medium"},
+          "deep": {"model": "gpt-5.6-sol", "reasoning": "high"},
+          "fast": {"model": "gpt-5.6-luna", "reasoning": "low"},
+          "top": {"model": "gpt-5.6-sol", "reasoning": "high"}
+        }
+      },
       "copilot": {
         "workflows": {
           "dev": {"model": "Claude Sonnet 5", "reasoning": "medium"},
@@ -79,6 +103,18 @@
       }
     },
     "quality": {
+      "codex": {
+        "workflows": {
+          "dev": {"model": null, "reasoning": "xhigh", "notes": "Coordinator inherits the active Codex session model."},
+          "review_pr": {"model": null, "reasoning": "xhigh", "notes": "Coordinator inherits the active Codex session model."}
+        },
+        "roles": {
+          "normal": {"model": "gpt-5.6-sol", "reasoning": "high"},
+          "deep": {"model": "gpt-5.6-sol", "reasoning": "xhigh"},
+          "fast": {"model": "gpt-5.6-terra", "reasoning": "medium"},
+          "top": {"model": "gpt-5.6-sol", "reasoning": "xhigh"}
+        }
+      },
       "copilot": {
         "workflows": {
           "dev": {"model": "Claude Opus 5", "reasoning": "high"},

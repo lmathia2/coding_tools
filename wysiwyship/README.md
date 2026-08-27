@@ -1,15 +1,16 @@
-# WYSIWYShip v0.10
+# WYSIWYShip v0.11
 
 *What you spec is what you ship.*
 
 **Plan it. Prove it. Just ship.**
 
-A self-contained, low-friction engineering workflow for VS Code/GitHub Copilot, Claude Code, and Pi.
+A self-contained, low-friction engineering workflow for Codex, VS Code/GitHub Copilot, Claude Code, and Pi.
 
 ## Two things to remember
 
 | Product | Development | PR review | Explain a project |
 |---|---|---|---|
+| Codex | `$engineering-workflow` or a coding request | `$pr-review` | `$eli5` |
 | Copilot | `Dev` | `ReviewPR` | `eli5` skill |
 | Claude Code | `/dev` | `/review-pr` | `/eli5` |
 | Pi | `/dev` | `/review-pr` | `/eli5` |
@@ -21,7 +22,7 @@ Everything else is routing and evidence gathering.
 ### Prerequisites
 
 - Python 3 and Bash;
-- at least one supported host installed: GitHub Copilot, Claude Code, or Pi;
+- at least one supported host installed: Codex, GitHub Copilot, Claude Code, or Pi;
 - an existing project directory where the host will run.
 
 The harness itself installs no packages and downloads nothing at runtime.
@@ -43,7 +44,7 @@ Rerun the project or global installer from `wysiwyship/`. It transactionally bac
 
 ### 2. Install into a project (recommended)
 
-Install all three adapters into the project where you want to use them:
+Install all four adapters into the project where you want to use them:
 
 ```bash
 bash wysiwyship/install.sh all /absolute/path/to/project
@@ -53,12 +54,15 @@ The project-local install creates or updates:
 
 | Host | Discovery files | What becomes available |
 |---|---|---|
+| Codex | `.agents/skills/`, `.codex/agents/` | automatic or `$engineering-workflow`, `$pr-review`, `$eli5`, and model-routed specialists |
 | GitHub Copilot | `.github/agents/`, `.github/skills/`, shared `.claude/skills/` | `Dev`, `ReviewPR`, and the `eli5` skill |
 | Claude Code | `.claude/commands/`, `.claude/agents/`, `.claude/skills/` | `/dev`, `/review-pr`, `/eli5`, and their specialists |
 | Pi | `.pi/prompts/`, `.pi/tools/`, `.pi/settings.json` | `/dev`, `/review-pr`, `/eli5`, shared skills, and parallel children |
 | All hosts | `.wysiwyship/` | Model profile, complexity/documentation tools, templates, provenance, and install manifest |
 
 Project-local installation is recommended because the workflow definitions travel with the codebase and can be reviewed with other project changes.
+
+By default, installation scans installed hosts before writing adapters. Codex supplies an account-visible model catalog and supported reasoning levels through its app-server protocol; Codex specialists are routed from that catalog while the coordinator safely inherits the model selected for the current session. Claude Code contributes explicit `availableModels` restrictions when configured. VS Code Copilot is detected, but its signed-in model picker has no supported installer API, so its generated agents inherit the selected chat-session model. The installer prints every evidence source and route and saves the full report at `.wysiwyship/model-discovery.json`. Use `--no-model-discovery` to install the versioned static profile instead.
 
 ### 3. Reload the host and use it
 
@@ -67,6 +71,7 @@ Open the project root in a new host session, or reload the current session so cu
 - GitHub Copilot: select the `Dev` agent for implementation or `ReviewPR` for pull-request review; invoke `eli5` explicitly for an explanation-only run.
 - Claude Code: run `/dev <task>`, `/review-pr <base-ref and intent>`, or `/eli5 <project and audience>`.
 - Pi: run `/dev <task>`, `/review-pr <base-ref and intent>`, or `/eli5 <project and audience>`.
+- Codex: make a normal coding request (the workflow can trigger implicitly) or invoke `$engineering-workflow`; use `$pr-review` for review and `$eli5` for an explanation-only run.
 
 If a command or agent does not appear, confirm the host was opened at the installed project root and check the paths in the table above.
 
@@ -90,7 +95,7 @@ bash wysiwyship/install-global.sh all
 bash wysiwyship/install-global.sh all --status
 ```
 
-Global installation uses `~/.copilot/agents`, `~/.claude/{commands,agents,skills}`, and `~/.pi/agent`. Host precedence rules differ when the same customization exists in both scopes, so avoid conflicting global and project definitions unless that override is intentional.
+Global installation uses `~/.agents/skills`, `~/.codex/agents`, `~/.copilot/agents`, `~/.claude/{commands,agents,skills}`, and `~/.pi/agent`. Host precedence rules differ when the same customization exists in both scopes, so avoid conflicting global and project definitions unless that override is intentional.
 
 ### Native plugin alternative
 
@@ -105,7 +110,7 @@ claude plugin install wysiwyship@coding-tools
 
 The plugin bundles are generated from the same canonical agents, skills, tools, model profile, and checks as the installer. Claude commands are namespaced (for example `/wysiwyship:dev`). Copilot keeps the `Dev` and `ReviewPR` agent names. The selected model profile is fixed at package build time; edit `config/models.json`, apply the profile, and rebuild to publish a different routing experiment.
 
-Use the project installer when policies/configuration should travel with the target repository, when Pi is required, or when project-local discovery names (`/dev`) are preferred. Do not install both forms for the same host unless you intentionally want project files to take precedence over plugin components.
+Use the project installer when policies/configuration should travel with the target repository, when Codex or Pi is required, or when project-local discovery names (`/dev`) are preferred. Do not install both forms for the same host unless you intentionally want project files to take precedence over plugin components.
 
 Discovery behavior is documented upstream for [Copilot custom agents and skills](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference), [Claude Code skills and commands](https://code.claude.com/docs/en/slash-commands), and [Pi settings](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/settings.md).
 
@@ -115,6 +120,8 @@ The default is intentionally small:
 
 ```text
 request
+  -> evidence-first planning grill
+  -> explicit human or auto plan lock
   -> coherent commit-sized work units
   -> plan -> implement -> document -> simplify -> verify per unit
   -> integrate independent units in dependency order
@@ -149,13 +156,31 @@ Routine work does not automatically receive a second premium LLM review when tes
 
 `engineering-workflow` owns the default process in one place:
 
-1. decompose non-trivial work into coherent, independently committable units;
-2. run `plan -> implement -> document -> simplify -> verify` for every unit;
-3. parallelize only independent units with disjoint ownership and isolated worktrees;
-4. keep implementation, API/contracts, purpose, intent, and invariants live in the same commit as code;
-5. score changed-function cyclomatic complexity and simplify without gaming the number;
-6. run executable verification before completion;
-7. after the committed-range gate passes, run `eli5` and produce a checked visual project handoff.
+1. grill the plan against repository evidence, user intent, scope, alternatives, assumptions, and acceptance criteria;
+2. lock an explicit decision record, either after interactive user approval or after an `auto` self-interview;
+3. decompose non-trivial work into coherent, independently committable units;
+4. run `plan -> implement -> document -> simplify -> verify` for every unit;
+5. parallelize only independent units with disjoint ownership and isolated worktrees;
+6. keep implementation, API/contracts, purpose, intent, and invariants live in the same commit as code;
+7. score changed-function cyclomatic complexity and simplify without gaming the number;
+8. run executable verification before completion;
+9. after the committed-range gate passes, run `eli5` and produce a checked visual project handoff.
+
+### Planning first, then fast execution
+
+`Dev` / `/dev` starts with an evidence-first planning grill. By default, the coordinator asks the highest-value unresolved questions—one focused decision at a time, with its recommendation and tradeoff—until goals, verifiable acceptance, in/out scope, alternatives, assumptions, and relevant constraints are clear. It then presents the key decision record for one final plan lock.
+
+To skip the human interview without skipping the reasoning, prefix the task with `auto`:
+
+```text
+Copilot Dev: auto add resumable uploads
+Claude Code: /dev auto add resumable uploads
+Pi: /dev auto add resumable uploads
+```
+
+Auto mode poses and answers the same questions from repository evidence, existing conventions, and the smallest reversible assumptions, then records and locks the result. It cannot self-authorize destructive/external actions or expand the requested scope.
+
+After lock, execution is intentionally low-interruption: the coordinator handles normal implementation choices, tests, refactoring, documentation, model routing, and integration itself. It returns to planning only when evidence invalidates a key decision, scope or public contracts must materially change, consequences change materially, or new authority is required. Only the affected decision is reopened; after relock, execution resumes.
 
 Documentation impact is always assessed. A code commit with no documentation changes records `Docs-Impact: none — <reason>`. The harness does not create low-value documentation merely to satisfy a ritual.
 
@@ -180,6 +205,9 @@ For a long, parallel, or resumable change, persist the execution contract and ac
 python3 .wysiwyship/tools/work_units.py init api-contract \
   --title "API contract" --goal "Add the accepted contract" \
   --acceptance "contract tests pass" --owns src/api.py --base-ref HEAD \
+  --planning-mode interactive --planning-gate pass \
+  --decision "D1: preserve the existing public response shape" \
+  --in-scope "API validation" --out-of-scope "client redesign" \
   --docs-impact required --doc-path docs/api.md --activate
 python3 .wysiwyship/tools/work_units.py advance api-contract --evidence "plan: callers and contract mapped"
 # Repeat advance after implement, document, simplify, and verify.
@@ -239,6 +267,7 @@ Install only the adapters you use:
 ```bash
 bash wysiwyship/install.sh copilot /path/to/project
 bash wysiwyship/install.sh claude /path/to/project
+bash wysiwyship/install.sh codex /path/to/project
 bash wysiwyship/install.sh pi /path/to/project
 bash wysiwyship/install.sh both /path/to/project  # Copilot + Claude Code
 ```
@@ -248,6 +277,7 @@ Preview or inspect installation state:
 ```bash
 bash wysiwyship/install.sh all /path/to/project --dry-run
 bash wysiwyship/install.sh all /path/to/project --status
+bash wysiwyship/install.sh all /path/to/project --no-model-discovery
 ```
 
 ## Models
@@ -267,7 +297,7 @@ python3 wysiwyship/config/configure-models.py --profile economy
 python3 wysiwyship/config/configure-models.py --check
 ```
 
-Activating a profile updates `active_profile`, regenerates Copilot and Claude Code frontmatter, and refreshes the generated reference. Each profile configures the `dev` and `review_pr` coordinators separately plus the reusable `normal`, `deep`, `fast`, and `top` specialist lanes. Copy a profile under a new name to run a custom model experiment.
+Activating a profile updates `active_profile`, regenerates Copilot and Claude Code frontmatter plus Codex specialist TOML, and refreshes the generated reference. Each profile configures the `dev` and `review_pr` coordinators separately plus the reusable `normal`, `deep`, `fast`, and `top` specialist lanes. Copy a profile under a new name to run a custom model experiment.
 
 After changing the active profile, rerun the relevant project or global installer so already-installed adapters receive the new settings.
 
@@ -275,14 +305,14 @@ Record evidence when comparing profiles instead of choosing from impressions alo
 
 ```bash
 python3 .wysiwyship/tools/experiments.py record \
-  --workflow dev --role normal --platform claude_code --profile quality \
+  --workflow dev --role deep --platform codex --profile detected \
   --status pass --verification pass --duration-seconds 84 --complexity-before 12 --complexity-after 8
 python3 .wysiwyship/tools/experiments.py compare --group-by profile
 ```
 
 The append-only log lives under ignored `.agent-state/` by default. Tokens, cost, defects, and rework are optional; missing host telemetry remains visibly unreported rather than being estimated. The `run` subcommand times a command, and `import-pi` converts measured `parallel-pi.py` child results into the same schema.
 
-The canonical `reasoning` field maps to Copilot CLI `reasoningEffort`, Claude Code `effort`, and Pi `thinking`. VS Code currently applies configured agent models but manages thinking effort at the chat-session model picker, so it may ignore the Copilot CLI effort field. Pi installs the config at `.wysiwyship/config/models.json`; parallel tasks select a semantic `role`, while explicit task-level `model` and `thinking` values override the profile.
+The canonical `reasoning` field maps to Codex `model_reasoning_effort`, Copilot CLI `reasoningEffort`, Claude Code `effort`, and Pi `thinking`. A `null` model means inherit the active host session. VS Code manages thinking effort at the chat-session model picker. Pi installs the config at `.wysiwyship/config/models.json`; parallel tasks select a semantic `role`, while explicit task-level `model` and `thinking` values override the profile.
 
 ## Documentation
 

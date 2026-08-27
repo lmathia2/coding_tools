@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parent
 sys.path.insert(0, str(ROOT / "config"))
 from model_config import get_profile, load_config, resolve_spec  # noqa: E402
+from adapter_config import rewrite_text  # noqa: E402
 
 EXPECTED_SKILLS = {
     "eli5",
@@ -36,6 +37,10 @@ EXPECTED_COPILOT_AGENTS = {
     "worker-deep.agent.md",
     "deep-reasoner.agent.md",
     "top-reviewer.agent.md",
+}
+EXPECTED_CODEX_AGENTS = {
+    "wysiwyship-fast.toml", "wysiwyship-worker.toml",
+    "wysiwyship-deep.toml", "wysiwyship-reviewer.toml",
 }
 EXPECTED_ADAPTER_TARGETS = {
     "copilot/agents/dev.agent.md": ("copilot", "coordinator", "dev"),
@@ -125,6 +130,10 @@ def validate_adapter_roles(profile: dict[str, object]) -> None:
         effort_field = "reasoningEffort" if platform == "copilot" else "effort"
         if metadata.get(effort_field) != spec["reasoning"]:
             fail(f"{relative} {effort_field} drift: expected {spec['reasoning']!r}, found {metadata.get(effort_field)!r}")
+    for path in (ROOT / "codex/agents").glob("*.toml"):
+        text = path.read_text(encoding="utf-8")
+        if rewrite_text(path, text, "codex", profile) != text:
+            fail(f"{path.relative_to(ROOT)} model or reasoning drift")
 
 
 def require_absent_terms(path: Path, terms: tuple[str, ...]) -> None:
@@ -165,6 +174,10 @@ def validate_budgets() -> None:
     if copilot_agents != EXPECTED_COPILOT_AGENTS:
         fail(f"Copilot agent budget drift: expected {sorted(EXPECTED_COPILOT_AGENTS)}, found {sorted(copilot_agents)}")
 
+    codex_agents = names(ROOT / "codex/agents", "*.toml")
+    if codex_agents != EXPECTED_CODEX_AGENTS:
+        fail(f"Codex agent budget drift: expected {sorted(EXPECTED_CODEX_AGENTS)}, found {sorted(codex_agents)}")
+
 
 def validate_identities() -> None:
     # Catch duplicate Claude agent identities (the v0.6 fast-executor/fast-verifier bug).
@@ -191,7 +204,11 @@ def validate_workflow_contracts() -> None:
         ROOT / "claude-code/commands/dev.md",
         ROOT / "pi/prompts/dev.md",
     ):
-        require_terms(path, ("eli5", ".agent-state/eli5", "not complete"))
+        require_terms(path, ("planning grill", "auto", "plan lock", "rapid", "eli5", ".agent-state/eli5", "not complete"))
+    require_terms(
+        ROOT / "shared/skills/engineering-workflow/references/planning-grill.md",
+        ("goals", "acceptance", "boundaries", "alternatives", "assumptions", "interactive", "auto", "decision record", "rapid execution after lock"),
+    )
     require_terms(ROOT / "pi/prompts/dev.md", ("harness-role: coordinator", "harness-workflow: dev"))
     require_terms(ROOT / "pi/prompts/review-pr.md", ("harness-role: coordinator", "harness-workflow: review-pr"))
 
@@ -228,7 +245,7 @@ def validate_runtime_independence() -> None:
     # Runtime installers/helpers must not fetch or install third-party harness dependencies.
     runtime_files = [
         ROOT / "install.sh", ROOT / "install-global.sh", ROOT / "scripts/install_harness.py",
-        *list((ROOT / "tools").glob("*.py")), *list((ROOT / "pi/tools").glob("*.py")),
+        ROOT / "config/model_discovery.py", *list((ROOT / "tools").glob("*.py")), *list((ROOT / "pi/tools").glob("*.py")),
     ]
     forbidden = [
         r"git\s+clone", r"gh\s+skill\s+install", r"/plugin\s+install",
@@ -262,7 +279,7 @@ def validate_removed_surfaces() -> None:
 
 
 def validate_required_refinements() -> None:
-    for required in (ROOT / "tools/complexity.py", ROOT / "tools/commit_docs.py", ROOT / "tools/check.py", ROOT / "tools/experiments.py", ROOT / "tools/work_units.py", ROOT / "tools/hook_check.py", ROOT / "tools/spec_bridge.py", ROOT / "copilot/hooks/wysiwyship.json", ROOT / "config/checks.json", ROOT / "tests/test_harness.py", ROOT / "templates/WORK_UNIT.md", ROOT / "shared/skills/eli5/scripts/render_explainer.py", ROOT / "shared/skills/eli5/assets/project-eli5-template.html"):
+    for required in (ROOT / "tools/complexity.py", ROOT / "tools/commit_docs.py", ROOT / "tools/check.py", ROOT / "tools/experiments.py", ROOT / "tools/work_units.py", ROOT / "tools/hook_check.py", ROOT / "tools/spec_bridge.py", ROOT / "copilot/hooks/wysiwyship.json", ROOT / "codex/agents/wysiwyship-worker.toml", ROOT / "config/checks.json", ROOT / "config/model_discovery.py", ROOT / "tests/test_harness.py", ROOT / "templates/WORK_UNIT.md", ROOT / "shared/skills/engineering-workflow/references/planning-grill.md", ROOT / "shared/skills/eli5/scripts/render_explainer.py", ROOT / "shared/skills/eli5/assets/project-eli5-template.html"):
         if not required.exists():
             fail(f"missing required harness component {required.relative_to(ROOT)}")
 

@@ -2,13 +2,14 @@
 
 ## Purpose
 
-Provide one high-quality coding interface across Copilot, Claude Code, and Pi without requiring the developer to remember model or workflow commands.
+Provide one high-quality coding interface across Codex, Copilot, Claude Code, and Pi without requiring the developer to remember model or workflow commands.
 
 ## Goals
 
 - two user-facing coordination workflows, development and PR review, plus an explicit/automatic project explanation skill;
 - quality-first model routing with token/latency discipline;
-- planning before source edits;
+- an evidence-first interactive or auto planning grill before source edits;
+- an explicit plan lock followed by rapid, low-interruption execution;
 - coherent commit-sized work units and useful parallelism without agent fan-out for its own sake;
 - smallest correct implementation;
 - live authoritative documentation synchronized in every logical code commit;
@@ -21,7 +22,9 @@ Provide one high-quality coding interface across Copilot, Claude Code, and Pi wi
 
 ```text
 request
-  -> coordinator defines work-unit dependency graph
+  -> planning grill resolves goals / acceptance / boundaries / alternatives / assumptions
+  -> human or auto mode locks an explicit decision record
+  -> coordinator defines work-unit dependency graph from the lock
   -> each unit: plan -> implement -> document -> simplify -> verify
   -> integrate independently completed units in dependency order
   -> committed-range gate
@@ -33,13 +36,15 @@ Independent agents are conditional, not ceremonial. Add them when they provide m
 
 `.agent-state/work-units/` is an optional operational checkpoint, not another planning system. It makes long or parallel work resumable and gives deterministic stop hooks an immutable base ref. The accepted plan and repository documentation remain authoritative; ignored ledger state records execution progress and evidence. Routine fixes omit it.
 
+Planning is the deliberate human-collaboration boundary. Interactive mode may require several question/answer rounds and one final lock; `auto` runs the same decision tree internally and records its assumptions. Once locked, the execution coordinator handles routine design choices, implementation surprises, tests, refactoring, integration, and documentation without further user input. Planning re-entry is narrow: only an invalidated material decision, required scope/contract expansion, materially changed consequences, or new authority can reopen the lock.
+
 The spec bridge is one-way intake from accepted Spec Kit, OpenSpec, or BMAD implementation artifacts into that operational ledger. It preserves source IDs and references and deliberately does not own requirement authoring, validation, status, application, or archival. This keeps WYSIWYShip focused on implementation quality while allowing a team to choose its specification layer independently.
 
 ## Shared policy
 
 Only six discoverable shared skills are intentional:
 
-1. `engineering-workflow` — all ordinary coding process: plan, routing principles, parallelism, minimal design, debugging/TDD, documentation, verification, and successful-completion handoff;
+1. `engineering-workflow` — all ordinary coding process: planning grill/lock, rapid autonomous execution, routing principles, parallelism, minimal design, debugging/TDD, documentation, verification, and successful-completion handoff;
 2. `eli5` — evidence-based what/how/why explanation for a curious developer plus a dependency-free visual HTML artifact;
 3. `pr-review` — worktree-based semantic + executable review and high-risk escalation;
 4. `product-behavior-spec` — explicit specialist outside-in product documentation;
@@ -50,7 +55,9 @@ Repository mapping, context snapshots, task ledgers, Superpowers process, Ponyta
 
 ## Model profiles
 
-`config/models.json` is the single source of truth for model and reasoning-strength experiments. A named active profile contains platform-specific settings for each workflow coordinator (`dev`, `review_pr`) and shared specialist lane (`normal`, `deep`, `fast`, `top`). `config/configure-models.py --profile <name>` persists the selection and regenerates static Copilot/Claude adapter frontmatter; validation rejects configuration or generated-file drift.
+`config/models.json` is the single source of truth for model and reasoning-strength experiments. A named active profile contains platform-specific settings for each workflow coordinator (`dev`, `review_pr`) and shared specialist lane (`normal`, `deep`, `fast`, `top`). `config/configure-models.py --profile <name>` persists the selection and regenerates static Copilot/Claude frontmatter and Codex specialist TOML; validation rejects configuration or generated-file drift.
+
+The installer normally derives a `detected` profile without mutating the canonical source. It asks each installed host only through documented or configuration-file surfaces, records the evidence class, and writes `.wysiwyship/model-discovery.json`. Account-visible or configured-restriction catalogs may select explicit models; an unprovable entitlement becomes `model: null` and inherits the active session. This prevents host detection from turning a supported model name into a false access claim.
 
 The automatic ELI5 handoff runs in the configured `dev` coordinator after verification; an explicit `/eli5` invocation uses the host session model. Both retain the curious-developer baseline and the required what/how/why layers. The renderer itself is deterministic and model-independent.
 
@@ -58,6 +65,7 @@ The config uses one provider-neutral `reasoning` property. Adapter translation i
 
 | Adapter | Model setting | Reasoning setting | Enforcement boundary |
 |---|---|---|---|
+| Codex | `model` | `model_reasoning_effort` | Account-visible `model/list` catalog for custom specialists; coordinator inherits the active session |
 | Copilot CLI | `model` | `reasoningEffort` | Per custom agent; an unavailable override falls back to the session |
 | VS Code Copilot | `model` | Session model picker | Current VS Code custom-agent frontmatter does not document per-agent effort |
 | Claude Code | `model` | `effort` | Per command/agent frontmatter |
@@ -140,14 +148,16 @@ resolve exact base + PR HEAD
 ## Invariants
 
 1. Every implementation unit runs `plan -> implement -> document -> simplify -> verify`.
-2. Non-trivial work is decomposed into coherent, independently committable units.
-3. Parallelism requires real independence; writers require isolated ownership/worktrees.
-4. Live authoritative documentation changes in the same logical commit as code, or the commit records a concrete no-impact reason.
-5. Changed-function complexity is measured and increases are explained; scores are not gamed at the expense of cohesion.
-6. Unexecuted checks are never PASS.
-7. PR review executes complete feasible configured unit and integration suites at exact PR HEAD.
-8. Premium-model fan-out is conditional on uncertainty/risk.
-9. Product behavior specification generation is explicit, never automatic.
-10. Runtime setup performs no external dependency installation.
-11. Installed stop hooks are inert unless an active work-unit pointer exists.
-12. Every successful development workflow produces and verifies a local ELI5 visual handoff after the committed-range gate passes.
+2. Every implementation request runs a planning grill and records a lock before source edits; `auto` self-answers rather than skipping the decision work.
+3. After lock, execution proceeds without routine human input and reopens only the invalidated material decision.
+4. Non-trivial work is decomposed into coherent, independently committable units.
+5. Parallelism requires real independence; writers require isolated ownership/worktrees.
+6. Live authoritative documentation changes in the same logical commit as code, or the commit records a concrete no-impact reason.
+7. Changed-function complexity is measured and increases are explained; scores are not gamed at the expense of cohesion.
+8. Unexecuted checks are never PASS.
+9. PR review executes complete feasible configured unit and integration suites at exact PR HEAD.
+10. Premium-model fan-out is conditional on uncertainty/risk.
+11. Product behavior specification generation is explicit, never automatic.
+12. Runtime setup performs no external dependency installation.
+13. Installed stop hooks are inert unless an active work-unit pointer exists.
+14. Every successful development workflow produces and verifies a local ELI5 visual handoff after the committed-range gate passes.

@@ -17,6 +17,8 @@ from typing import Any
 STAGES = ("plan", "implement", "document", "simplify", "verify", "complete")
 UNIT_ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,79}$")
 DOC_IMPACTS = ("required", "generated", "none")
+PLANNING_MODES = ("interactive", "auto", "imported")
+PLANNING_GATES = ("pass", "user-override")
 
 
 def now() -> str:
@@ -85,7 +87,7 @@ def load_all(root: Path) -> list[dict[str, Any]]:
 def new_unit(args: argparse.Namespace) -> dict[str, Any]:
     timestamp = now()
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "id": args.unit_id,
         "title": args.title,
         "goal": args.goal,
@@ -95,6 +97,18 @@ def new_unit(args: argparse.Namespace) -> dict[str, Any]:
         "owned_paths": args.owns,
         "base_ref": args.base_ref,
         "stage": "plan",
+        "planning": {
+            "mode": args.planning_mode,
+            "gate": args.planning_gate,
+            "iterations": args.planning_iterations,
+            "locked_at": timestamp,
+            "decisions": args.decision,
+            "in_scope": args.in_scope,
+            "out_of_scope": args.out_of_scope,
+            "assumptions": args.assumption,
+            "open_questions": args.open_question,
+            "ambiguity_assessment": args.ambiguity,
+        },
         "evidence": {stage: [] for stage in STAGES[:-1]},
         "documentation": {"impact": args.docs_impact, "paths": args.doc_path, "reason": args.docs_reason},
         "verification": [],
@@ -109,8 +123,10 @@ def validation_errors(unit: dict[str, Any]) -> list[str]:
     errors = []
     required_strings = ("id", "title", "goal", "base_ref", "stage")
     errors.extend(f"missing non-empty {field}" for field in required_strings if not isinstance(unit.get(field), str) or not unit[field])
-    if unit.get("schema_version") != 1:
+    if unit.get("schema_version") not in {1, 2}:
         errors.append("unsupported schema_version")
+    if unit.get("schema_version") == 2:
+        errors.extend(planning_errors(unit.get("planning")))
     if unit.get("stage") not in STAGES:
         errors.append(f"invalid stage {unit.get('stage')!r}")
     for field in ("acceptance_criteria", "dependencies", "owners", "owned_paths", "verification"):
@@ -120,6 +136,43 @@ def validation_errors(unit: dict[str, Any]) -> list[str]:
     if not isinstance(unit.get("evidence"), dict):
         errors.append("evidence must be an object")
     return errors
+
+
+def planning_errors(planning: object) -> list[str]:
+    if not isinstance(planning, dict):
+        return ["planning must be an object"]
+    errors = []
+    errors.extend(enum_errors(planning, "mode", PLANNING_MODES))
+    errors.extend(enum_errors(planning, "gate", PLANNING_GATES))
+    errors.extend(positive_integer_errors(planning, "iterations"))
+    errors.extend(non_empty_string_errors(planning, "locked_at"))
+    fields = ("decisions", "in_scope", "out_of_scope", "assumptions", "open_questions", "ambiguity_assessment")
+    for field in fields:
+        errors.extend(string_array_errors(planning, field))
+    if isinstance(planning.get("decisions"), list) and not planning["decisions"]:
+        errors.append("planning.decisions must record at least one key decision")
+    return errors
+
+
+def enum_errors(value: dict[str, Any], field: str, choices: tuple[str, ...]) -> list[str]:
+    observed = value.get(field)
+    return [] if observed in choices else [f"invalid planning {field} {observed!r}"]
+
+
+def positive_integer_errors(value: dict[str, Any], field: str) -> list[str]:
+    observed = value.get(field)
+    return [] if isinstance(observed, int) and observed >= 1 else [f"planning.{field} must be a positive integer"]
+
+
+def non_empty_string_errors(value: dict[str, Any], field: str) -> list[str]:
+    observed = value.get(field)
+    return [] if isinstance(observed, str) and observed else [f"planning.{field} must be a non-empty string"]
+
+
+def string_array_errors(value: dict[str, Any], field: str) -> list[str]:
+    observed = value.get(field)
+    valid = isinstance(observed, list) and all(isinstance(item, str) and item.strip() for item in observed)
+    return [] if valid else [f"planning.{field} must be an array of non-empty strings"]
 
 
 def documentation_errors(documentation: object) -> list[str]:
@@ -317,6 +370,15 @@ def parse_args() -> argparse.Namespace:
     initialized.add_argument("--owner", action="append", default=[])
     initialized.add_argument("--owns", action="append", default=[])
     initialized.add_argument("--base-ref", default="HEAD")
+    initialized.add_argument("--planning-mode", choices=PLANNING_MODES, required=True)
+    initialized.add_argument("--planning-gate", choices=PLANNING_GATES, required=True)
+    initialized.add_argument("--planning-iterations", type=int, default=1)
+    initialized.add_argument("--decision", action="append", required=True)
+    initialized.add_argument("--in-scope", action="append", default=[])
+    initialized.add_argument("--out-of-scope", action="append", default=[])
+    initialized.add_argument("--assumption", action="append", default=[])
+    initialized.add_argument("--open-question", action="append", default=[])
+    initialized.add_argument("--ambiguity", action="append", default=[])
     initialized.add_argument("--docs-impact", choices=DOC_IMPACTS, required=True)
     initialized.add_argument("--doc-path", action="append", default=[])
     initialized.add_argument("--docs-reason")

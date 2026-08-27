@@ -16,7 +16,7 @@ import uuid
 
 ROLES = ("coordinator", "normal", "deep", "fast", "top")
 WORKFLOWS = ("dev", "review_pr")
-PLATFORMS = ("copilot", "claude_code", "pi")
+PLATFORMS = ("codex", "copilot", "claude_code", "pi")
 STATUSES = ("pass", "fail", "blocked", "unknown")
 VERIFICATIONS = ("pass", "fail", "not_run", "unknown")
 METRICS = (

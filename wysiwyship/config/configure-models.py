@@ -5,54 +5,19 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-import re
 import subprocess
 import sys
 
-from model_config import get_profile, load_config, resolve_spec
+from adapter_config import markdown_target as adapter_target, replace_field, rewrite_text
+from model_config import get_profile, load_config
 
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 CONFIG_PATH = HERE / "models.json"
-ROLE_RE = re.compile(r"<!--\s*harness-role:\s*([a-z-]+)\s*-->")
-WORKFLOW_RE = re.compile(r"<!--\s*harness-workflow:\s*([a-z-]+)\s*-->")
-
-
-def replace_field(frontmatter: str, field: str, value: str | None) -> str:
-    pattern = rf"(?m)^{re.escape(field)}:\s*.*$"
-    if value is None:
-        return re.sub(pattern + r"\n?", "", frontmatter)
-    replacement = f"{field}: {value}"
-    return re.sub(pattern, replacement, frontmatter) if re.search(pattern, frontmatter) else frontmatter + f"\n{replacement}"
-
-
-def adapter_target(path: Path, text: str) -> tuple[str, str | None]:
-    roles = ROLE_RE.findall(text)
-    workflows = WORKFLOW_RE.findall(text)
-    if len(roles) != 1:
-        raise RuntimeError(f"{path}: expected exactly one harness-role marker, found {len(roles)}")
-    if roles[0] == "coordinator" and len(workflows) != 1:
-        raise RuntimeError(f"{path}: coordinator requires exactly one harness-workflow marker")
-    if roles[0] != "coordinator" and workflows:
-        raise RuntimeError(f"{path}: specialist must not declare a harness-workflow marker")
-    workflow = workflows[0].replace("-", "_") if workflows else None
-    return roles[0], workflow
-
-
 def rewrite(path: Path, platform: str, profile: dict[str, object]) -> str:
     text = path.read_text(encoding="utf-8")
-    role, workflow = adapter_target(path, text)
-    spec = resolve_spec(profile, platform, role, workflow)
-    end = text.find("\n---\n", 4)
-    if not text.startswith("---\n") or end < 0:
-        raise RuntimeError(f"{path}: invalid frontmatter")
-    front, body = text[4:end], text[end + 5:]
-    front = replace_field(front, "model", spec.get("model"))
-    front = replace_field(front, "reasoningEffort", spec["reasoning"] if platform == "copilot" else None)
-    if platform == "claude_code":
-        front = replace_field(front, "effort", spec["reasoning"])
-    return "---\n" + front.rstrip() + "\n---\n" + body
+    return rewrite_text(path, text, platform, profile)
 
 
 def adapter_files() -> list[tuple[Path, str]]:
@@ -60,6 +25,7 @@ def adapter_files() -> list[tuple[Path, str]]:
         *((path, "copilot") for path in (ROOT / "copilot/agents").glob("*.agent.md")),
         *((path, "claude_code") for path in (ROOT / "claude-code/agents").glob("*.md")),
         *((path, "claude_code") for path in (ROOT / "claude-code/commands").glob("*.md")),
+        *((path, "codex") for path in (ROOT / "codex/agents").glob("*.toml")),
     ]
 
 

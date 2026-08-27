@@ -175,6 +175,10 @@ def create_unit(root: Path, plan: dict[str, Any], item: dict[str, Any], owner: s
         acceptance=[item["title"]], depends_on=item["dependencies"], owner=[owner] if owner else [],
         owns=item["owned_paths"], base_ref=work_units.resolve_ref(root, "HEAD"), docs_impact="required",
         doc_path=[plan["source"]], docs_reason=None, source_framework=plan["framework"], source_path=plan["source"],
+        planning_mode="imported", planning_gate="pass", planning_iterations=1,
+        decision=[f"Accepted {plan['framework']} artifact remains authoritative for {item['source_id']}."],
+        in_scope=[item["title"]], out_of_scope=[], assumption=[], open_question=[],
+        ambiguity=["Accepted upstream artifact supplies the executable planning contract."],
     )
     unit = work_units.new_unit(arguments)
     errors = work_units.validation_errors(unit)

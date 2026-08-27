@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 
-PLATFORMS = {"copilot", "claude_code", "pi"}
+PLATFORMS = {"codex", "copilot", "claude_code", "pi"}
 WORKFLOWS = {"dev", "review_pr"}
 ROLES = {"normal", "deep", "fast", "top"}
 
@@ -45,7 +45,7 @@ def validate_platform(path: str, platform: str, settings: object) -> None:
         raise RuntimeError(f"{path}.workflows must define {sorted(WORKFLOWS)}")
     if not isinstance(roles, dict) or set(roles) != ROLES:
         raise RuntimeError(f"{path}.roles must define {sorted(ROLES)}")
-    allow_inherit = platform == "pi"
+    allow_inherit = True
     for name, spec in workflows.items():
         validate_spec(f"{path}.workflows.{name}", spec, allow_inherit)
     for name, spec in roles.items():
