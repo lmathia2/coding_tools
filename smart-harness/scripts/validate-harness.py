@@ -246,7 +246,7 @@ def validate_removed_surfaces() -> None:
 
 
 def validate_required_refinements() -> None:
-    for required in (ROOT / "tools/complexity.py", ROOT / "tools/commit_docs.py", ROOT / "tests/test_harness.py", ROOT / "templates/WORK_UNIT.md"):
+    for required in (ROOT / "tools/complexity.py", ROOT / "tools/commit_docs.py", ROOT / "tools/check.py", ROOT / "config/checks.json", ROOT / "tests/test_harness.py", ROOT / "templates/WORK_UNIT.md"):
         if not required.exists():
             fail(f"missing required harness component {required.relative_to(ROOT)}")
 

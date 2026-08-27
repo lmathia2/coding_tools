@@ -18,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Check model configuration
         run: python3 smart-harness/config/configure-models.py --check
@@ -36,6 +38,10 @@ jobs:
 
       - name: Check harness code complexity
         run: python3 smart-harness/tools/complexity.py smart-harness/config smart-harness/scripts smart-harness/tools smart-harness/pi/tools --fail-above 20
+
+      - name: Smoke-test deterministic lifecycle gate
+        if: github.event_name == 'pull_request'
+        run: python3 smart-harness/tools/check.py "${{ github.event.pull_request.base.sha }}" --head HEAD --config smart-harness/config/checks.harness.json
 
       - name: Validate shell syntax
         run: |
@@ -69,7 +75,9 @@ jobs:
           test -f "$tmp/.pi/tools/parallel-pi.py"
           test -f "$tmp/.smart-harness/tools/complexity.py"
           test -f "$tmp/.smart-harness/tools/commit_docs.py"
+          test -f "$tmp/.smart-harness/tools/check.py"
           test -f "$tmp/.smart-harness/config/models.json"
+          test -f "$tmp/.smart-harness/config/checks.json"
           test -f "$tmp/.smart-harness/vendor/THIRD_PARTY_NOTICES.md"
           test -f "$tmp/.smart-harness/install-manifest.json"
           test -f "$tmp/.claude/skills/engineering-workflow/SKILL.md"

@@ -137,6 +137,15 @@ For Python, the installed dependency-free analyzer reports function scores and o
 python3 .smart-harness/tools/complexity.py path/to/code.py --compare-ref <unit-start-ref>
 ```
 
+The deterministic lifecycle gate composes that metric with per-commit documentation evidence and the repository's configured verification commands:
+
+```bash
+python3 .smart-harness/tools/check.py <unit-start-ref> --head HEAD
+python3 .smart-harness/tools/check.py <unit-start-ref> --head HEAD --format json
+```
+
+Edit `.smart-harness/config/checks.json` to add project checks as argument arrays. For example, `{"name": "tests", "argv": ["python3", "-m", "pytest", "-q"]}`. Commands execute directly without a shell, from the repository root unless a safe repository-relative `cwd` is supplied.
+
 ## PR review
 
 `ReviewPR` / `/review-pr` preserves the stronger review path:

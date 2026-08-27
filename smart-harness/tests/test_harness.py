@@ -27,6 +27,7 @@ complexity = load_module("complexity", HARNESS / "tools/complexity.py")
 parallel_pi = load_module("parallel_pi", HARNESS / "pi/tools/parallel-pi.py")
 installer = load_module("install_harness", HARNESS / "scripts/install_harness.py")
 commit_docs = load_module("commit_docs", HARNESS / "tools/commit_docs.py")
+check_gate = load_module("check_gate", HARNESS / "tools/check.py")
 model_config = load_module("model_config", HARNESS / "config/model_config.py")
 configure_models = load_module("configure_models", HARNESS / "config/configure-models.py")
 
@@ -203,6 +204,56 @@ class CommitDocumentationTests(unittest.TestCase):
             self.assertEqual([result["status"] for result in results], ["FAIL"])
 
 
+class LifecycleGateTests(unittest.TestCase):
+    def make_repository(self, root: Path) -> str:
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        subprocess.run(["git", "config", "user.name", "Harness Test"], cwd=root, check=True)
+        subprocess.run(["git", "config", "user.email", "harness@example.invalid"], cwd=root, check=True)
+        (root / "README.md").write_text("# Test\n", encoding="utf-8")
+        subprocess.run(["git", "add", "README.md"], cwd=root, check=True)
+        subprocess.run(["git", "commit", "-qm", "baseline"], cwd=root, check=True)
+        return subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, text=True, capture_output=True, check=True).stdout.strip()
+
+    def test_changed_function_complexity_ignores_untouched_functions(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            base = self.make_repository(root)
+            source = "def old(a, b, c):\n    if a and b and c:\n        return 1\n    return 0\n\ndef changed():\n    return 1\n"
+            (root / "app.py").write_text(source, encoding="utf-8")
+            (root / "docs.md").write_text("# App\n", encoding="utf-8")
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "Add app and docs"], cwd=root, check=True)
+            base = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, text=True, capture_output=True, check=True).stdout.strip()
+            (root / "app.py").write_text(source.replace("return 1\n", "return 2\n", 1), encoding="utf-8")
+            subprocess.run(["git", "add", "app.py"], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "Change old\n\nDocs-Impact: none — return value only"], cwd=root, check=True)
+            item = check_gate.complexity_check(root, base, "HEAD", 20)
+            names = [function["qualified_name"] for file in item["details"] for function in file.get("functions", [])]
+            self.assertEqual(names, ["old"])
+
+    def test_gate_composes_docs_complexity_and_commands(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            base = self.make_repository(root)
+            (root / "app.py").write_text("def run():\n    return 1\n", encoding="utf-8")
+            (root / "docs.md").write_text("# Contract\n", encoding="utf-8")
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "Add app contract"], cwd=root, check=True)
+            config = {
+                "documentation": {"enabled": True},
+                "complexity": {"enabled": True, "fail_above": 20},
+                "commands": [{"name": "probe", "argv": [sys.executable, "-c", "print('ok')"]}],
+                "repository": {"require_clean": False},
+            }
+            results = check_gate.run_checks(root, base, "HEAD", config, False)
+            self.assertEqual([item["status"] for item in results], ["PASS", "PASS", "PASS"])
+
+    def test_command_cwd_cannot_escape_repository(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            with self.assertRaisesRegex(ValueError, "escapes repository root"):
+                check_gate.safe_command_cwd(Path(raw), "../outside")
+
+
 class InstallerTests(unittest.TestCase):
     def test_invalid_pi_settings_fail_before_mutation(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -252,7 +303,9 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue((target / ".smart-harness/vendor/licenses/SUPERPOWERS-MIT.txt").exists())
             self.assertTrue((target / ".smart-harness/tools/complexity.py").exists())
             self.assertTrue((target / ".smart-harness/tools/commit_docs.py").exists())
+            self.assertTrue((target / ".smart-harness/tools/check.py").exists())
             self.assertTrue((target / ".smart-harness/config/models.json").exists())
+            self.assertTrue((target / ".smart-harness/config/checks.json").exists())
 
     def test_dry_run_does_not_mutate_target(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

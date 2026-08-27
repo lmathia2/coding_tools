@@ -23,6 +23,18 @@ One dependable entry point with model and workflow selection hidden from the use
 9. Escalate to another premium perspective only for material uncertainty or high risk.
 10. Report exact evidence and residual risk.
 
+### Deterministic lifecycle gate
+
+The installed gate evaluates the committed range as one machine-readable contract:
+
+```text
+python3 .smart-harness/tools/check.py <unit-start-ref> --head HEAD
+```
+
+It checks documentation evidence in every code commit, scores only Python functions intersecting changed lines, and runs the explicit argument-array commands in `.smart-harness/config/checks.json`. A project can add unit, integration, build, type, lint, generated-artifact, or documentation commands without embedding shell evaluation in the harness. `--format json` provides CI/host automation output; `--require-clean` adds a repository-cleanliness assertion when appropriate.
+
+Exit status `0` means all checks passed, `1` means a check failed, and `2` means configuration or gate execution was invalid. The default installed configuration has documentation and complexity checks enabled and leaves project-specific commands empty.
+
 ### Normal-case cost shape
 
 ```text
