@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added a README getting-started guide covering prerequisites, project-local and global installation, host discovery paths, first use, verification, upgrades, and model-profile deployment.
 - Added selectable `balanced`, `economy`, and `quality` model profiles with separately configurable development/review coordinators, specialist models, and canonical reasoning strength translated across Copilot CLI, Claude Code, and Pi.
 - Renamed Copilot specialist identities around stable semantic roles so model-profile experiments cannot leave model-branded names or descriptions stale.
 - Made `plan -> implement -> document -> simplify -> verify` mandatory for every coherent work unit and added isolated parallel work-unit guidance.
