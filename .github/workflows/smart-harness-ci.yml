@@ -79,6 +79,7 @@ jobs:
           test -f "$tmp/.smart-harness/tools/experiments.py"
           test -f "$tmp/.smart-harness/tools/work_units.py"
           test -f "$tmp/.smart-harness/tools/hook_check.py"
+          test -f "$tmp/.smart-harness/tools/spec_bridge.py"
           test -f "$tmp/.smart-harness/config/models.json"
           test -f "$tmp/.smart-harness/config/checks.json"
           test -f "$tmp/.github/hooks/smart-harness.json"

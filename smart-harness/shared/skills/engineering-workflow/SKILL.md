@@ -42,6 +42,8 @@ Decompose non-trivial work into the smallest coherent, independently committable
 
 One unit should produce one reviewable commit or commit-ready change. Do not split code from its tests or documentation merely to create more parallelism. Commit only when the user or repository workflow authorizes it.
 
+If the repository already contains an accepted Spec Kit `tasks.md`, OpenSpec change `tasks.md`, or BMAD implementation story/spec, treat that artifact as authoritative planning input. Preview its translation with `.smart-harness/tools/spec_bridge.py`; import ledger units only with explicit acceptance. Do not regenerate, reinterpret, or replace the upstream specification workflow.
+
 If execution disproves a plan assumption, revise the plan before continuing.
 
 ## 2. Spend tokens where they change the answer

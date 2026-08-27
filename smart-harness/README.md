@@ -161,6 +161,16 @@ python3 .smart-harness/tools/work_units.py close
 
 The ledger is deliberately optional and ignored by Git. Installed stop hooks do nothing when no unit is active. With an active unit, they prevent premature completion, run the committed-range gate after verification, and retain the completed unit history for handoff/audit.
 
+If the project already uses Spec Kit, OpenSpec, or BMAD, preview accepted implementation tasks instead of maintaining a second plan:
+
+```bash
+python3 .smart-harness/tools/spec_bridge.py detect
+python3 .smart-harness/tools/spec_bridge.py preview specs/001-auth/tasks.md
+python3 .smart-harness/tools/spec_bridge.py import specs/001-auth/tasks.md --accepted --activate-first
+```
+
+Import is explicit and one-way. The upstream artifact remains authoritative; the bridge preserves its task IDs/path, imports only checklist execution state, and never invokes or replaces the framework's specification, validation, apply, or archive workflow.
+
 ## PR review
 
 `ReviewPR` / `/review-pr` preserves the stronger review path:

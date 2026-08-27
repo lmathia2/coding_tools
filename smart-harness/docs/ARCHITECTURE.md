@@ -31,6 +31,8 @@ Independent agents are conditional, not ceremonial. Add them when they provide m
 
 `.agent-state/work-units/` is an optional operational checkpoint, not another planning system. It makes long or parallel work resumable and gives deterministic stop hooks an immutable base ref. The accepted plan and repository documentation remain authoritative; ignored ledger state records execution progress and evidence. Routine fixes omit it.
 
+The spec bridge is one-way intake from accepted Spec Kit, OpenSpec, or BMAD implementation artifacts into that operational ledger. It preserves source IDs and references and deliberately does not own requirement authoring, validation, status, application, or archival. This keeps Smart Harness focused on implementation quality while allowing a team to choose its specification layer independently.
+
 ## Shared policy
 
 Only five discoverable shared skills are intentional:

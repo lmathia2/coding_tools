@@ -49,6 +49,18 @@ work_units.py close [ID]
 
 Project installation adds a Copilot `agentStop` hook and merges an idempotent Claude Code `Stop` hook. Both are no-ops without an active unit, self-limit when already continuing from a stop hook, block an incomplete active lifecycle, and run the deterministic gate after the unit reaches `complete`. A successful hook removes only the active pointer; unit history remains available. Manual/non-hook hosts run `check.py --active` followed by `work_units.py close`.
 
+### Accepted-spec intake bridge
+
+`spec_bridge.py` detects current repository artifacts at `specs/*/tasks.md` (Spec Kit), `openspec/changes/*/tasks.md` (OpenSpec), and BMAD implementation story/spec locations under `_bmad-output/implementation-artifacts/`. It parses Markdown checklist IDs, completion, `[P]` hints, explicit `depends:` IDs, section context, and referenced paths.
+
+```text
+spec_bridge.py detect
+spec_bridge.py preview PATH [--framework spec-kit|openspec|bmad]
+spec_bridge.py import PATH --accepted [--owner NAME] [--activate-first]
+```
+
+`preview` is read-only. `import` requires `--accepted`, preflights all IDs/conflicts before writing, resolves explicit task dependencies to generated unit IDs, and retains the source framework/path as authoritative provenance. It does not infer unstated dependencies or run any upstream generator, validator, apply, or archive command. Update/check off the upstream task artifact during the unit's documentation stage.
+
 ### Normal-case cost shape
 
 ```text

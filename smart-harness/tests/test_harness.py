@@ -32,6 +32,7 @@ work_units = load_module("work_units", HARNESS / "tools/work_units.py")
 check_gate = load_module("check_gate", HARNESS / "tools/check.py")
 experiments = load_module("experiments", HARNESS / "tools/experiments.py")
 hook_check = load_module("hook_check", HARNESS / "tools/hook_check.py")
+spec_bridge = load_module("spec_bridge", HARNESS / "tools/spec_bridge.py")
 model_config = load_module("model_config", HARNESS / "config/model_config.py")
 configure_models = load_module("configure_models", HARNESS / "config/configure-models.py")
 
@@ -372,6 +373,53 @@ class WorkUnitTests(unittest.TestCase):
             self.assertEqual(hook_check.evaluate(root, {"stop_hook_active": True}), {})
 
 
+class SpecBridgeTests(unittest.TestCase):
+    def test_detects_supported_artifact_locations(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            paths = [
+                root / "specs/001-auth/tasks.md",
+                root / "openspec/changes/add-auth/tasks.md",
+                root / "_bmad-output/implementation-artifacts/story-auth.md",
+            ]
+            for path in paths:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("- [ ] task\n", encoding="utf-8")
+            detected = {(item.framework, item.path) for item in spec_bridge.detect(root)}
+            self.assertEqual(len(detected), 3)
+
+    def test_parses_ids_parallel_hints_dependencies_and_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "tasks.md"
+            path.write_text(
+                "## User Story 1\n- [ ] T001 [P] Add `src/api.py`\n- [ ] T002 Test contract depends: T001\n- [x] T003 Already done\n",
+                encoding="utf-8",
+            )
+            tasks = spec_bridge.parse_tasks(path)
+        self.assertEqual([task.source_id for task in tasks], ["T001", "T002"])
+        self.assertTrue(tasks[0].parallel)
+        self.assertEqual(tasks[0].owned_paths, ["src/api.py"])
+        self.assertEqual(tasks[1].dependencies, ["T001"])
+        self.assertEqual(tasks[1].section, "User Story 1")
+
+    def test_import_preserves_source_and_resolved_dependencies(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.name", "Harness Test"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.email", "harness@example.invalid"], cwd=root, check=True)
+            source = root / "specs/001-auth/tasks.md"
+            source.parent.mkdir(parents=True)
+            source.write_text("- [ ] T001 Add `src/api.py`\n- [ ] T002 Add tests depends: T001\n", encoding="utf-8")
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "accepted spec"], cwd=root, check=True)
+            plan = spec_bridge.preview(root, "spec-kit", source, False)
+            created = spec_bridge.import_preview(root, plan, "worker-a", True)
+            self.assertEqual(created[1]["dependencies"], [created[0]["id"]])
+            self.assertEqual(created[0]["source"], {"framework": "spec-kit", "path": "specs/001-auth/tasks.md"})
+            self.assertEqual(work_units.active_unit(root)["id"], created[0]["id"])
+
+
 class InstallerTests(unittest.TestCase):
     def test_invalid_pi_settings_fail_before_mutation(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -425,6 +473,7 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue((target / ".smart-harness/tools/experiments.py").exists())
             self.assertTrue((target / ".smart-harness/tools/work_units.py").exists())
             self.assertTrue((target / ".smart-harness/tools/hook_check.py").exists())
+            self.assertTrue((target / ".smart-harness/tools/spec_bridge.py").exists())
             self.assertTrue((target / ".smart-harness/config/models.json").exists())
             self.assertTrue((target / ".smart-harness/config/checks.json").exists())
             self.assertTrue((target / ".github/hooks/smart-harness.json").exists())
