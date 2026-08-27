@@ -28,8 +28,10 @@ complexity = load_module("complexity", HARNESS / "tools/complexity.py")
 parallel_pi = load_module("parallel_pi", HARNESS / "pi/tools/parallel-pi.py")
 installer = load_module("install_harness", HARNESS / "scripts/install_harness.py")
 commit_docs = load_module("commit_docs", HARNESS / "tools/commit_docs.py")
+work_units = load_module("work_units", HARNESS / "tools/work_units.py")
 check_gate = load_module("check_gate", HARNESS / "tools/check.py")
 experiments = load_module("experiments", HARNESS / "tools/experiments.py")
+hook_check = load_module("hook_check", HARNESS / "tools/hook_check.py")
 model_config = load_module("model_config", HARNESS / "config/model_config.py")
 configure_models = load_module("configure_models", HARNESS / "config/configure-models.py")
 
@@ -249,7 +251,7 @@ class LifecycleGateTests(unittest.TestCase):
                 "repository": {"require_clean": False},
             }
             results = check_gate.run_checks(root, base, "HEAD", config, False)
-            self.assertEqual([item["status"] for item in results], ["PASS", "PASS", "PASS"])
+            self.assertEqual([item["status"] for item in results], ["PASS", "PASS", "PASS", "PASS"])
 
     def test_command_cwd_cannot_escape_repository(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -309,6 +311,67 @@ class ExperimentTests(unittest.TestCase):
         self.assertEqual(record["duration_seconds"], 1.25)
 
 
+class WorkUnitTests(unittest.TestCase):
+    def initialize_repository(self, root: Path) -> str:
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        subprocess.run(["git", "config", "user.name", "Harness Test"], cwd=root, check=True)
+        subprocess.run(["git", "config", "user.email", "harness@example.invalid"], cwd=root, check=True)
+        (root / "README.md").write_text("# Test\n", encoding="utf-8")
+        subprocess.run(["git", "add", "README.md"], cwd=root, check=True)
+        subprocess.run(["git", "commit", "-qm", "baseline"], cwd=root, check=True)
+        return subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, text=True, capture_output=True, check=True).stdout.strip()
+
+    def unit_args(self, root: Path, unit_id: str = "api-contract") -> argparse.Namespace:
+        return argparse.Namespace(
+            root=str(root), unit_id=unit_id, title="API contract", goal="Add the contract",
+            acceptance=["contract is tested"], depends_on=[], owner=["worker-a"], owns=["src/api.py"],
+            base_ref="HEAD", docs_impact="required", doc_path=["docs/api.md"], docs_reason=None,
+            source_framework=None, source_path=None, activate=True,
+        )
+
+    def test_lifecycle_resolves_base_and_requires_ordered_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            base = self.initialize_repository(root)
+            args = self.unit_args(root)
+            with mock.patch("builtins.print"):
+                work_units.initialize_command(args)
+            unit = work_units.load_unit(root, args.unit_id)
+            self.assertEqual(unit["base_ref"], base)
+            for stage in work_units.STAGES[:-1]:
+                advance = argparse.Namespace(root=str(root), unit_id=args.unit_id, evidence=f"{stage} evidence", commit=None)
+                with mock.patch("builtins.print"):
+                    work_units.advance_command(advance)
+            self.assertEqual(work_units.active_unit(root)["stage"], "complete")
+            self.assertEqual(hook_check.evaluate(root, {}), {})
+            self.assertFalse(work_units.active_pointer(root).exists())
+
+    def test_dependency_blocks_implementation(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self.initialize_repository(root)
+            dependency = self.unit_args(root, "dependency")
+            dependent = self.unit_args(root, "dependent")
+            dependent.depends_on = ["dependency"]
+            dependent.owns = ["src/other.py"]
+            with mock.patch("builtins.print"):
+                work_units.initialize_command(dependency)
+                work_units.initialize_command(dependent)
+            advance = argparse.Namespace(root=str(root), unit_id="dependent", evidence="plan", commit=None)
+            with self.assertRaisesRegex(ValueError, "dependencies are incomplete"):
+                work_units.advance_command(advance)
+
+    def test_stop_hook_blocks_an_incomplete_active_unit(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self.initialize_repository(root)
+            with mock.patch("builtins.print"):
+                work_units.initialize_command(self.unit_args(root))
+            decision = hook_check.evaluate(root, {})
+            self.assertEqual(decision["decision"], "block")
+            self.assertEqual(hook_check.evaluate(root, {"stop_hook_active": True}), {})
+
+
 class InstallerTests(unittest.TestCase):
     def test_invalid_pi_settings_fail_before_mutation(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -360,8 +423,13 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue((target / ".smart-harness/tools/commit_docs.py").exists())
             self.assertTrue((target / ".smart-harness/tools/check.py").exists())
             self.assertTrue((target / ".smart-harness/tools/experiments.py").exists())
+            self.assertTrue((target / ".smart-harness/tools/work_units.py").exists())
+            self.assertTrue((target / ".smart-harness/tools/hook_check.py").exists())
             self.assertTrue((target / ".smart-harness/config/models.json").exists())
             self.assertTrue((target / ".smart-harness/config/checks.json").exists())
+            self.assertTrue((target / ".github/hooks/smart-harness.json").exists())
+            settings = json.loads((target / ".claude/settings.json").read_text(encoding="utf-8"))
+            self.assertEqual(settings["hooks"]["Stop"][0]["hooks"][0]["command"], installer.CLAUDE_HOOK_COMMAND)
 
     def test_dry_run_does_not_mutate_target(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

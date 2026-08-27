@@ -63,7 +63,15 @@ Keep work sequential when it has unmet dependencies or shared mutable state.
 
 Parallel writers require disjoint ownership, isolated branches/worktrees, one accountable agent per unit, and an explicit integration step. Each agent receives the same unit contract and runs the complete `plan -> implement -> document -> simplify -> verify` cycle. Otherwise use one writer.
 
-For complex or long tasks, give parallel lanes the same compact evidence: goal, acceptance criteria, relevant refs/files/contracts, and known environment constraints. Persist a short `.agent-state/<task>/progress.md` only when compaction/handoff risk justifies it; do not create task ledgers for routine work.
+For complex, long, parallel, or resumable tasks, give every lane the same compact evidence and use `.smart-harness/tools/work_units.py` to persist dependencies, ownership, lifecycle evidence, documentation impact, verification, and commit SHA under ignored `.agent-state/work-units/`. Activate one unit so installed stop hooks can enforce its lifecycle gate. Do not create ledger state for routine fixes where it adds no handoff value.
+
+```bash
+python3 .smart-harness/tools/work_units.py init <id> --title <title> --goal <goal> \
+  --acceptance <criterion> --owns <path> --base-ref HEAD --docs-impact required --doc-path <path> --activate
+python3 .smart-harness/tools/work_units.py advance <id> --evidence <stage-evidence>
+python3 .smart-harness/tools/check.py --active
+python3 .smart-harness/tools/work_units.py close
+```
 
 ## 4. Implement the smallest correct design
 

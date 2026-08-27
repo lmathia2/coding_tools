@@ -35,6 +35,20 @@ It checks documentation evidence in every code commit, scores only Python functi
 
 Exit status `0` means all checks passed, `1` means a check failed, and `2` means configuration or gate execution was invalid. The default installed configuration has documentation and complexity checks enabled and leaves project-specific commands empty.
 
+### Resumable work-unit state and hooks
+
+The optional ledger is for complex, long, parallel, or handoff-prone tasks; routine fixes need no ledger. `work_units.py init` resolves the unit's base ref to an immutable commit and stores acceptance criteria, dependencies, owners/owned paths, documentation impact, source artifact, and lifecycle evidence under ignored `.agent-state/work-units/`. `advance` accepts evidence only in `plan -> implement -> document -> simplify -> verify` order. Dependencies must complete and active ownership cannot overlap before implementation starts.
+
+```text
+work_units.py init ID --title TITLE --goal GOAL --acceptance CRITERION --owns PATH --base-ref REF --docs-impact required --doc-path PATH --activate
+work_units.py ready | list | show [ID] | validate
+work_units.py advance ID --evidence EVIDENCE [--commit SHA]
+check.py --active
+work_units.py close [ID]
+```
+
+Project installation adds a Copilot `agentStop` hook and merges an idempotent Claude Code `Stop` hook. Both are no-ops without an active unit, self-limit when already continuing from a stop hook, block an incomplete active lifecycle, and run the deterministic gate after the unit reaches `complete`. A successful hook removes only the active pointer; unit history remains available. Manual/non-hook hosts run `check.py --active` followed by `work_units.py close`.
+
 ### Normal-case cost shape
 
 ```text

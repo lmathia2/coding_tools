@@ -29,6 +29,8 @@ request
 
 Independent agents are conditional, not ceremonial. Add them when they provide material independent evidence or judgment: ambiguous debugging, architecture alternatives, high-risk boundaries, or PR semantic review.
 
+`.agent-state/work-units/` is an optional operational checkpoint, not another planning system. It makes long or parallel work resumable and gives deterministic stop hooks an immutable base ref. The accepted plan and repository documentation remain authoritative; ignored ledger state records execution progress and evidence. Routine fixes omit it.
+
 ## Shared policy
 
 Only five discoverable shared skills are intentional:
@@ -136,3 +138,4 @@ resolve exact base + PR HEAD
 8. Premium-model fan-out is conditional on uncertainty/risk.
 9. Product behavior specification generation is explicit, never automatic.
 10. Runtime setup performs no external dependency installation.
+11. Installed stop hooks are inert unless an active work-unit pointer exists.

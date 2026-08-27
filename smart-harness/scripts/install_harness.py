@@ -27,6 +27,7 @@ LEGACY_COPILOT_AGENTS = (
     "worker-terra.agent.md", "fast-terra.agent.md", "worker-sonnet.agent.md",
     "worker-sol.agent.md", "deep-sol.agent.md", "security-opus.agent.md",
 )
+CLAUDE_HOOK_COMMAND = "python3 .smart-harness/tools/hook_check.py --host claude"
 
 
 def exists(path: Path) -> bool:
@@ -199,6 +200,7 @@ class Installer:
         self.validate_target()
         self.validate_sources()
         self.validate_pi_settings()
+        self.validate_claude_settings()
         self.validate_manifest()
 
     def validate_target(self) -> None:
@@ -208,7 +210,7 @@ class Installer:
             raise PermissionError(f"target directory is not writable: {self.target}")
 
     def validate_sources(self) -> None:
-        required = [ROOT / "VERSION", ROOT / "config/models.json", ROOT / "config/checks.json", ROOT / "shared/skills", ROOT / "templates", ROOT / "tools/complexity.py", ROOT / "tools/commit_docs.py", ROOT / "tools/check.py", ROOT / "tools/experiments.py", ROOT / "vendor/SOURCES.json"]
+        required = [ROOT / "VERSION", ROOT / "config/models.json", ROOT / "config/checks.json", ROOT / "shared/skills", ROOT / "templates", ROOT / "copilot/hooks/smart-harness.json", ROOT / "tools/complexity.py", ROOT / "tools/commit_docs.py", ROOT / "tools/check.py", ROOT / "tools/experiments.py", ROOT / "tools/work_units.py", ROOT / "tools/hook_check.py", ROOT / "vendor/SOURCES.json"]
         missing = [str(path) for path in required if not path.exists()]
         if missing:
             raise FileNotFoundError(f"installer source is incomplete: {missing}")
@@ -221,6 +223,17 @@ class Installer:
         skills = data.get("skills", [])
         if not isinstance(skills, list) or not all(isinstance(item, str) for item in skills):
             raise ValueError(f"{settings}: skills must be an array of strings")
+
+    def validate_claude_settings(self) -> None:
+        if self.scope != "project" or not self.selected("claude"):
+            return
+        settings = self.target / ".claude/settings.json"
+        data = load_json_object(settings)
+        hooks = data.get("hooks", {})
+        if not isinstance(hooks, dict):
+            raise ValueError(f"{settings}: hooks must be an object")
+        if not isinstance(hooks.get("Stop", []), list):
+            raise ValueError(f"{settings}: hooks.Stop must be an array")
 
     def validate_manifest(self) -> None:
         manifest = self.target / ".smart-harness/install-manifest.json"
@@ -246,6 +259,7 @@ class Installer:
             self.replace(source, base / source.name)
         if self.scope == "project":
             self.replace(ROOT / "copilot/github-skills/code-review", self.target / ".github/skills/code-review")
+            self.replace(ROOT / "copilot/hooks/smart-harness.json", self.target / ".github/hooks/smart-harness.json")
 
     def install_claude(self) -> None:
         agent_root = self.target / ".claude/agents"
@@ -255,6 +269,21 @@ class Installer:
             self.replace(source, agent_root / source.name)
         for source in sorted((ROOT / "claude-code/commands").glob("*.md")):
             self.replace(source, self.target / ".claude/commands" / source.name)
+        if self.scope == "project":
+            self.install_claude_hook()
+
+    def install_claude_hook(self) -> None:
+        settings_path = self.target / ".claude/settings.json"
+        data = load_json_object(settings_path)
+        stop_hooks = data.setdefault("hooks", {}).setdefault("Stop", [])
+        present = any(
+            handler.get("command") == CLAUDE_HOOK_COMMAND
+            for group in stop_hooks if isinstance(group, dict)
+            for handler in group.get("hooks", []) if isinstance(handler, dict)
+        )
+        if not present:
+            stop_hooks.append({"hooks": [{"type": "command", "command": CLAUDE_HOOK_COMMAND, "timeout": 600}]})
+        self.write_text(settings_path, json.dumps(data, indent=2) + "\n")
 
     def install_pi(self) -> None:
         if self.scope == "project":

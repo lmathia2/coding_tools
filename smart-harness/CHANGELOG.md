@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added an optional resumable work-unit ledger with immutable base refs, dependency/ownership validation, ordered lifecycle evidence, active-unit gates, and no-op-by-default Copilot/Claude stop hooks.
 - Added append-only model experiment records and profile/model/role comparisons with honest per-metric sample counts, optional token/cost/quality evidence, command timing, and Pi child-result import.
 - Added a deterministic committed-range lifecycle gate for per-commit documentation evidence, changed-function complexity, configured project checks, JSON automation output, and PR CI.
 - Added a README getting-started guide covering prerequisites, project-local and global installation, host discovery paths, first use, verification, upgrades, and model-profile deployment.

@@ -146,6 +146,21 @@ python3 .smart-harness/tools/check.py <unit-start-ref> --head HEAD --format json
 
 Edit `.smart-harness/config/checks.json` to add project checks as argument arrays. For example, `{"name": "tests", "argv": ["python3", "-m", "pytest", "-q"]}`. Commands execute directly without a shell, from the repository root unless a safe repository-relative `cwd` is supplied.
 
+For a long, parallel, or resumable change, persist the execution contract and activate it for the installed Copilot/Claude stop hook:
+
+```bash
+python3 .smart-harness/tools/work_units.py init api-contract \
+  --title "API contract" --goal "Add the accepted contract" \
+  --acceptance "contract tests pass" --owns src/api.py --base-ref HEAD \
+  --docs-impact required --doc-path docs/api.md --activate
+python3 .smart-harness/tools/work_units.py advance api-contract --evidence "plan: callers and contract mapped"
+# Repeat advance after implement, document, simplify, and verify.
+python3 .smart-harness/tools/check.py --active
+python3 .smart-harness/tools/work_units.py close
+```
+
+The ledger is deliberately optional and ignored by Git. Installed stop hooks do nothing when no unit is active. With an active unit, they prevent premature completion, run the committed-range gate after verification, and retain the completed unit history for handoff/audit.
+
 ## PR review
 
 `ReviewPR` / `/review-pr` preserves the stronger review path:

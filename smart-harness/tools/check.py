@@ -12,6 +12,7 @@ from typing import Any
 
 import commit_docs
 import complexity
+import work_units
 
 
 HUNK_RE = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@")
@@ -21,6 +22,7 @@ DEFAULT_CONFIG = {
     "complexity": {"enabled": True, "fail_above": 20},
     "commands": [],
     "repository": {"require_clean": False},
+    "work_units": {"enabled": True, "require_complete": False},
 }
 
 
@@ -62,7 +64,7 @@ def load_config(path: Path) -> dict[str, Any]:
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict) or data.get("schema_version") != 1:
         raise ValueError(f"{path}: expected a schema_version 1 JSON object")
-    for key in ("documentation", "complexity", "repository"):
+    for key in ("documentation", "complexity", "repository", "work_units"):
         if key in data and not isinstance(data[key], dict):
             raise ValueError(f"{path}: {key} must be an object")
     commands = data.get("commands", [])
@@ -206,6 +208,16 @@ def cleanliness_check(root: Path) -> dict[str, object]:
     return result("repository-clean", status, summary, changes)
 
 
+def work_unit_check(root: Path, require_complete: bool) -> dict[str, object]:
+    units, errors = work_units.validate_all(root)
+    incomplete = [unit.get("id") for unit in units if unit.get("stage") != "complete"]
+    if require_complete and incomplete:
+        errors.append(f"incomplete work units: {', '.join(str(item) for item in incomplete)}")
+    status = "FAIL" if errors else "PASS"
+    summary = f"{len(units)} work unit(s) valid" if not errors else f"{len(errors)} work-unit error(s)"
+    return result("work-units", status, summary, {"errors": errors, "work_units": units})
+
+
 def run_checks(root: Path, base: str, head: str, config: dict[str, Any], require_clean: bool) -> list[dict[str, object]]:
     checks = []
     if config.get("documentation", {}).get("enabled", True):
@@ -219,6 +231,9 @@ def run_checks(root: Path, base: str, head: str, config: dict[str, Any], require
     configured_clean = config.get("repository", {}).get("require_clean", False)
     if require_clean or configured_clean:
         checks.append(cleanliness_check(root))
+    unit_config = config.get("work_units", {})
+    if unit_config.get("enabled", True):
+        checks.append(work_unit_check(root, bool(unit_config.get("require_complete", False))))
     return checks
 
 
@@ -231,7 +246,8 @@ def render_text(checks: list[dict[str, object]]) -> str:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("base", help="exclusive base Git ref")
+    parser.add_argument("base", nargs="?", help="exclusive base Git ref")
+    parser.add_argument("--active", action="store_true", help="use the active work unit's immutable base ref")
     parser.add_argument("--head", default="HEAD", help="inclusive head Git ref")
     parser.add_argument("--root", help="repository path; defaults to the current repository")
     parser.add_argument("--config", help="checks JSON; defaults to the installed or source configuration")
@@ -245,10 +261,21 @@ def main() -> int:
     root = repository_root(args.root)
     config_path = Path(args.config).resolve() if args.config else default_config_path(root)
     config = load_config(config_path)
-    checks = run_checks(root, args.base, args.head, config, args.require_clean)
-    payload = {"base": args.base, "head": args.head, "root": str(root), "checks": checks}
+    base = resolve_base(args, root)
+    checks = run_checks(root, base, args.head, config, args.require_clean)
+    payload = {"base": base, "head": args.head, "root": str(root), "checks": checks}
     print(json.dumps(payload, indent=2) if args.format == "json" else render_text(checks))
     return 1 if any(item["status"] in {"FAIL", "ERROR"} for item in checks) else 0
+
+
+def resolve_base(args: argparse.Namespace, root: Path) -> str:
+    if args.active and args.base:
+        raise ValueError("provide either base or --active, not both")
+    if args.active:
+        return str(work_units.active_unit(root)["base_ref"])
+    if not args.base:
+        raise ValueError("base is required unless --active is used")
+    return args.base
 
 
 if __name__ == "__main__":
