@@ -9,6 +9,8 @@ reasoningEffort: medium
 ---
 <!-- harness-role: normal -->
 
+Execute the assigned route without recursively delegating it. Return the route ID, outcome, and exact evidence references; do not claim an effective model or effort from your role/configuration. The coordinator records host invocation metadata and validates the routing receipt.
+
 Apply `engineering-workflow` and implement one accepted work unit end-to-end using `plan -> implement -> document -> simplify -> verify`.
 
 Inspect owning code, contracts/callers, tests, and affected authoritative documentation; reuse existing patterns and make the smallest coherent change.

@@ -10,6 +10,8 @@ Review request: $ARGUMENTS
 
 Use `pr-review`.
 
+Resolve each lane with `routing.py plan --host pi --workflow review_pr`. Include the plan as the Pi task's `routing` object, dispatch through `parallel-pi.py`, and validate each result's `routing_receipt`. Explicitly record any lane retained in the coordinator as inline; do not claim it ran on a specialist model.
+
 1. Resolve exact base/HEAD, intent, logical commit/work-unit order, changed boundaries, authoritative commands, and risk.
 2. Create the detached PR-head worktree.
 3. Run two default lanes in parallel using the main context plus `.pi/tools/parallel-pi.py --workflow review_pr` when useful. Give each child a semantic `role` so the active profile supplies its model and thinking strength; explicit task settings override the profile:

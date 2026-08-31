@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jobservice — what, how, why</title>
+<style>
+body{font:17px/1.65 system-ui,sans-serif;background:#f4f5f1;color:#20312c;margin:0}
+main{max-width:900px;margin:auto;padding:36px 24px 72px}h1,h2{line-height:1.2}
+h1{font-size:2.6rem}a{color:#096652}code,pre{font-family:ui-monospace,monospace}
+pre{overflow:auto;background:#e3e9e1;padding:18px;border-radius:8px}
+section{margin:32px 0}aside{border-left:5px solid #ac602e;background:#fff4e3;padding:16px 20px}
+table{border-collapse:collapse;width:100%;font-size:.95rem}td,th{border-bottom:1px solid #c9d4cb;padding:10px;text-align:left}
+.eyebrow{letter-spacing:.12em;text-transform:uppercase;font-size:.8rem;color:#43685c}
+</style>
+<main>
+<p class="eyebrow">Developer field guide · offline · Python + SQLite</p>
+<h1>A to-do list that survives a worker disappearing.</h1>
+<p>Jobservice stores small automation jobs in a SQLite file. A worker takes one,
+runs a handler, and records its result. The durable version gives each attempt
+a time-limited claim, so the queue can recover if that worker crashes.</p>
+<section>
+<h2>What changed?</h2>
+<p>Before, a crash after taking a job left it “running” forever. Now taking work
+creates an expiring lease and a fresh token. A replacement can retry abandoned
+work, while the old token cannot overwrite the replacement's result.</p>
+<table>
+<thead><tr><th>Concern</th><th>Behavior</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td>Two workers want the same job</td><td>Claim and ownership update commit together.</td><td><a href="../jobservice/store.py">JobStore.claim</a>, <a href="../jobservice/database.py">Database.transaction</a></td></tr>
+<tr><td>A worker stops responding</td><td>Claim or reap observes expiry and schedules a bounded retry.</td><td><a href="../jobservice/store.py">_recover, _failure, _delay</a></td></tr>
+<tr><td>An old worker returns late</td><td>State, token and expiry are checked before its write.</td><td><a href="../jobservice/store.py">_owned</a>, <a href="../jobservice/worker.py">Worker.run_one</a></td></tr>
+<tr><td>A caller submits twice</td><td>A key reuses matching inputs; conflicting inputs are rejected.</td><td><a href="../jobservice/store.py">enqueue</a></td></tr>
+<tr><td>You need to see what happened</td><td>Every accepted mutation commits one event with the state.</td><td><a href="../jobservice/store.py">_change, _event, events</a></td></tr>
+</tbody></table>
+</section>
+<section>
+<h2>How does a lease work?</h2>
+<p>Imagine a checkout slip marked “valid until 10:00:30.” Before that time, the
+worker holding the current slip can renew it or finish. At exactly 10:00:30 the
+slip is invalid, even if no one has collected the overdue work yet. Another
+attempt gets a new slip, even if it uses the same worker name.</p>
+<pre>queued → claim → running → live completion → succeeded
+                    │
+                    ├─ failure / observed expiry → delayed queued retry
+                    │                              or failed when exhausted
+                    └─ cancel request → owner/reaper resolves → cancelled</pre>
+<p>The default retry delays are 1, 2, 4, … seconds, capped at 60. Claims count
+against the attempt limit, including claims by workers that crash. A failure or
+recovery starts its delay when it is observed. A worker poll never sleeps waiting
+for that future retry. See <a href="contracts.md">the full API contract</a>.</p>
+</section>
+<aside>
+<strong>Why “exactly once” needs a boundary</strong>
+<p>A worker could send an email and then crash before saving “done.” Its replacement
+may send it again. Database transitions and event commits are fenced and atomic;
+external effects remain <strong>at-least-once</strong>. Enqueue deduplication
+does not deduplicate handler effects. Use the downstream system's own idempotency
+key when a repeated effect would be harmful.</p>
+</aside>
+<section>
+<h2>Use it</h2>
+<p>From the project root, submit and process one job. Repeating the submission
+with the same key and inputs returns the original job, including after success.</p>
+<pre>python3 -m jobservice --db demo.sqlite submit summary '{"values":[2,4,6]}' --idempotency-key report-7
+python3 -m jobservice --db demo.sqlite work --once --lease-seconds 30
+python3 -m jobservice --db demo.sqlite list --state succeeded
+python3 -m jobservice --db demo.sqlite stats</pre>
+<p>Replace <code>JOB_ID</code> with a submitted id to inspect its events or request
+cancellation. Cancel stops queued work immediately; running code must cooperate.</p>
+<pre>python3 -m jobservice --db demo.sqlite events JOB_ID
+python3 -m jobservice --db demo.sqlite cancel JOB_ID
+python3 -m jobservice --db demo.sqlite reap
+python3 -m unittest discover -s tests -v</pre>
+<p>Long-running custom handlers explicitly call <code>context.heartbeat()</code>
+or <code>context.check_cancelled()</code>. These renew the lease; the latter raises
+when a durable cancellation was requested. There is no background heartbeat.
+See <a href="../jobservice/context.py">ExecutionContext</a> and
+<a href="../jobservice/handlers.py">the handler registry and built-ins</a>.</p>
+</section>
+<section>
+<h2>What should a maintainer watch?</h2>
+<p>Use a local filesystem and consistent retry policy/clock across workers.
+Read APIs never recover work: a supervisor must issue another claim or explicit
+reap. Jobs, keys and events are not automatically pruned. Cancellation does not
+kill processes. Storage errors propagate instead of pretending the job finished.</p>
+<p>Opening an older database migrates its schema atomically and preserves stored
+results and insertion order. Legacy running work has no valid owner and can be
+recovered. See <a href="../jobservice/database.py">Database initialization</a>
+and <a href="architecture.md">architecture and failure boundaries</a>.</p>
+</section>
+</main>
+</html>

@@ -39,6 +39,12 @@ jobs:
       - name: Run harness regression tests
         run: python3 -m unittest discover -s wysiwyship/tests -v
 
+      - name: Test local evaluation runner (no model calls)
+        run: python3 -m unittest discover -s wysiwyship/evals/tests -v
+
+      - name: Validate local evaluation fixtures (no model calls)
+        run: python3 wysiwyship/evals/runner.py validate
+
       - name: Check harness code complexity
         run: python3 wysiwyship/tools/complexity.py wysiwyship/config wysiwyship/scripts wysiwyship/tools wysiwyship/pi/tools --fail-above 20
 

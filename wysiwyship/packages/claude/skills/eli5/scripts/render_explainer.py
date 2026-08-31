@@ -19,6 +19,7 @@ RECORD_SCHEMAS = {
     "items": ({"title": 80, "body": 260, "tag": 24}, 4),
     "metrics": ({"value": 32, "label": 80, "detail": 180}, 4),
 }
+FLOW_SCHEMA = {"title": 80, "body": 220, "path": 180}
 
 
 def load_story(path: Path) -> dict[str, Any]:
@@ -71,21 +72,51 @@ def validate_analogy(value: object, label: str) -> None:
     validate_text_fields(value, {"title": 100, "body": 500, "boundary": 300}, label, {"title", "body"})
 
 
+def validate_flow(value: object, label: str) -> None:
+    if value is None:
+        return
+    if not isinstance(value, list) or not 2 <= len(value) <= 5:
+        raise ValueError(f"{label} must be an array with 2 to 5 entries")
+    for index, item in enumerate(value):
+        if not isinstance(item, dict):
+            raise ValueError(f"{label}[{index}] must be an object")
+        validate_text_fields(item, FLOW_SCHEMA, f"{label}[{index}]", {"title", "body"})
+
+
 def validate_slide(slide: object, index: int) -> None:
     label = f"slides[{index}]"
     if not isinstance(slide, dict):
         raise ValueError(f"{label} must be an object")
     validate_text_fields(slide, SLIDE_TEXT_LIMITS, label, {"title"})
     validate_string_list(slide.get("bullets"), f"{label}.bullets", 5, 180)
+    validate_string_list(slide.get("evidence"), f"{label}.evidence", 4, 180)
     for key, (schema, maximum) in RECORD_SCHEMAS.items():
         validate_records(slide.get(key), f"{label}.{key}", schema, maximum)
+    validate_flow(slide.get("flow"), f"{label}.flow")
     validate_analogy(slide.get("analogy"), f"{label}.analogy")
-    populated = [key for key in ("bullets", "items", "metrics", "analogy", "code") if slide.get(key)]
+    populated = [key for key in ("flow", "bullets", "items", "metrics", "analogy", "code") if slide.get(key)]
     if len(populated) > 1:
         raise ValueError(f"{label} may use only one structured element, found {populated}")
     accent = slide.get("accent")
     if accent is not None and accent not in ACCENTS:
         raise ValueError(f"{label}.accent must be one of {sorted(ACCENTS)}")
+
+
+def validate_grounding(slides: list[dict[str, Any]]) -> None:
+    if not any(slide.get("flow") for slide in slides):
+        raise ValueError("story.slides must include an architecture or execution flow")
+    evidence_count = sum(len(slide.get("evidence", [])) for slide in slides)
+    if evidence_count < 3:
+        raise ValueError("story.slides must include at least 3 evidence anchors")
+
+
+def validate_closing(closing: object) -> None:
+    if closing is None:
+        return
+    if not isinstance(closing, dict):
+        raise ValueError("story.closing must be an object")
+    validate_text_fields(closing, {"title": 100, "body": 500}, "story.closing")
+    validate_string_list(closing.get("next_steps"), "story.closing.next_steps", 4, 180)
 
 
 def validate_story(story: dict[str, Any]) -> None:
@@ -100,12 +131,8 @@ def validate_story(story: dict[str, Any]) -> None:
         raise ValueError("story.slides must contain 3 to 9 slides")
     for index, slide in enumerate(slides):
         validate_slide(slide, index)
-    closing = story.get("closing")
-    if closing is not None:
-        if not isinstance(closing, dict):
-            raise ValueError("story.closing must be an object")
-        validate_text_fields(closing, {"title": 100, "body": 500}, "story.closing")
-        validate_string_list(closing.get("next_steps"), "story.closing.next_steps", 4, 180)
+    validate_grounding(slides)
+    validate_closing(story.get("closing"))
 
 
 def safe_json(story: dict[str, Any]) -> str:
@@ -122,7 +149,7 @@ def render_document(story: dict[str, Any], template_path: Path = TEMPLATE) -> st
     if template.count("__STORY_DATA__") != 1:
         raise ValueError("ELI5 template must contain exactly one __STORY_DATA__ marker")
     document = template.replace("__STORY_DATA__", safe_json(normalized))
-    forbidden = ("http://", "https://", "<script src=", "<link rel=\"stylesheet\"")
+    forbidden = ("<script src=", "<link rel=\"stylesheet\"", "@import url", "url(http", "src=\"http")
     present = [value for value in forbidden if value in document.lower()]
     if present:
         raise ValueError(f"rendered explainer contains external dependency markers: {present}")

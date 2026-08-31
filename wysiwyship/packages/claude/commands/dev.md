@@ -13,6 +13,8 @@ Task: $ARGUMENTS
 
 Use `wysiwyship:engineering-workflow`. The user should not have to choose a model or sub-workflow.
 
+Follow its routing contract with `--host claude --workflow dev`. Invoke the resolved subagent type through the Agent tool (including its plugin namespace when present), retain and validate its receipt, and report unobserved effective settings as `UNVERIFIED`.
+
 ## Planning grill and lock
 
 Before decomposition or source edits, run the planning grill defined by `wysiwyship:engineering-workflow`.

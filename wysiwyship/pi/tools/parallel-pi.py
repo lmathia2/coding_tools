@@ -16,6 +16,7 @@ from pathlib import Path
 import subprocess
 import sys
 import time
+import uuid
 from typing import Any
 
 PREFIX = """You are a bounded specialist child in a larger engineering workflow.
@@ -104,6 +105,40 @@ def apply_runtime_defaults(
     return resolved
 
 
+def validate_routing(task: dict[str, Any], workflow: str | None = None) -> None:
+    """Reject task settings that would silently change a locked Pi dispatch."""
+    plan = task.get("routing")
+    if plan is None:
+        return
+    if not isinstance(plan, dict) or plan.get("schema_version") != 1 or not plan.get("route_id"):
+        raise ValueError("task routing must be a routing.py plan")
+    if plan.get("require_confirmed"):
+        raise ValueError("Pi print-mode launcher cannot confirm effective model/effort; this route cannot run here")
+    expected = {"host": "pi", "execution": "delegated", "agent": "parallel-pi",
+                "role": task.get("role", "fast"), "task": task["name"],
+                "requested": {"model": task.get("model"), "reasoning": task.get("thinking")}}
+    if workflow is not None:
+        expected["workflow"] = workflow
+    for field, value in expected.items():
+        if plan.get(field) != value:
+            raise ValueError(f"task {task['name']!r} conflicts with locked routing {field}")
+
+
+def invocation_receipt(task: dict[str, Any], invocation_id: str, succeeded: bool) -> dict[str, Any]:
+    """Argv is launch evidence, never a claim about the model that answered."""
+    plan = task.get("routing") or {}
+    return {
+        "schema_version": 1, "route_id": plan.get("route_id", invocation_id),
+        "agent": "parallel-pi", "invocation_id": invocation_id,
+        "source": "launcher", "evidence_ref": f"parallel-pi:{invocation_id}",
+        "status": "completed" if succeeded else "failed",
+        "requested": {"model": task.get("model"), "reasoning": task.get("thinking")},
+        "observed": None,
+        "model_status": "UNVERIFIED",
+        "model_selection": "explicit" if task.get("model") else "child-host-default",
+    }
+
+
 def default_model_config(cwd: str) -> Path:
     project = Path(cwd).resolve() / ".wysiwyship/config/models.json"
     return project if project.exists() else Path.home() / ".wysiwyship/config/models.json"
@@ -127,6 +162,8 @@ def run_task(
     auto_approve: bool = False,
     inherit_env: bool = False,
 ) -> dict[str, Any]:
+    validate_routing(task)
+    invocation_id = str(uuid.uuid4())
     root = Path(default_cwd).resolve()
     cwd_path = Path(task.get("cwd") or root).resolve()
     if cwd_path != root and root not in cwd_path.parents:
@@ -167,6 +204,7 @@ def run_task(
             "stderr": completed.stderr,
             "timed_out": False,
             "duration_seconds": round(time.monotonic() - started, 6),
+            "routing_receipt": invocation_receipt(task, invocation_id, completed.returncode == 0),
         }
     except subprocess.TimeoutExpired as exc:
         return {
@@ -180,6 +218,7 @@ def run_task(
             "stderr": decode_output(exc.stderr),
             "timed_out": True,
             "duration_seconds": round(time.monotonic() - started, 6),
+            "routing_receipt": invocation_receipt(task, invocation_id, False),
         }
 
 
@@ -201,6 +240,9 @@ def main() -> int:
     loaded = load_pi_profile(config_path.resolve(), args.profile)
     profile_name, settings = loaded if loaded else (None, None)
     tasks = [apply_runtime_defaults(task, settings, args.workflow) for task in tasks]
+    # Validate the entire batch before any child starts, not after partial dispatch.
+    for task in tasks:
+        validate_routing(task, args.workflow)
     if profile_name:
         print(f"using Pi model profile {profile_name!r}", file=sys.stderr)
     workers = max(1, min(args.max_workers, len(tasks)))

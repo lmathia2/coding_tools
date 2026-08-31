@@ -13,6 +13,7 @@ from typing import Any
 import commit_docs
 import complexity
 import work_units
+import routing
 
 
 HUNK_RE = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@")
@@ -253,16 +254,24 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--config", help="checks JSON; defaults to the installed or source configuration")
     parser.add_argument("--format", choices=("text", "json"), default="text")
     parser.add_argument("--require-clean", action="store_true", help="also fail on uncommitted changes")
+    parser.add_argument("--routing-plan", type=Path, help="also check this unit or review lane's dispatch plan")
+    parser.add_argument("--routing-receipt", type=Path, help="invocation receipt paired with --routing-plan")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
+    if bool(args.routing_plan) != bool(args.routing_receipt):
+        raise ValueError("provide both --routing-plan and --routing-receipt")
     root = repository_root(args.root)
     config_path = Path(args.config).resolve() if args.config else default_config_path(root)
     config = load_config(config_path)
     base = resolve_base(args, root)
     checks = run_checks(root, base, args.head, config, args.require_clean)
+    if args.routing_plan:
+        dispatch = routing.check_route(routing.read_object(args.routing_plan), routing.read_object(args.routing_receipt))
+        checks.append(result("routing", dispatch["status"],
+                             f"receipt checked; effective model: {dispatch['model_status']}", dispatch))
     payload = {"base": base, "head": args.head, "root": str(root), "checks": checks}
     print(json.dumps(payload, indent=2) if args.format == "json" else render_text(checks))
     return 1 if any(item["status"] in {"FAIL", "ERROR"} for item in checks) else 0

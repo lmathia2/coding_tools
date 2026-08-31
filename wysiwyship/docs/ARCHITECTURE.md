@@ -25,8 +25,10 @@ request
   -> planning grill resolves goals / acceptance / boundaries / alternatives / assumptions
   -> human or auto mode locks an explicit decision record
   -> coordinator defines work-unit dependency graph from the lock
+  -> resolve each unit's route and invoke its named host agent (or explicit inline exception)
   -> each unit: plan -> implement -> document -> simplify -> verify
   -> integrate independently completed units in dependency order
+  -> validate invocation receipts; report effective settings separately
   -> committed-range gate
   -> ELI5 visual handoff
   -> completion
@@ -45,7 +47,7 @@ The spec bridge is one-way intake from accepted Spec Kit, OpenSpec, or BMAD impl
 Only six discoverable shared skills are intentional:
 
 1. `engineering-workflow` — all ordinary coding process: planning grill/lock, rapid autonomous execution, routing principles, parallelism, minimal design, debugging/TDD, documentation, verification, and successful-completion handoff;
-2. `eli5` — evidence-based what/how/why explanation for a curious developer plus a dependency-free visual HTML artifact;
+2. `eli5` — evidence-based developer onboarding and change explanation covering purpose, first use, core concepts, connected source architecture, representative execution flow, rationale, proof, and limits in a dependency-free visual HTML artifact;
 3. `pr-review` — worktree-based semantic + executable review and high-risk escalation;
 4. `product-behavior-spec` — explicit specialist outside-in product documentation;
 5. `skill-authoring` — maintenance-only harness policy;
@@ -59,19 +61,27 @@ Repository mapping, context snapshots, task ledgers, Superpowers process, Ponyta
 
 The installer normally derives a `detected` profile without mutating the canonical source. It asks each installed host only through documented or configuration-file surfaces, records the evidence class, and writes `.wysiwyship/model-discovery.json`. Account-visible or configured-restriction catalogs may select explicit models; an unprovable entitlement becomes `model: null` and inherits the active session. This prevents host detection from turning a supported model name into a false access claim.
 
-The automatic ELI5 handoff runs in the configured `dev` coordinator after verification; an explicit `/eli5` invocation uses the host session model. Both retain the curious-developer baseline and the required what/how/why layers. The renderer itself is deterministic and model-independent.
+The automatic ELI5 handoff runs in the configured `dev` coordinator after verification; an explicit `/eli5` invocation uses the host session model. Both retain the curious-developer baseline. The renderer validates that the story includes a connected architecture or execution flow and at least three inspected evidence anchors, then renders those paths and symbols beside the explanation. The renderer itself is deterministic and model-independent.
 
 The config uses one provider-neutral `reasoning` property. Adapter translation is deliberately narrow:
 
 | Adapter | Model setting | Reasoning setting | Enforcement boundary |
 |---|---|---|---|
 | Codex | `model` | `model_reasoning_effort` | Account-visible `model/list` catalog for custom specialists; coordinator inherits the active session |
-| Copilot CLI | `model` | `reasoningEffort` | Per custom agent; an unavailable override falls back to the session |
+| Copilot CLI | `model` | `reasoningEffort` | Per invoked custom agent; unavailable settings block or require an accepted fallback |
 | VS Code Copilot | `model` | Session model picker | Current VS Code custom-agent frontmatter does not document per-agent effort |
 | Claude Code | `model` | `effort` | Per command/agent frontmatter |
 | Pi | `--model` | `--thinking` | Per parallel child; the coordinator inherits its active session |
 
 Pi receives the selected config at `.wysiwyship/config/models.json`. Its helper resolves defaults from `--workflow` plus each task's semantic `role`; explicit per-task values take precedence for controlled experiments.
+
+## Dispatch and evidence boundary
+
+`tools/routing.py:resolve_route` reads that profile and maps a role to the host's named agent; it emits a unique locked route, not an invocation. The shared workflow requires the coordinator to invoke the native agent tool (Codex, Claude, Copilot) or `parallel-pi.py` (Pi), then retain a receipt. The same contract applies to development and each PR lane. One implementation worker owns the full lifecycle; it does not redispatch itself at each phase.
+
+`routing.py:check_route` compares route ID, agent, requested settings, completion, and evidence references. `work_units.py` embeds the plan/receipt and blocks stage transitions on inconsistency; `check.py` composes that validation with functional checks. Pi additionally validates a batch's locked routes before launch and emits launcher receipts from actual subprocess results. A null Pi child model means host-default selection, not parent-session inheritance.
+
+Requested settings and answering-model metadata are distinct. Launcher argv or coordinator reports stay `UNVERIFIED`; only attributed host metadata can yield `CONFIRMED`, and conflicting metadata fails. The optional `require_confirmed` policy blocks completion without matching effective settings. These are consistency checks on local evidence, not authenticated attestations, a universal scheduler, or interception of every source edit. Native clients still decide whether to follow the dispatch instruction; unsupported tools/permissions must be disclosed rather than silently substituted.
 
 Experiment evidence is deliberately separate from profile configuration. Profiles express intended routing; `.agent-state/model-experiments.jsonl` records observed outcomes. The comparison tool groups records without imputing unavailable host telemetry, so a profile with one reported cost is not presented as having the same evidence quality as a profile with twenty reported costs.
 

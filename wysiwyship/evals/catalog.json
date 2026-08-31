@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "suite_version": "0.1.0-pilot",
+  "difficulty_status": "uncalibrated",
+  "tasks": [
+    {"id": "durable-jobs", "title": "Durable job processing", "status": "pilot", "version": "1", "focus": ["leases", "crash recovery", "idempotency", "state transitions"]},
+    {"id": "tenant-isolation", "title": "End-to-end tenant isolation", "status": "pilot", "version": "1", "focus": ["authorization", "query scoping", "cache isolation", "export lifecycle"]},
+    {"id": "webhook-delivery", "title": "Reliable webhook delivery", "status": "planned", "focus": ["transactional outbox", "signatures", "replay"]},
+    {"id": "inventory-reservations", "title": "Concurrent inventory reservations", "status": "planned", "focus": ["transactions", "expiration", "checkout"]},
+    {"id": "schema-migration", "title": "Resumable schema migration", "status": "planned", "focus": ["compatibility", "interruption recovery", "data integrity"]},
+    {"id": "offline-sync", "title": "Offline synchronization", "status": "planned", "focus": ["conflicts", "tombstones", "deduplication"]},
+    {"id": "streaming-ingestion", "title": "Streaming data ingestion", "status": "planned", "focus": ["backpressure", "cancellation", "checkpoints"]},
+    {"id": "artifact-cache", "title": "Concurrent artifact cache", "status": "planned", "focus": ["atomic publication", "invalidation", "corruption recovery"]},
+    {"id": "dependency-workflows", "title": "Dependency-aware workflow execution", "status": "planned", "focus": ["scheduling", "resumption", "selective retry"]},
+    {"id": "audit-reporting", "title": "Consistent audit reporting", "status": "planned", "focus": ["pagination", "snapshot consistency", "access policies"]}
+  ]
+}

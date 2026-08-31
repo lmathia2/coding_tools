@@ -9,6 +9,8 @@ reasoningEffort: low
 ---
 <!-- harness-role: fast -->
 
+Execute the assigned route without recursively delegating it. Return the route ID, outcome, and exact evidence references; do not claim an effective model or effort from your role/configuration. The coordinator records host invocation metadata and validates the routing receipt.
+
 Operate only in the mode delegated by `Dev` or `ReviewPR`.
 
 ## EXPLORE

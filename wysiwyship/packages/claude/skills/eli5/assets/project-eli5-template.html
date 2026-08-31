@@ -91,6 +91,19 @@
     .card-tag { display: inline-block; min-width: 36px; margin-bottom: 24px; padding: 7px 10px; background: var(--accent); font: 800 17px/1 var(--mono); text-align: center; }
     .card h3 { margin: 0 0 13px; font: 650 31px/1.08 var(--display); }
     .card p { font-size: 22px; line-height: 1.35; color: #44515f; }
+    .flow-list { display: grid; gap: 17px; }
+    .flow-step {
+      position: relative; display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 20px;
+      min-height: 112px; padding: 20px 24px; border-left: 8px solid var(--accent); background: rgba(255,255,255,.7);
+    }
+    .flow-step:not(:last-child)::after {
+      content: "↓"; position: absolute; left: 20px; bottom: -25px; z-index: 2;
+      width: 32px; color: var(--ink); background: var(--paper); font: 800 24px/1 var(--mono); text-align: center;
+    }
+    .flow-index { padding-top: 4px; font: 800 19px/1 var(--mono); color: var(--muted); }
+    .flow-copy h3 { margin: 0; font: 650 28px/1.05 var(--display); }
+    .flow-copy p { margin-top: 8px; font-size: 20px; line-height: 1.25; color: #44515f; }
+    .flow-path { margin-top: 10px; font: 700 16px/1.2 var(--mono); color: #485665; overflow-wrap: anywhere; }
     .metric-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
     .metric { min-height: 210px; padding: 30px; background: var(--night); color: var(--paper); border-top: 12px solid var(--accent); }
     .metric-value { font: 650 70px/.95 var(--display); color: var(--accent); }
@@ -102,6 +115,10 @@
     .analogy p { font-size: 24px; line-height: 1.38; color: #d9dee3; }
     .boundary { margin-top: 20px; padding-top: 18px; border-top: 1px solid #48515b; font-size: 19px !important; color: #abb5bf !important; }
     pre { max-height: 470px; overflow: hidden; margin: 0; padding: 34px; border-radius: 0; background: var(--night); color: #e9f0f4; font: 21px/1.45 var(--mono); border-left: 12px solid var(--accent); white-space: pre-wrap; }
+    .evidence-block { margin-top: 26px; }
+    .evidence-label { font: 800 15px/1 var(--mono); letter-spacing: .12em; color: var(--muted); }
+    .evidence-list { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 11px; }
+    .evidence-chip { padding: 8px 11px; background: rgba(23, 32, 42, .08); font: 700 15px/1.15 var(--mono); overflow-wrap: anywhere; }
 
     /* === TITLE AND CLOSING === */
     .title-slide { background: var(--night); color: var(--paper); }
@@ -214,8 +231,31 @@
       return panel;
     }
 
+    function flow(values) {
+      if (!values || !values.length) return null;
+      const list = node('div', 'flow-list');
+      values.forEach((value, index) => {
+        const step = add(list, node('article', 'flow-step reveal'));
+        add(step, node('div', 'flow-index', String(index + 1).padStart(2, '0')));
+        const copy = add(step, node('div', 'flow-copy'));
+        add(copy, node('h3', '', value.title));
+        add(copy, node('p', '', value.body));
+        if (value.path) add(copy, node('div', 'flow-path', value.path));
+      });
+      return list;
+    }
+
+    function evidence(values) {
+      if (!values || !values.length) return null;
+      const block = node('aside', 'evidence-block reveal');
+      add(block, node('div', 'evidence-label', 'INSPECTED EVIDENCE'));
+      const list = add(block, node('div', 'evidence-list'));
+      values.forEach(value => add(list, node('span', 'evidence-chip', value)));
+      return block;
+    }
+
     function visualFor(slide) {
-      return cards(slide.items) || metrics(slide.metrics) || analogy(slide.analogy) || bullets(slide.bullets) || (slide.code ? node('pre', 'reveal', slide.code) : null);
+      return flow(slide.flow) || cards(slide.items) || metrics(slide.metrics) || analogy(slide.analogy) || bullets(slide.bullets) || (slide.code ? node('pre', 'reveal', slide.code) : null);
     }
 
     /* === SLIDE BUILDERS === */
@@ -248,6 +288,7 @@
       add(copy, node('div', 'accent-rule reveal'));
       const visual = add(layout, node('div', 'visual'));
       add(visual, visualFor(value) || node('div', 'analogy reveal', story.summary));
+      add(visual, evidence(value.evidence));
       return section;
     }
 

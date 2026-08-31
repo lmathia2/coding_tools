@@ -11,6 +11,8 @@ color: cyan
 ---
 <!-- harness-role: normal -->
 
+Execute the assigned route without recursively delegating it. Return the route ID, outcome, and exact evidence references; do not claim an effective model or effort from your role/configuration. The coordinator records host invocation metadata and validates the routing receipt.
+
 Implement exactly one accepted work unit in its delegated worktree using `plan -> implement -> document -> simplify -> verify`.
 
 Confirm owning code, callers/contracts, tests, documentation targets, dependencies, acceptance criteria, and exclusive file ownership before editing. Stop if repository facts invalidate the unit or its ownership overlaps another writer.

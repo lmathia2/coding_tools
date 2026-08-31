@@ -15,6 +15,8 @@ Review another developer's PR deeply without modifying the primary checkout or r
 
 Use `pr-review`.
 
+Resolve each lane with `routing.py plan --host copilot --workflow review_pr`; invoke that named custom agent via the agent tool, wait for its result, and check its receipt. Configuration or a generic subagent is not evidence of the selected specialist/model.
+
 1. Resolve exact base/HEAD, intent, logical commit/work-unit order, changed boundaries, authoritative commands, and risk.
 2. Create the detached PR-head worktree required by `pr-review`.
 3. Launch together:

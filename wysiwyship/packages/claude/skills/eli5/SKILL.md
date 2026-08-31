@@ -1,51 +1,81 @@
 ---
 name: eli5
-description: "Explain a completed coding project or technical change to a curious developer through its what, how, and why, and produce a polished, dependency-free visual HTML walkthrough. Use when the user invokes /eli5, asks to understand a project's purpose and implementation, or when a WYSIWYShip development workflow has completed successfully and needs its mandatory post-completion explanation."
+description: "Teach a curious developer what a completed coding project or change is for, how to use it, its core concepts, how the code is organized and executes under the hood, why key design choices exist, and what evidence proves it works. Produce a precise, source-grounded, dependency-free visual HTML walkthrough. Use for /eli5, project or codebase explanations, architecture walkthroughs, onboarding guides, and the mandatory handoff after a successful WYSIWYShip development workflow."
 ---
 
-# Project ELI5
+# Developer ELI5
 
-Turn verified code into an accurate, approachable story and a self-contained visual explainer. Always teach a curious developer what changed, how the system works, and why the implementation and design choices exist.
+Produce the simplest accurate mental model a developer can use to navigate and extend the code. Do not produce a product pitch, release-summary deck, or childish analogy.
 
-## 1. Establish the completion boundary
+## 1. Establish the boundary and audience
 
-For an automatic post-development run, start only after all required work units are integrated and verification has passed. Do not disguise blocked or unverified work as complete. For an explicit `/eli5` request, explain the requested repository state and label any uncertainty.
+For an automatic post-development run, begin only after all required work units are integrated and verification passes. For an explicit `/eli5`, explain the requested repository state and label unverified or incomplete areas.
 
-Use a curious developer who wants to learn the what, how, and why as the baseline audience for every run. Assume general programming literacy without assuming familiarity with the repository, architecture, or domain. Define project-specific terms on first use and include concrete source paths, contracts, flows, and tradeoffs when they aid understanding. If the user names a role or experience level, adapt emphasis and vocabulary on top of this baseline; never omit the what, how, or why. Do not interrupt a completed development workflow to ask about audience unless the choice materially changes a required deliverable.
+Default to a curious developer with general programming literacy but no repository context. A requested role or experience level may change emphasis and vocabulary, but never remove purpose, first use, core concepts, code architecture, execution flow, design rationale, or proof.
 
-## 2. Read evidence before explaining
+Classify the request before reading:
 
-Inspect the authoritative implementation, tests, live documentation, public contracts, configuration, verification results, and relevant commit/work-unit history. Build the explanation from evidence, not the plan or commit title alone.
+- **Project onboarding:** explain the repository's current purpose, installation or startup path, primary user workflow, source architecture, and extension points.
+- **Completed change:** explain the observable delta, how a developer uses it, where it fits in the existing architecture, the changed execution path, and why the implementation was chosen.
 
-Capture three explicit layers:
+## 2. Build an evidence map
 
-- **What** — the problem, changed behavior, affected surfaces, and what a user or operator can do now;
-- **How** — the smallest useful system map, one representative end-to-end flow, and the key implementation or API contracts;
-- **Why** — the intent, important design decisions, constraints, rejected or avoided alternatives when evidenced, and tradeoffs;
-- **Proof** — tests, verification, complexity or other quality evidence, limitations, and sensible next steps.
+Inspect authoritative implementation, tests, live documentation, public contracts, configuration, verification results, and relevant commit/work-unit history. Do not build the story from a plan, README, commit title, or marketing language alone.
 
-Never expose secrets, credentials, private customer data, or irrelevant internal details.
+Record enough evidence to answer:
 
-## 3. Calibrate the story
+- **Purpose:** the concrete problem and who experiences it;
+- **Use:** exact install/start/invoke commands, prerequisites, expected output or state, and the first likely failure;
+- **Concepts:** the smallest vocabulary needed to understand the design;
+- **Architecture:** named modules and their responsibilities, boundaries, dependencies, persistent state, and generated versus canonical files;
+- **Flow:** one representative request from entry point through named files, symbols, data/contracts, side effects, and result;
+- **Rationale:** evidenced decisions, constraints, alternatives, and tradeoffs;
+- **Proof:** tests and verification actually executed, meaningful quality evidence, limitations, and uncertainty.
 
-Start with purpose and observable behavior, then move through architecture into a representative implementation flow. Retain proper names, source paths, architecture boundaries, contracts, tradeoffs, and failure behavior. Explain code selectively rather than dumping it. Use one coherent analogy only when it clarifies the mechanism, and state where it stops matching reality. Never reduce the explainer to a release summary or talk down to the reader.
+Use source paths, symbols, commands, configuration keys, schemas, tests, or captured output as evidence anchors. Every technical claim must be traceable to inspected evidence. Never invent an API, runtime path, metric, capability, or design rationale.
 
-Create a short story of 5–9 slides:
+## 3. Simplify without becoming vague
 
-1. what was built and what changed;
-2. why the old problem mattered and the intent behind the change;
-3. the system map and ownership boundaries;
-4. how one representative flow moves through the implementation;
-5. one or two important design decisions and why they were chosen;
-6. contracts, failure behavior, or an analogy where useful;
-7. evidence and verification;
-8. limitations or next steps.
+Prefer a concrete noun over a slogan and a representative path over a generic lifecycle. Define a project term on first use. Show only code that reveals a contract or decision boundary. Use one analogy only when it shortens the explanation, and state where it stops matching the implementation.
 
-Combine or omit slides when the project is small. Do not pad the deck.
+Keep these distinctions explicit:
 
-## 4. Render the visual explainer
+- canonical source versus generated or installed copies;
+- build-time or install-time behavior versus runtime behavior;
+- required behavior versus optional tooling;
+- verified facts versus inference or future work;
+- user-facing entry points versus internal helpers.
 
-Read [references/story-format.md](references/story-format.md), then create the story JSON under `.agent-state/eli5/<project-slug>.json`. Render it with the bundled standard-library tool:
+Do not use vanity metrics, generic benefits, or labels such as “smart,” “safe,” or “powerful” without showing the mechanism and evidence.
+
+## 4. Design the walkthrough
+
+Read [references/story-format.md](references/story-format.md). Create 6–9 focused content slides for a normal repository or non-trivial change; use fewer only when the evidence is genuinely smaller.
+
+For project onboarding, normally cover this sequence:
+
+1. **Purpose:** the problem, intended developer, and concrete capability;
+2. **First five minutes:** prerequisites, exact command or invocation, created state, and what to expect;
+3. **Core concepts:** three to five terms that unlock the rest of the code;
+4. **Architecture:** connected components with responsibilities and real source paths;
+5. **Under the hood:** one end-to-end flow through named entry points, symbols, contracts, and outputs;
+6. **Key boundary:** canonical/generated state, data ownership, API contract, or failure behavior;
+7. **Why this design:** important choices and tradeoffs grounded in code or live docs;
+8. **Proof and limits:** executed tests/checks plus honest gaps and next steps.
+
+For a completed change, keep the same learning path but lead with the behavioral delta and show the impacted slice of architecture. Do not omit first use or under-the-hood flow merely because the change is small.
+
+Use `flow` for architecture and execution sequences, `code` for an exact command or compact contract, and `evidence` for source anchors. Every story must include:
+
+- at least one exact first-use command or invocation;
+- at least one connected architecture or execution `flow`;
+- at least three evidence anchors across the deck;
+- at least one named source path and one named symbol or contract when code is available;
+- a final action the developer can take immediately.
+
+## 5. Render the offline explainer
+
+Write the story JSON under `.agent-state/eli5/<project-slug>.json`, then use the bundled standard-library renderer:
 
 ```bash
 python3 <skill-directory>/scripts/render_explainer.py \
@@ -53,22 +83,19 @@ python3 <skill-directory>/scripts/render_explainer.py \
   --output .agent-state/eli5/<project-slug>.html
 ```
 
-The generated HTML must remain a single offline file: no CDN, external font, package manager, build tool, tracking, or network request. It uses a fixed 1920×1080 stage, uniform viewport scaling, strong editorial hierarchy, accessible semantic structure, keyboard/buttons/swipe navigation, progress, restrained reveals, print styles, and reduced-motion support.
+Keep the output as one offline file with no CDN, external font, package manager, analytics, or network request. Use short labels and readable diagrams. Split overloaded slides instead of shrinking text.
 
-Use short labels, visual grouping, flow arrows, metrics, and code only when they clarify the explanation. Do not turn every concept into a card or fill slides with prose. Split overloaded slides rather than shrinking text.
+## 6. Verify and deliver
 
-## 5. Verify and deliver
+Run the renderer with `--check` before writing. Verify that:
 
-Run the renderer once with `--check` before writing. Then verify:
+- commands, paths, symbols, contracts, and claims match the inspected repository state;
+- the deck answers purpose, first use, core concepts, architecture, under-the-hood flow, rationale, proof, and limits;
+- architecture edges describe real calls, copies, reads, writes, or ownership—not merely visual adjacency;
+- the artifact contains no remote resource marker or runtime dependency;
+- slides fit without overflow and keyboard, touch, print, and reduced-motion behavior remain present;
+- completed evidence and future ideas are visibly distinct.
 
-- the source paths and claims still match the completed code;
-- the artifact contains no `http://`, `https://`, remote script, remote stylesheet, or runtime dependency;
-- every slide is readable at the fixed stage without overflow or overlap;
-- keyboard navigation and reduced-motion behavior are present;
-- the analogy is helpful but not misleading;
-- the deck explicitly answers what changed, how it works, and why it was designed that way;
-- the final slide distinguishes completed evidence from future ideas.
+Visually inspect the rendered deck when permitted browser or screenshot tooling is available. Otherwise report visual inspection as `NOT EXECUTED` while still running deterministic rendering and static checks.
 
-Visually inspect the rendered deck when browser or screenshot tooling is available. Otherwise report visual inspection as `NOT EXECUTED`, while still running the deterministic renderer and static tests.
-
-Return a concise plain-language summary plus the absolute HTML path, audience, slide count, verification evidence, and any uncertainty. A successful WYSIWYShip development run is not ready for final handoff until this ELI5 artifact has been generated and checked.
+Return a concise summary plus the absolute HTML path, audience, slide count, verification evidence, and uncertainty. A successful WYSIWYShip development run is not ready for final handoff until this artifact has been generated and checked.

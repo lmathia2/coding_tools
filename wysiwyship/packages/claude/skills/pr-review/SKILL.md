@@ -16,6 +16,8 @@ Resolve base ref, exact committed PR HEAD, intent/acceptance criteria, commit/wo
 
 Create a compact common evidence snapshot from refs/diff and relevant contracts. Do not make every lane rediscover the whole repository.
 
+Before launching lanes, follow [the shared dispatch contract](../engineering-workflow/references/routing.md). Resolve `review_pr` routes for semantic (`deep`), execution (`fast`), and any escalated roles. Invoke the named agents, retain distinct receipts, wait for results, and check each receipt before publishing the recommendation. Never describe coordinator-only work as an independent specialist review. A host/tool limitation requires a disclosed, accepted alternative or a blocked lane; model/effort not exposed by the host remains `UNVERIFIED`.
+
 ## 2. Isolate execution
 
 Create a detached worktree under `.agent-worktrees/` at exact PR HEAD. Every reviewer, test, analyzer, docs build, and probe uses that path. Never mutate the developer's primary checkout; never commit, push, rebase, or merge during review.
@@ -28,7 +30,7 @@ Review architecture/design fit, ownership/coupling, semantic correctness, runtim
 
 Inspect logical commits as well as the aggregate diff. Each implementation commit should be coherent, independently reviewable, and follow `plan -> implement -> document -> simplify -> verify`. Code, tests, and its live authoritative documentation belong in the same commit. A code-only commit requires `Docs-Impact: none — <concrete reason>`; otherwise request an amend/squash even when the final PR aggregate contains later documentation. Run `${CLAUDE_PLUGIN_ROOT}/tools/commit_docs.py <base-ref>` when installed.
 
-Minimality is a review dimension, not a separate reviewer. Recommend deletion/reuse/native/stdlib simplification only when it preserves requirements, tests, security, accessibility, compatibility, documentation, and operations.
+Minimality is a review dimension, not a separate reviewer. Tie new abstractions, dependencies, configuration, fallbacks, and parallel implementations to accepted requirements or evidenced risks; propose a smaller causal fix when that justification is missing. New tests should close an actual acceptance, regression, or risk gap—not duplicate coverage or expand scope. Recommend deletion/reuse/native/stdlib simplification only when it preserves requirements, necessary tests, security, accessibility, compatibility, documentation, and operations; do not impose arbitrary test-count or test-size caps or reduce the required execution suites below.
 
 ### Execution lane
 
@@ -76,6 +78,7 @@ Return:
 - risk and recommendation: `APPROVE`, `COMMENT`, `REQUEST CHANGES`, or `BLOCK`;
 - evidence-backed findings, severity, confidence, and smallest remediation/test;
 - exact unit/integration/e2e/static/docs commands and results;
+- per-lane requested route, invocation evidence, effective model/effort or `UNVERIFIED`, and any fallback;
 - commit/work-unit coherence and documentation-sync results;
 - changed-function complexity scores/deltas and actionable simplifications;
 - missing behavior tests or stale authoritative docs;

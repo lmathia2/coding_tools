@@ -13,6 +13,8 @@ import sys
 import tempfile
 from typing import Any
 
+import routing
+
 
 STAGES = ("plan", "implement", "document", "simplify", "verify", "complete")
 UNIT_ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,79}$")
@@ -135,6 +137,9 @@ def validation_errors(unit: dict[str, Any]) -> list[str]:
     errors.extend(documentation_errors(unit.get("documentation")))
     if not isinstance(unit.get("evidence"), dict):
         errors.append("evidence must be an object")
+    if "routing" in unit:
+        errors.extend(routing.bundle_errors(unit["routing"], started=unit.get("stage") != "plan",
+                                            complete=unit.get("stage") == "complete"))
     return errors
 
 
@@ -244,6 +249,10 @@ def initialize_command(args: argparse.Namespace) -> int:
         raise ValueError(f"work unit {args.unit_id!r} already exists")
     args.base_ref = resolve_ref(root, args.base_ref)
     unit = new_unit(args)
+    if getattr(args, "routing_plan", None):
+        unit["routing"] = {"plan": routing.read_object(Path(args.routing_plan))}
+        if unit["routing"]["plan"].get("task") != args.unit_id:
+            raise ValueError("routing task must match the work-unit ID")
     errors = validation_errors(unit)
     if errors:
         raise ValueError("; ".join(errors))
@@ -260,6 +269,14 @@ def advance_command(args: argparse.Namespace) -> int:
     stage = unit.get("stage")
     if stage == "complete":
         raise ValueError(f"work unit {args.unit_id!r} is already complete")
+    if getattr(args, "routing_receipt", None):
+        if "routing" not in unit:
+            raise ValueError("unit has no locked routing plan")
+        unit["routing"]["receipt"] = routing.read_object(Path(args.routing_receipt))
+    if "routing" in unit:
+        errors = routing.bundle_errors(unit["routing"], started=True, complete=stage == "verify")
+        if errors:
+            raise ValueError("routing gate failed: " + "; ".join(errors))
     if stage == "plan":
         ensure_ready_to_implement(root, unit)
     if stage == "document":
@@ -271,6 +288,31 @@ def advance_command(args: argparse.Namespace) -> int:
         unit["verification"].append(args.evidence)
         unit["commit_sha"] = args.commit or git_head(root)
     unit["stage"] = STAGES[STAGES.index(stage) + 1]
+    unit["updated_at"] = now()
+    atomic_json(unit_path(root, args.unit_id), unit)
+    print(json.dumps(unit, indent=2))
+    return 0
+
+
+def route_command(args: argparse.Namespace) -> int:
+    """Attach a route to an imported plan or record an accepted routing-only change."""
+    if not routing.has_text(args.reason):
+        raise ValueError("rerouting requires a non-empty accepted decision reason")
+    root = repository_root(args.root)
+    unit = load_unit(root, args.unit_id)
+    if unit.get("stage") == "complete":
+        raise ValueError("cannot reroute a completed unit")
+    plan = routing.read_object(Path(args.routing_plan))
+    errors = routing.plan_errors(plan)
+    if plan.get("task") != args.unit_id:
+        errors.append("routing task must match the work-unit ID")
+    previous = unit.get("routing")
+    if previous and previous["plan"]["route_id"] == plan.get("route_id"):
+        errors.append("rerouting requires a new route ID")
+    if errors:
+        raise ValueError("; ".join(errors))
+    unit.setdefault("routing_history", []).append({"reason": args.reason, "previous": previous, "at": now()})
+    unit["routing"] = {"plan": plan}
     unit["updated_at"] = now()
     atomic_json(unit_path(root, args.unit_id), unit)
     print(json.dumps(unit, indent=2))
@@ -309,6 +351,9 @@ def close_command(args: argparse.Namespace) -> int:
     unit = active_unit(root) if args.unit_id is None else load_unit(root, args.unit_id)
     if unit.get("stage") != "complete":
         raise ValueError(f"work unit {unit.get('id')!r} cannot close at stage {unit.get('stage')!r}")
+    errors = validation_errors(unit)
+    if errors:
+        raise ValueError("; ".join(errors))
     pointer = active_pointer(root)
     if pointer.exists() and pointer.read_text(encoding="utf-8").strip() == unit.get("id"):
         pointer.unlink()
@@ -385,14 +430,22 @@ def parse_args() -> argparse.Namespace:
     initialized.add_argument("--source-framework")
     initialized.add_argument("--source-path")
     initialized.add_argument("--activate", action="store_true")
+    initialized.add_argument("--routing-plan", help="freeze routing.py plan JSON into this unit")
     add_root(initialized)
     initialized.set_defaults(handler=initialize_command)
     advanced = subparsers.add_parser("advance")
     advanced.add_argument("unit_id")
     advanced.add_argument("--evidence", required=True)
     advanced.add_argument("--commit")
+    advanced.add_argument("--routing-receipt", help="attach invocation evidence before advancing")
     add_root(advanced)
     advanced.set_defaults(handler=advance_command)
+    routed = subparsers.add_parser("route", help="attach or replace a route after accepting a routing-only decision")
+    routed.add_argument("unit_id")
+    routed.add_argument("--routing-plan", required=True)
+    routed.add_argument("--reason", required=True, help="accepted routing decision; does not grant execution permissions")
+    add_root(routed)
+    routed.set_defaults(handler=route_command)
     shown = subparsers.add_parser("show")
     shown.add_argument("unit_id", nargs="?")
     add_root(shown)

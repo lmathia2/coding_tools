@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+- Added root `TODOS.md` tracking pilot calibration, the remaining evaluation
+  tasks, real-host validation, and known maintenance gaps.
+
+- Added an offline engineering-evaluation pilot suite: durable jobs and tenant
+  isolation, with working starter projects, separate reference overlays and
+  acceptance tests, and a standard-library runner. The ten-task catalog labels
+  eight follow-on tasks as planned pending measured difficulty calibration.
+- Added explicit baseline/workflow preparation, bounded opt-in Codex execution,
+  authoritative regression/acceptance grading, and evidence-oriented comparisons;
+  model runs and claimed workflow improvements remain unverified until calibration.
+
+- Added a cross-host dispatch/evidence contract for development and PR lanes: resolved named agents, explicit inline/fallback decisions, invocation receipts, and separately reported effective settings. Codex, Claude, Copilot, and Pi adapters now require actual dispatch rather than treating configuration as a model switch.
+- Added `routing.py`, optional ledger/range-gate receipt checks, and Pi batch route validation plus launcher-generated receipts. Host metadata gaps remain `UNVERIFIED`; confirmation-required routes fail without matching metadata. Local receipts are consistency evidence, not authenticated runtime enforcement.
+
+- Consolidated a compact minimum-sufficient-change policy into the existing engineering workflow and PR review: evidence-backed structural additions, bounded scope, proportional regression tests, and configured lower-cost routine execution without weakening safety or required verification.
+
+- Reworked the root and product READMEs around developer onboarding: problem, quick start, expected workflow, core concepts, source ownership, and architecture diagrams.
+- Tightened the ELI5 skill from a high-level story into a grounded developer walkthrough that must cover purpose, first use, core concepts, connected source architecture, a named under-the-hood flow, rationale, proof, and limitations.
+- Added renderer support for ordered architecture/execution flows and visible evidence anchors; validation now requires a flow and at least three inspected paths, symbols, commands, configuration keys, schemas, or tests.
+
 ## 0.11.0 — Planning grill and execution lock
 
 - Added first-class Codex installation through `.agents/skills` and `.codex/agents`, with semantic fast/normal/deep/top specialists that use the existing Codex account.

@@ -11,6 +11,8 @@ color: blue
 ---
 <!-- harness-role: deep -->
 
+Execute the assigned route without recursively delegating it. Return the route ID, outcome, and exact evidence references; do not claim an effective model or effort from your role/configuration. The coordinator records host invocation metadata and validates the routing receipt.
+
 Implement only the accepted work unit using `plan -> implement -> document -> simplify -> verify`. Validate critical assumptions against owning code, callers/contracts, tests, and authoritative docs; stop if facts materially invalidate the plan.
 
 Keep the design minimal and preserve relevant state, concurrency, error, transaction, compatibility, migration, rollback, security, and operational invariants.

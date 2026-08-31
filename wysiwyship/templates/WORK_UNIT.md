@@ -37,6 +37,18 @@ Repository facts, contracts, invariants, and the smallest correct approach deriv
 
 ## Implementation
 
+### Locked execution route
+
+- Route JSON / route ID:
+- Host, workflow, role, named agent:
+- Profile and requested model/reasoning:
+- Delegated or inline (reason required for inline):
+- Approved fallback, or stop if unavailable:
+- Invocation receipt / host evidence reference:
+- Effective model/reasoning: host-observed values or `UNVERIFIED`
+
+Attach the route using `work_units.py init --routing-plan`; attach started/completed receipts with `advance --routing-receipt`. Receipt consistency is not proof of authenticity.
+
 Code and behavioral tests changed by this unit.
 
 ## Documentation impact

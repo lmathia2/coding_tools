@@ -227,7 +227,14 @@ def validate_workflow_contracts() -> None:
     require_terms(ROOT / "shared/skills/engineering-workflow/SKILL.md", ("do not create a product behavior specification unless the user asks" ,))
     require_terms(ROOT / "shared/skills/pr-review/SKILL.md", ("do not create one during review",))
 
-    require_terms(ROOT / "shared/skills/eli5/SKILL.md", ("curious developer", "what changed", "how the system works", "why", "dependency-free", "1920×1080", "reduced-motion"))
+    require_terms(
+        ROOT / "shared/skills/eli5/SKILL.md",
+        (
+            "curious developer", "purpose", "first use", "core concepts",
+            "source architecture", "execution flow", "evidence anchors",
+            "dependency-free", "reduced-motion",
+        ),
+    )
 
 
 def validate_vendor() -> None:

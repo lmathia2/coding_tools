@@ -193,7 +193,7 @@ def discover_pi(which: Callable[[str], str | None] = shutil.which, run: Run = su
     return {
         "host": "pi", "installed": True, "version": executable_version(executable, run),
         "evidence": "session-inheritance", "models": [], "current_model": None,
-        "notes": ["Pi model routing remains provider-specific; workflows inherit the active session and explicit task overrides."],
+        "notes": ["Pi's coordinator retains its active session; a child without --model uses its own host default, not the parent's interactive selection. Explicit task overrides must match any locked route."],
     }
 
 

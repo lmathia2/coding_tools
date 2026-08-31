@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IssueHub: how tenant isolation works</title>
+<style>
+body{font:17px/1.55 system-ui,sans-serif;max-width:920px;margin:40px auto;padding:0 24px;color:#172c3a;background:#f7fafb}h1,h2{line-height:1.15}h1{font-size:2.4rem}h2{margin-top:2rem}code,pre{font-family:ui-monospace,monospace}pre{overflow:auto;background:#e7eef1;padding:18px;border-radius:8px}table{border-collapse:collapse;width:100%}td,th{text-align:left;vertical-align:top;border-bottom:1px solid #cad7de;padding:10px}a{color:#075985}.note{border-left:4px solid #0e7490;padding-left:16px}
+</style>
+<main>
+<h1>One tracker. Separate workspaces.</h1>
+<p>IssueHub stores projects, issues, comments, audit events, and CSV export jobs
+in SQLite. A tenant is a workspace. An actor may belong to several workspaces,
+but a role in one workspace never grants access to another.</p>
+<p class="note">This is a local, synthetic-identity example. It does not authenticate
+real Internet users, run an HTTP server, or provide a production security audit.</p>
+
+<h2>Run it locally</h2>
+<pre>python3 -m issuehub
+python3 -m unittest discover -s tests -p 'test_*.py' -v</pre>
+<p>The demo is <a href="../issuehub/__main__.py">issuehub.__main__.main</a>.
+It seeds an in-memory workspace and prints an issue list and CSV. Python 3.9+
+standard library is enough; there are no services to start.</p>
+<pre>from issuehub import App, RequestContext
+from issuehub.seed import seed_demo
+
+app = App()
+try:
+    seed_demo(app)
+    viewer = RequestContext(actor_id=3, tenant_id=1)
+    job = app.exports.enqueue(viewer)
+    app.exports.run_next()
+    print(app.exports.download(viewer, job["id"]))
+finally:
+    app.close()</pre>
+
+<h2>Follow an issue read</h2>
+<pre>App.request → RequestContext → operation / Authorizer.require
+                                       ↓ current tenant + role
+                              Service.get_issue
+                                  ↙           ↘
+                         tenant cache     scoped Repository SQL
+                                  ↘           ↙
+                                 copied response</pre>
+<p>The <a href="../issuehub/api.py">API adapter</a> and direct-service callers
+both enter the <a href="../issuehub/auth.py">operation authorization wrapper</a>.
+That wrapper checks fresh membership before any cache hit. The
+<a href="../issuehub/repository.py">repository</a> selects with tenant scope;
+foreign and absent IDs both become the same generic 404.</p>
+
+<h2>Why checks exist at several layers</h2>
+<table>
+<thead><tr><th>Boundary</th><th>Its job</th><th>Why another layer is not enough</th></tr></thead>
+<tbody>
+<tr><td>Authorizer.require</td><td>Current actor, tenant membership, minimum role.</td><td>Knowing a resource ID or possessing cached bytes is not permission.</td></tr>
+<tr><td>Repository + SQLite v2</td><td>Scoped rows and tenant-consistent parent relations.</td><td>API filtering cannot protect a different storage caller or an invalid durable relation.</td></tr>
+<tr><td>QueryCache</td><td>Tenant/kind/query keys, copied values, tenant-only invalidation.</td><td>Two tenants can issue the same search; one must not receive the other's cached result.</td></tr>
+<tr><td>Service.bulk_update</td><td>Complete validation, one write/audit transaction, post-commit invalidation.</td><td>A later foreign ID must not leave earlier issues changed.</td></tr>
+<tr><td>Exports</td><td>Owner-only access, fresh execution/download checks.</td><td>A queued or ready artifact may outlive its owner's membership.</td></tr>
+</tbody>
+</table>
+
+<h2>Exports are state, not permanent permission</h2>
+<pre>enqueue → queued → run_next → current membership?
+                              ├─ yes → scoped current SQL → ready bytes + audit
+                              └─ no  → denied, no bytes + job-tenant audit
+
+download → current membership + owner? → ready? → CSV</pre>
+<p><a href="../issuehub/exports.py">Exports.run_next</a> processes one oldest queued
+job each call. It uses current SQL rows, not a cached list or enqueue snapshot.
+Expected revocation is terminal denied state, not a worker crash. Administrators
+cannot inspect another member's export. Restoring membership allows a ready
+job's owner to download again, but does not restart a denied job.</p>
+
+<h2>Upgrade without trusting old CSV</h2>
+<p><a href="../issuehub/database.py">Database._upgrade_v2</a> adds durable tenant
+ownership and relation constraints in one transaction. It retains data, IDs,
+audit history, and deleted-ID high-water marks. Invalid old relations abort
+without a half-upgraded database. Old ready CSV is cleared and requeued: only
+the new worker can recreate safe bytes. Reopening v2 does not reset new exports.</p>
+
+<h2>Audit explains outcomes without leaking foreign data</h2>
+<p>Successful writes and their audit event commit together. Bulk records one
+summary event. Failed role/resource checks record one sanitized access.denied
+for a current member's requested tenant, with no resource ID or request body.
+The trusted worker instead records export.denied in the stored job tenant,
+including the job ID, even after its owner has been removed.</p>
+
+<h2>Know the limits</h2>
+<p>One App, one SQLite connection, one process-local cache, serial operations.
+Membership maintenance affects the next call; already-running operations are
+not retroactively cancelled. Concurrent requests/workers, externally edited
+resource rows, cross-App cache coherence, public identity proof, and spreadsheet
+formula sanitizing are outside this example's contract.</p>
+<p>For precise payloads, error precedence, maintenance ports, and state rules,
+read <a href="contracts.md">contracts.md</a>. For design rationale and recovery
+boundaries, read <a href="architecture.md">architecture.md</a>.</p>
+</main>
+</html>

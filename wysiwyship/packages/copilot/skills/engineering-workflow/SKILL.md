@@ -63,7 +63,9 @@ Use the cheapest capable lane:
 - deep model for subtle state/algorithm/integration work or ambiguous debugging;
 - top model only for architecture adjudication, security/high-consequence review, or materially uncertain decisions.
 
-Do not create a second premium review merely because one is available. Strong deterministic evidence is enough for low-risk work.
+Use stronger reasoning for unresolved planning; return routine execution to configured normal/fast lanes after lock. Maximum reasoning, extra agents, and skills require task-relevant value, not availability. Use supported host controls and report unapplied model switches honestly. Strong deterministic evidence is enough for low-risk work.
+
+**Dispatch is an action, not a preference.** Before execution, read [references/routing.md](references/routing.md), resolve and lock each unit's host, role, named agent, requested model/effort, and delegated or justified inline mode. For delegated units, invoke that agent through the host before any source edits; do not silently implement in the coordinator. Pass the complete unit contract and wait for its result. Record invocation evidence separately from effective-model evidence; missing host metadata stays `UNVERIFIED`. Report blocked routing or an explicitly accepted fallback. Workers execute their assigned unit without recursively redispatching themselves.
 
 ## 3. Parallelize meaningful independence
 
@@ -87,23 +89,21 @@ python3 "${PLUGIN_ROOT}/tools/work_units.py" close
 
 ## 4. Implement the smallest correct design
 
-After tracing the real flow, stop at the first option that fully satisfies the accepted requirements:
+**Minimum sufficient change:**
 
-1. do nothing if the requested behavior already exists or the need is speculative;
-2. reuse an existing repository pattern/helper;
-3. use the standard library or native platform/framework/database capability;
-4. reuse an already-installed dependency;
-5. write the minimum coherent new code.
-
-Prefer deletion and boring code over speculative abstraction. Fix root causes at the shared causal boundary rather than patching symptoms.
-
-Never simplify away validation, security/privacy, accessibility, compatibility, migration/rollback, data-loss protection, necessary error/retry/idempotency/concurrency/recovery behavior, tests, documentation, or explicit requirements.
+- Read affected code/callers; preserve the locked goal, acceptance criteria, non-goals, and untouched surfaces.
+- Prefer no change when behavior exists; otherwise delete, reuse, or use native capabilities before adding code. Fix root causes, not stacked symptoms.
+- Justify new abstractions, dependencies, configuration, fallbacks, or duplicate implementations by accepted requirements or evidenced risks—not future possibilities.
+- If unrelated scope or scaffolding grows, pause and choose a smaller coherent design; do not fragment code to game metrics.
+- Stop after acceptance, affected documentation, and required verification pass. Preserve safety, compatibility, accessibility, recovery, and authorization boundaries.
 
 ## 5. Debug and change behavior with evidence
 
 For ambiguous failures: reproduce → trace → form competing hypotheses → run discriminating checks → establish root cause → implement the smallest causal fix → add regression evidence.
 
 For behavior changes, use RED → GREEN → REFACTOR when practical. Use characterization tests before risky refactors. Do not force ceremonial TDD for trivial deterministic edits.
+
+Run relevant existing tests first. Add/change tests for uncovered acceptance, regressions, or credible affected risks; state what would otherwise go undetected. Reuse infrastructure; avoid redundant cases and unrelated coverage backfills. Size coverage to risk, not arbitrary test-count or test-to-code-size limits.
 
 ## 6. Document in the same unit and commit
 
@@ -184,6 +184,7 @@ Return concise:
 - Work units / commits and dependency order
 - Planning grill mode, iterations, key decisions, assumptions, boundaries, and lock/re-entry events
 - Verification (exact commands/results)
+- Routing: configured/requested settings, actual invocation reference, effective settings or `UNVERIFIED`, and any approved fallback
 - Documentation impact and changed paths
 - Complexity scores/deltas and simplification decisions
 - ELI5 audience, slide count, verification, and artifact path

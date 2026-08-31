@@ -111,6 +111,8 @@ def make_record(metadata: dict[str, Any], **evidence: Any) -> dict[str, Any]:
         "id": str(uuid.uuid4()),
         "recorded_at": datetime.now(timezone.utc).isoformat(),
         **metadata,
+        "model_attribution": "requested/configured, not runtime-confirmed",
+        "routing_receipt": evidence.get("routing_receipt"),
         "status": evidence.get("status", "unknown"),
         "verification": evidence.get("verification", "unknown"),
         "duration_seconds": evidence.get("duration_seconds"),
@@ -179,6 +181,7 @@ def summarize(records: list[dict[str, Any]], group_by: str) -> list[dict[str, An
     for key, grouped in sorted(groups.items()):
         summaries.append({
             group_by: key,
+            "model_attribution": "requested/configured, not runtime-confirmed",
             "runs": len(grouped),
             "outcome": rate(grouped, "status", "pass", {"unknown", None}),
             "verification": rate(grouped, "verification", "pass", {"unknown", "not_run", None}),
@@ -201,7 +204,7 @@ def render_comparison(summaries: list[dict[str, Any]], group_by: str) -> str:
             f"{summary[group_by]}: runs={summary['runs']} outcome={format_rate(outcome)} "
             f"verification={format_rate(verification)} avg_duration={duration if duration is not None else 'n/a'}"
         )
-    return "\n".join(lines) if lines else "No experiment records found."
+    return "Grouping uses requested/configured settings, not confirmed answering models.\n" + "\n".join(lines) if lines else "No experiment records found."
 
 
 def evidence_from_args(args: argparse.Namespace, source: str = "manual") -> dict[str, Any]:
@@ -272,6 +275,7 @@ def pi_record(args: argparse.Namespace, item: object) -> dict[str, Any]:
         duration_seconds=item.get("duration_seconds"),
         notes=f"Pi child task: {item.get('name', '(unnamed)')}",
         source="parallel-pi",
+        routing_receipt=item.get("routing_receipt"),
     )
 
 

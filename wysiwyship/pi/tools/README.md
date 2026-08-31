@@ -33,3 +33,7 @@ python3 .pi/tools/parallel-pi.py --tasks /tmp/tasks.json --cwd . --workflow dev 
 python3 .wysiwyship/tools/experiments.py import-pi /tmp/pi-results.json --workflow dev --profile quality
 python3 .wysiwyship/tools/experiments.py compare --group-by profile
 ```
+
+For workflow-managed dispatch, first resolve `routing.py plan --host pi --role normal --task <name>` and include its entire output as the task's `routing` object. Task name, role, and resolved runtime settings must match it; the whole batch is validated before launch. A task override that conflicts with the plan is rejected, not silently applied.
+
+Each child result now contains `routing_receipt`: route ID, unique launcher invocation ID, requested settings, completion/failure, and a launcher evidence reference. Save the result and pass that receipt to `routing.py check` or `work_units.py advance --routing-receipt`. Effective settings remain `UNVERIFIED`: the print-mode launch arguments are not provider telemetry. With no explicit model, a fresh child uses its own host default; it does not inherit an interactive parent's selection. Model-based experiment grouping describes requested settings, not proven answering models.

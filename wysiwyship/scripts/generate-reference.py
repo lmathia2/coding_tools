@@ -66,6 +66,8 @@ def header_lines(version: str, skills: list[tuple[str, str, str]], codex_agents:
         "",
         "## Model routing",
         "",
+        "Profiles below describe intended settings, not proof of model execution. Workflows resolve a named route, invoke the host, and check a receipt; effective model/effort remains UNVERIFIED without host metadata. Pi children with no explicit model use their own host default.",
+        "",
     ]
 
 
@@ -124,6 +126,7 @@ def footer_lines() -> list[str]:
         "",
         "- `.wysiwyship/tools/complexity.py` — dependency-free Python function cyclomatic complexity and baseline deltas.",
         "- `.wysiwyship/tools/commit_docs.py` — commit-range documentation synchronization checks.",
+        "- `.wysiwyship/tools/routing.py` — cross-host route resolution and invocation-receipt consistency checks; not a model launcher or authenticated attestation.",
         "- `.wysiwyship/config/models.json` — installed active profile and model/reasoning routes for every host.",
         "- `.wysiwyship/model-discovery.json` — installer evidence, account-visible capabilities, fallbacks, and limitations when discovery is enabled.",
         "- `.wysiwyship/install-manifest.json` — installed paths, checksums, platforms, version, and backup history.",

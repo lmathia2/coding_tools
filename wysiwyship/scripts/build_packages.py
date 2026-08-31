@@ -48,6 +48,7 @@ def copy_runtime(destination: Path) -> None:
         target = destination / "config" / name
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(ROOT / "config" / name, target)
+    shutil.copy2(ROOT / "config/model_config.py", destination / "config/model_config.py")
     copy_files(ROOT / "shared/skills", destination / "skills")
     copy_files(ROOT / "vendor", destination / "vendor")
 

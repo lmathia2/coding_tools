@@ -19,7 +19,7 @@ One dependable entry point with model and workflow selection hidden from the use
 5. Run `plan -> implement -> document -> simplify -> verify` for every implementation unit.
 6. After lock, execute rapidly and autonomously. Reopen only the invalidated decision if evidence breaks a material assumption/criterion, scope or contracts must expand, consequences materially change, or new authority is required; append the decision, increment iterations, relock, and resume.
 7. Use repository evidence to resolve ownership, callers/contracts, tests, and documentation impact.
-8. Route to the cheapest capable implementation path.
+8. Resolve and lock the cheapest capable route, actually invoke its named agent, and check its receipt; justify inline exceptions and disclose unverified effective settings.
 9. Parallelize independent units only when it improves latency or reduces anchoring/uncertainty; parallel writers use isolated worktrees and disjoint ownership.
 10. Update live authoritative documentation in the same logical commit, including implementation, APIs/contracts, purpose, intent, and invariants; otherwise record `Docs-Impact: none — <reason>`.
 11. Measure changed-function cyclomatic complexity against the unit start ref when feasible, simplify coherently, and explain scores above 10 or material increases.
@@ -27,6 +27,10 @@ One dependable entry point with model and workflow selection hidden from the use
 13. Escalate to another premium perspective only for material uncertainty or high risk.
 14. After the committed-range gate passes, invoke `eli5`, render and check the visual explainer, and report its audience and path.
 15. Report exact evidence and residual risk.
+
+### Minimum sufficient change
+
+The shared engineering skill owns the compact anti-overengineering policy: read the causal code path, preserve non-goals/untouched surfaces, reuse before adding, and justify new structural layers by accepted requirements or evidenced risks. Scope growth triggers simplification, not further scaffolding. Routine execution returns to configured normal/fast lanes after planning; extra reasoning, agents, and skills are conditional. Existing tests come first; additions close specific acceptance/regression/risk gaps without arbitrary count or size limits. This policy does not weaken safety, authorization, live documentation, or the complete feasible PR review suites.
 
 ### Planning grill, lock, and re-entry
 
@@ -90,7 +94,9 @@ The full `product-behavior-spec` workflow runs only when explicitly requested. E
 
 ### Project ELI5 completion handoff
 
-Every successful `Dev` / `/dev` run invokes the shared `eli5` skill after all code units are integrated and the committed range passes. Every explanation targets a curious developer and explicitly teaches what changed, how it works, and why the implementation and design choices exist. A more specific requested audience changes emphasis, not those three required layers. The skill derives claims from implementation, tests, live documentation, contracts, and verification evidence; writes story JSON under `.agent-state/eli5/`; and uses its bundled `render_explainer.py` plus local HTML template to emit a single dependency-free file.
+Every successful `Dev` / `/dev` run invokes the shared `eli5` skill after all code units are integrated and the committed range passes. ELI5 means the simplest accurate developer mental model, not a product pitch or release-summary deck. Every explanation covers purpose, exact first use and expected behavior, core concepts, connected source architecture, one representative flow through named files/symbols/contracts, design rationale, proof, and limitations. A more specific audience changes emphasis without removing those layers.
+
+The skill derives claims from implementation, tests, live documentation, contracts, configuration, and verification evidence. Its story schema requires a connected architecture or execution flow plus at least three visible evidence anchors such as source paths, symbols, commands, configuration keys, schemas, and tests. It writes story JSON under `.agent-state/eli5/` and uses its bundled `render_explainer.py` plus local HTML template to emit a single dependency-free file.
 
 The default ignored output avoids making the repository dirty after the final gate. A user-requested versioned output belongs in the affected documentation commit and must pass the normal documentation and range gates. Blocked or incomplete development does not produce a misleading completion deck. A renderer or validation failure means the successful development handoff is not complete.
 
@@ -116,6 +122,37 @@ Review another developer's PR through semantic reasoning plus actual execution.
 
 Minimality is part of semantic review; it is not a separate review lane.
 
+Each review lane uses the dispatch/evidence API below, including independent challenges. A coordinator-only pass is not an independent specialist review. Keep route IDs and evidence distinct across lanes, and validate every completed receipt before publishing the recommendation.
+
+## Dispatch and evidence API
+
+The shared [dispatch reference](../shared/skills/engineering-workflow/references/routing.md) owns the host-specific invocation instructions. `tools/routing.py` provides the same schema and checks for Codex, Claude Code, Copilot, and Pi:
+
+```text
+routing.py plan --host {codex|claude|copilot|pi} --workflow {dev|review_pr} --role {normal|deep|fast|top} --task ID
+                [--execution inline --reason TEXT] [--profile NAME] [--config PATH]
+                [--agent NAME] [--namespace NAME] [--require-confirmed]
+routing.py check --plan route.json --receipt receipt.json [--started]
+work_units.py init ID ... --routing-plan route.json
+work_units.py route ID --routing-plan route.json --reason "accepted routing decision"
+work_units.py advance ID --evidence TEXT [--routing-receipt receipt.json]
+check.py BASE --head HEAD --routing-plan route.json --routing-receipt receipt.json
+```
+
+`plan` emits schema-v1 JSON containing a unique `route_id`, task, host, workflow, role, execution mode, agent, profile, configured/requested settings, reason, and confirmation policy. It does not call a model. Model IDs come from the active profile; an inline route explicitly requests no switch and requires a reason. Native-plugin Claude helpers add their agent namespace automatically. The host-loaded adapter must agree with the resolved profile; config edits alone do not reload a running host.
+
+Receipts bind to that route ID, agent, and requested settings, and require an invocation ID, evidence reference, source (`report`, `launcher`, `host`), and status (`started`, `completed`, `failed`). Optional `observed` settings must come from host metadata, not a prompt, argv, or worker self-report. Each retry/fallback route has a new ID and must be accepted before use; the original failed attempt remains evidence. Routing changes never grant new permissions.
+
+`check` exits 1 for mismatches/missing/failed invocations, 2 for malformed input/files, and 0 for consistent receipts. Its `status: PASS` is receipt consistency, not model confirmation: `model_status` separately reports `UNVERIFIED`, `CONFIRMED`, or `MISMATCH`. Missing metadata is allowed but visible by default; `--require-confirmed` makes it fail completion. Use exact model IDs for this policy; the checker does not guess alias resolution. Host-labelled JSON is still editable evidence, not an authenticated attestation.
+
+For ledger units with `routing`, leaving plan requires a started or completed invocation; leaving verify requires completed evidence. The composed gate and active-unit hooks also validate stored receipts. Legacy units without routing remain readable; new dispatched workflows attach a route or, for small units/imported plans/PR lanes without routing-enabled ledgers, explicitly run the standalone check. This is not a global source-write interceptor, and no-commit work must still report the committed-range gate as `NOT EXECUTED`.
+
+`work_units.py route` attaches routing to imported units or records an accepted routing-only change without discarding lifecycle work. Replacements require a new route ID; `routing_history` retains the previous plan/receipt and reason. The new route has no invocation receipt until dispatched. Completed units cannot be rerouted, and recording a reason does not grant permission for a fallback.
+
+Pi tasks can include the full plan in `routing`. A mismatched task name/role/model/thinking/agent rejects the batch before any child launches. Each result includes a `routing_receipt` generated from the subprocess outcome; it proves which arguments were requested, not which model answered. Failed/timed-out calls cannot pass completion. Explicit task overrides must agree with the locked route; otherwise create and accept a new route before launching.
+
+The Pi CLI also rejects a mismatched workflow and confirmation-required routes before launch: print mode does not expose effective model/effort metadata to this helper. Other hosts must check metadata availability before accepting that stricter policy.
+
 ## Model configuration API
 
 `config/models.json` schema version 2 provides named profiles. Each profile defines platform-specific `{model, reasoning}` specifications for:
@@ -140,13 +177,15 @@ Installed Pi child API:
 parallel-pi.py --workflow {dev|review_pr} [--profile NAME] [--model-config PATH]
 ```
 
-Each JSON task accepts `role`, `model`, and `thinking`. `role` defaults to `fast`; profile values supply missing runtime fields, and explicit task fields win. Pi's main coordinator remains controlled by the active Pi session because prompt files cannot switch the running session model.
+Each JSON task accepts `role`, `model`, `thinking`, and optional `routing`. `role` defaults to `fast`; profile values supply missing runtime fields, and explicit task fields win only when they agree with an attached locked route. Pi's main coordinator remains controlled by the active Pi session because prompt files cannot switch the running session model. A child with `model: null` uses its own host default, not the parent's interactive selection.
 
 The Pi helper resolves project `.wysiwyship/config/models.json` first and global `~/.wysiwyship/config/models.json` second. `--model-config` overrides both locations.
 
 ### Model experiment evidence
 
 `.wysiwyship/tools/experiments.py` stores append-only JSONL records under `.agent-state/model-experiments.jsonl` by default. A record identifies workflow, semantic role, platform, profile, resolved model, and reasoning strength. It can also carry duration, reported tokens/cost, verification outcome, complexity before/after, review defects, and rework. Unreported provider telemetry stays `null`, and comparison output includes the observed sample count for every metric.
+
+Model/reasoning labels and grouping are requested/configured settings, not confirmed answering-model identity. New records and comparisons explicitly label that attribution. Pi imports retain the launcher receipt for inspection without promoting argv to host-observed telemetry.
 
 ```text
 experiments.py record --workflow dev --role normal --platform claude_code --profile quality --status pass --verification pass

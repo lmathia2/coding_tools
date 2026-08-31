@@ -10,6 +10,8 @@ Task: $ARGUMENTS
 
 Use `engineering-workflow`.
 
+Follow its routing contract with `--host pi --workflow dev`. Launch each delegated unit through `parallel-pi.py`, even when only one unit is ready; include the locked plan as the task's `routing` object and check the returned `routing_receipt`. Its argv proves requested settings, not the effective answering model. A missing explicit model means the child's host default, not the parent session's selection.
+
 Every implementation unit follows `plan -> implement -> document -> simplify -> verify`.
 
 Before decomposition or source edits, run the planning grill defined by `engineering-workflow`. Default to an interactive, evidence-first interview that resolves goals, acceptance, in/out scope, alternatives, assumptions, and relevant constraints; include a recommendation and tradeoff with each material question and iterate until the user locks the plan. If the first task argument is exactly `auto` or `--auto`, remove it, pose and answer the same questions yourself from evidence or the smallest reversible assumptions, record them, and lock without routine user input. Record mode, iterations, gate, key decisions, scope, assumptions, open questions, ambiguity assessment, and the plan lock. After lock, execute rapidly and autonomously; reopen only an invalidated decision when evidence breaks the plan, scope/contracts must materially change, or new authority is required, then relock and resume.

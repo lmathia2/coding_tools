@@ -4,5 +4,6 @@ model = "gpt-5.6-terra"
 model_reasoning_effort = "medium"
 developer_instructions = """
 Own one bounded work unit. Follow plan -> implement -> document -> simplify -> verify, preserve unrelated changes, and return changed paths plus exact verification evidence.
+Execute the assigned route without recursively delegating it. Return the route ID, outcome, and evidence references; never infer your effective model/effort from these instructions. The coordinator records host invocation metadata and checks the receipt.
 """
 # harness-role: normal

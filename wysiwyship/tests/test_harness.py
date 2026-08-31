@@ -28,6 +28,7 @@ complexity = load_module("complexity", HARNESS / "tools/complexity.py")
 parallel_pi = load_module("parallel_pi", HARNESS / "pi/tools/parallel-pi.py")
 installer = load_module("install_harness", HARNESS / "scripts/install_harness.py")
 commit_docs = load_module("commit_docs", HARNESS / "tools/commit_docs.py")
+routing = load_module("routing", HARNESS / "tools/routing.py")
 work_units = load_module("work_units", HARNESS / "tools/work_units.py")
 check_gate = load_module("check_gate", HARNESS / "tools/check.py")
 experiments = load_module("experiments", HARNESS / "tools/experiments.py")
@@ -48,15 +49,25 @@ class Eli5RendererTests(unittest.TestCase):
             "audience": "Curious developer",
             "summary": "The project checks the important promises before a release is called complete.",
             "slides": [
-                {"title": "The old problem", "bullets": ["Checks could be scattered"], "accent": "coral"},
                 {
-                    "title": "Think of a preflight checklist",
-                    "analogy": {"title": "A pilot's checklist", "body": "One ordered list catches omissions.", "boundary": "Software checks can be automated."},
+                    "title": "Run the release gate",
+                    "code": "python3 .wysiwyship/tools/check.py main --head HEAD",
+                    "evidence": ["tools/check.py:main"],
+                    "accent": "coral",
+                },
+                {
+                    "title": "Follow one request through the gate",
+                    "flow": [
+                        {"title": "CLI", "body": "Parse the requested commit range.", "path": "tools/check.py:main"},
+                        {"title": "Checks", "body": "Compose documentation, complexity, and project evidence.", "path": "tools/check.py:run_checks"},
+                    ],
+                    "evidence": ["config/checks.json"],
                     "accent": "mint",
                 },
                 {
                     "title": "Proof",
                     "metrics": [{"value": "8/8", "label": "checks passed", "detail": "Clean repository"}],
+                    "evidence": ["tests/test_harness.py:Eli5RendererTests"],
                     "accent": "gold",
                 },
             ],
@@ -65,12 +76,14 @@ class Eli5RendererTests(unittest.TestCase):
 
     def test_renders_offline_fixed_stage_document(self) -> None:
         story = self.story()
-        story["summary"] = "Safe even with </script><script>alert('no')</script> text."
+        story["summary"] = "Safe with </script><script>alert('no')</script> and https://example.invalid text."
         document = eli5_renderer.render_document(story)
         self.assertIn('class="deck-stage"', document)
+        self.assertIn("function flow(values)", document)
+        self.assertIn("evidence-chip", document)
         self.assertIn("prefers-reduced-motion", document)
         self.assertIn("\\u003c/script\\u003e", document)
-        self.assertNotIn("https://", document.lower())
+        self.assertIn("https://example.invalid", document)
         self.assertNotIn("<script src=", document.lower())
 
     def test_rejects_overloaded_slides(self) -> None:
@@ -84,6 +97,19 @@ class Eli5RendererTests(unittest.TestCase):
         del story["audience"]
         document = eli5_renderer.render_document(story)
         self.assertIn('"audience":"Curious developer"', document)
+
+    def test_requires_grounded_flow_and_evidence(self) -> None:
+        story = self.story()
+        story["slides"][1].pop("flow")
+        story["slides"][1]["bullets"] = ["No connected execution path"]
+        with self.assertRaisesRegex(ValueError, "architecture or execution flow"):
+            eli5_renderer.render_document(story)
+
+        story = self.story()
+        for slide in story["slides"]:
+            slide.pop("evidence", None)
+        with self.assertRaisesRegex(ValueError, "at least 3 evidence anchors"):
+            eli5_renderer.render_document(story)
 
 
 class ComplexityTests(unittest.TestCase):
@@ -241,6 +267,123 @@ class ModelConfigurationTests(unittest.TestCase):
             updated = configure_models.rewrite(path, "codex", profile)
         self.assertIn('model = "gpt-test-fast"', updated)
         self.assertIn('model_reasoning_effort = "low"', updated)
+
+
+class RoutingTests(unittest.TestCase):
+    def plan(self, host="codex", **kwargs):
+        return routing.resolve_route(HARNESS / "config/models.json", host, "dev", "normal", "unit", **kwargs)
+
+    def receipt(self, plan, **kwargs):
+        return {"schema_version": 1, "route_id": plan["route_id"], "agent": plan["agent"],
+                "requested": dict(plan["requested"]), "invocation_id": "host-call-123",
+                "source": "report", "evidence_ref": "transcript:host-call-123",
+                "status": "completed", "observed": None, **kwargs}
+
+    def test_all_hosts_resolve_profile_roles_and_review_agents(self):
+        config = model_config.load_config(HARNESS / "config/models.json")
+        _, profile = model_config.get_profile(config)
+        for host, roles in routing.AGENTS.items():
+            for role in roles:
+                with self.subTest(host=host, role=role):
+                    plan = routing.resolve_route(HARNESS / "config/models.json", host, "review_pr", role, "review")
+                    self.assertEqual(plan["requested"]["model"], profile[host]["roles"][role]["model"])
+                    self.assertEqual(plan["agent"], roles[role][-1])
+                    self.assertEqual(routing.plan_errors(plan), [])
+        self.assertEqual(self.plan("claude", namespace="wysiwyship")["agent"], "wysiwyship:smart-worker")
+
+    def test_inline_is_explicit_session_inheritance(self):
+        with self.assertRaisesRegex(ValueError, "requires a reason"):
+            self.plan(execution="inline")
+        plan = self.plan(execution="inline", reason="Mechanical one-line correction")
+        self.assertEqual(plan["agent"], "session")
+        self.assertEqual(plan["requested"], {"model": None, "reasoning": None})
+        self.assertIsNotNone(plan["configured"]["model"])
+
+    def test_configuration_and_worker_prose_do_not_confirm_execution_model(self):
+        plan = self.plan()
+        self.assertEqual(routing.check_route(plan)["status"], "FAIL")
+        receipt = self.receipt(plan, observed=plan["requested"], model_status="CONFIRMED")
+        result = routing.check_route(plan, receipt)
+        self.assertEqual((result["status"], result["model_status"]), ("PASS", "UNVERIFIED"))
+        result = routing.check_route(plan, self.receipt(plan, source="launcher", observed=plan["requested"]))
+        self.assertEqual(result["model_status"], "UNVERIFIED")
+
+    def test_host_settings_confirm_or_reject_a_route(self):
+        plan = self.plan(require_confirmed=True)
+        self.assertEqual(routing.check_route(plan, self.receipt(plan))["status"], "FAIL")
+        receipt = self.receipt(plan, source="host", observed=dict(plan["requested"]))
+        self.assertEqual(routing.check_route(plan, receipt)["model_status"], "CONFIRMED")
+        receipt["observed"]["model"] = "wrong-model"
+        result = routing.check_route(plan, receipt)
+        self.assertEqual((result["status"], result["model_status"]), ("FAIL", "MISMATCH"))
+
+    def test_failed_reused_or_wrong_agent_receipts_are_rejected(self):
+        plan = self.plan()
+        for changes in ({"status": "failed"}, {"route_id": "another-unit"},
+                        {"agent": "general-purpose"}, {"evidence_ref": ""},
+                        {"requested": {"model": "silent-fallback", "reasoning": "low"}}):
+            with self.subTest(changes=changes):
+                self.assertEqual(routing.check_route(plan, self.receipt(plan, **changes))["status"], "FAIL")
+
+    def test_started_receipt_does_not_satisfy_completion(self):
+        plan = self.plan(require_confirmed=True)
+        receipt = self.receipt(plan, status="started")
+        self.assertEqual(routing.check_route(plan, receipt, complete=False)["status"], "PASS")
+        self.assertEqual(routing.check_route(plan, receipt)["status"], "FAIL")
+
+    def test_malformed_plan_or_receipt_fails_without_crashing(self):
+        plan = self.plan()
+        for field, value in (("host", []), ("requested", {"model": [], "reasoning": "low"}),
+                             ("agent", "unregistered-agent"), ("require_confirmed", "yes")):
+            invalid = {**plan, field: value}
+            self.assertEqual(routing.check_route(invalid)["status"], "FAIL")
+        self.assertEqual(routing.check_route(plan, self.receipt(plan, source=[]))["status"], "FAIL")
+
+    def test_range_gate_includes_routing_failure(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            WorkUnitTests().initialize_repository(root)
+            plan = self.plan()
+            (root / "route.json").write_text(json.dumps(plan))
+            (root / "receipt.json").write_text(json.dumps(self.receipt(plan, status="failed")))
+            completed = subprocess.run(
+                [sys.executable, str(HARNESS / "tools/check.py"), "HEAD", "--root", raw,
+                 "--routing-plan", str(root / "route.json"), "--routing-receipt", str(root / "receipt.json"),
+                 "--format", "json"], text=True, capture_output=True,
+            )
+            self.assertEqual(completed.returncode, 1, completed.stderr)
+            self.assertEqual(json.loads(completed.stdout)["checks"][-1]["name"], "routing")
+
+    def test_pi_launcher_binds_receipt_to_plan_and_actual_arguments(self):
+        plan = self.plan("pi")
+        task = {"name": "unit", "prompt": "bounded task", "role": "normal", "routing": plan,
+                "model": plan["requested"]["model"], "thinking": plan["requested"]["reasoning"]}
+        completed = subprocess.CompletedProcess([], 0, "done", "")
+        with mock.patch.object(parallel_pi.subprocess, "run", return_value=completed) as run:
+            result = parallel_pi.run_task(task, ".", "pi")
+        argv = run.call_args.args[0]
+        self.assertEqual(argv[argv.index("--thinking") + 1], task["thinking"])
+        receipt = result["routing_receipt"]
+        self.assertEqual(receipt["source"], "launcher")
+        self.assertEqual(routing.check_route(plan, receipt)["status"], "PASS")
+        self.assertEqual(routing.check_route(plan, receipt)["model_status"], "UNVERIFIED")
+        task["model"] = "unapproved-override"
+        with mock.patch.object(parallel_pi.subprocess, "run") as run:
+            with self.assertRaisesRegex(ValueError, "conflicts with locked routing"):
+                parallel_pi.run_task(task, ".", "pi")
+            run.assert_not_called()
+
+    def test_pi_rejects_wrong_workflow_and_unsupported_confirmation_before_launch(self):
+        plan = self.plan("pi")
+        task = {"name": "unit", "prompt": "bounded task", "role": "normal", "routing": plan,
+                "model": plan["requested"]["model"], "thinking": plan["requested"]["reasoning"]}
+        with self.assertRaisesRegex(ValueError, "workflow"):
+            parallel_pi.validate_routing(task, "review_pr")
+        plan["require_confirmed"] = True
+        with mock.patch.object(parallel_pi.subprocess, "run") as run:
+            with self.assertRaisesRegex(ValueError, "cannot confirm"):
+                parallel_pi.run_task(task, ".", "pi")
+            run.assert_not_called()
 
 
 class ModelDiscoveryTests(unittest.TestCase):
@@ -517,6 +660,74 @@ class WorkUnitTests(unittest.TestCase):
             self.assertEqual(decision["decision"], "block")
             self.assertEqual(hook_check.evaluate(root, {"stop_hook_active": True}), {})
 
+    def test_routed_unit_requires_invocation_then_completion(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self.initialize_repository(root)
+            helpers = RoutingTests()
+            plan = helpers.plan()
+            plan["task"] = "api-contract"
+            plan_path = root / "route.json"
+            plan_path.write_text(json.dumps(plan))
+            args = self.unit_args(root)
+            args.routing_plan = str(plan_path)
+            with mock.patch("builtins.print"):
+                work_units.initialize_command(args)
+            advance = argparse.Namespace(root=str(root), unit_id=args.unit_id, evidence="evidence", commit=None)
+            with self.assertRaisesRegex(ValueError, "invocation receipt"):
+                work_units.advance_command(advance)
+            receipt_path = root / "receipt.json"
+            receipt_path.write_text(json.dumps(helpers.receipt(plan, status="started")))
+            advance.routing_receipt = str(receipt_path)
+            with mock.patch("builtins.print"):
+                for _ in range(4):
+                    work_units.advance_command(advance)
+            with self.assertRaisesRegex(ValueError, "not completed"):
+                work_units.advance_command(advance)
+            receipt_path.write_text(json.dumps(helpers.receipt(plan)))
+            with mock.patch("builtins.print"):
+                work_units.advance_command(advance)
+            self.assertEqual(work_units.active_unit(root)["stage"], "complete")
+            # A corrupted persisted receipt is also caught by the composed gate/stop hook.
+            unit = work_units.active_unit(root)
+            unit["routing"]["receipt"]["agent"] = "wrong-agent"
+            work_units.atomic_json(work_units.unit_path(root, args.unit_id), unit)
+            self.assertEqual(check_gate.work_unit_check(root, True)["status"], "FAIL")
+            self.assertEqual(hook_check.evaluate(root, {})["decision"], "block")
+
+    def test_rerouting_preserves_history_and_requires_fresh_invocation(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self.initialize_repository(root)
+            helpers = RoutingTests()
+            plan = helpers.plan()
+            plan["task"] = "api-contract"
+            path = root / "route.json"
+            path.write_text(json.dumps(plan))
+            args = self.unit_args(root)
+            args.routing_plan = str(path)
+            receipt = root / "receipt.json"
+            receipt.write_text(json.dumps(helpers.receipt(plan, status="started")))
+            advance = argparse.Namespace(root=raw, unit_id=args.unit_id, evidence="plan locked", commit=None,
+                                         routing_receipt=str(receipt))
+            with mock.patch("builtins.print"):
+                work_units.initialize_command(args)
+                work_units.advance_command(advance)
+            change = argparse.Namespace(root=raw, unit_id=args.unit_id, routing_plan=str(path), reason="Accepted replacement")
+            with self.assertRaisesRegex(ValueError, "new route ID"):
+                work_units.route_command(change)
+            replacement = helpers.plan()
+            replacement["task"] = args.unit_id
+            path.write_text(json.dumps(replacement))
+            with mock.patch("builtins.print"):
+                work_units.route_command(change)
+            unit = work_units.load_unit(root, args.unit_id)
+            self.assertEqual(unit["stage"], "implement")
+            self.assertEqual(unit["routing_history"][0]["previous"]["receipt"]["route_id"], plan["route_id"])
+            self.assertNotIn("receipt", unit["routing"])
+            with self.assertRaisesRegex(ValueError, "does not match"):
+                work_units.advance_command(advance)
+
 
 class SpecBridgeTests(unittest.TestCase):
     def test_detects_supported_artifact_locations(self) -> None:
@@ -568,6 +779,18 @@ class SpecBridgeTests(unittest.TestCase):
 
 
 class PackageBuilderTests(unittest.TestCase):
+    def test_native_package_routing_cli_is_self_contained(self):
+        with tempfile.TemporaryDirectory() as raw:
+            output = Path(raw) / "packages"
+            package_builder.build(output)
+            for host, expected in (("claude", "wysiwyship:smart-worker"), ("copilot", "WorkerNormal")):
+                completed = subprocess.run(
+                    [sys.executable, str(output / host / "tools/routing.py"), "plan", "--host", host,
+                     "--role", "normal", "--task", "unit"], cwd=raw, text=True, capture_output=True,
+                )
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+                self.assertEqual(json.loads(completed.stdout)["agent"], expected)
+
     def test_builds_native_manifests_and_rewrites_runtime_paths(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             output = Path(raw) / "packages"
@@ -668,6 +891,15 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue((target / ".wysiwyship/tools/work_units.py").exists())
             self.assertTrue((target / ".wysiwyship/tools/hook_check.py").exists())
             self.assertTrue((target / ".wysiwyship/tools/spec_bridge.py").exists())
+            self.assertTrue((target / ".wysiwyship/tools/routing.py").exists())
+            for host in ("codex", "copilot", "claude", "pi"):
+                completed = subprocess.run(
+                    [sys.executable, str(target / ".wysiwyship/tools/routing.py"), "plan",
+                     "--host", host, "--role", "normal", "--task", "unit"],
+                    cwd=target, text=True, capture_output=True,
+                )
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+                self.assertEqual(json.loads(completed.stdout)["profile"], "balanced")
             self.assertTrue((target / ".wysiwyship/config/models.json").exists())
             self.assertTrue((target / ".wysiwyship/config/checks.json").exists())
             self.assertTrue((target / ".wysiwyship/model-discovery.json").exists())

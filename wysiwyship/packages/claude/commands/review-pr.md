@@ -13,6 +13,8 @@ Review request: $ARGUMENTS
 
 Use `wysiwyship:pr-review`.
 
+Resolve each lane with `routing.py plan --host claude --workflow review_pr`; invoke that subagent type through the Agent tool, wait for its result, and check its receipt. Use the resolved plugin namespace when present; never silently fall back to a generic agent.
+
 1. Resolve exact base/HEAD, intent, logical commit/work-unit order, changed boundaries, authoritative commands, and risk.
 2. Create the detached PR-head worktree required by `wysiwyship:pr-review`.
 3. Launch together:
