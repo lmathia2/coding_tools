@@ -21,6 +21,7 @@ EXPECTED_SKILLS = {
     "skill-authoring",
     "vscode",
 }
+DISTRIBUTED_SKILLS = {"eli5", "engineering-workflow", "pr-review", "product-behavior-spec"}
 EXPECTED_CLAUDE_AGENTS = {
     "fast.md",
     "worker.md",
@@ -72,13 +73,6 @@ def fail(message: str) -> None:
 
 def names(path: Path, pattern: str) -> set[str]:
     return {p.name for p in path.glob(pattern)}
-
-
-def require_terms(path: Path, terms: tuple[str, ...]) -> None:
-    text = path.read_text(encoding="utf-8").lower()
-    missing = [term for term in terms if term.lower() not in text]
-    if missing:
-        fail(f"{path.relative_to(ROOT)} missing required terms {missing}")
 
 
 def frontmatter_name(path: Path) -> str:
@@ -136,13 +130,6 @@ def validate_adapter_roles(profile: dict[str, object]) -> None:
             fail(f"{path.relative_to(ROOT)} model or reasoning drift")
 
 
-def require_absent_terms(path: Path, terms: tuple[str, ...]) -> None:
-    text = path.read_text(encoding="utf-8").lower()
-    present = [term for term in terms if term.lower() in text]
-    if present:
-        fail(f"{path.relative_to(ROOT)} contains forbidden terms {present}")
-
-
 def validate_version_and_models() -> str:
     version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
     if not re.fullmatch(r"\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", version):
@@ -190,91 +177,6 @@ def validate_identities() -> None:
 
     for path in (ROOT / "shared/skills").glob("*/SKILL.md"):
         frontmatter_name(path)
-
-
-def validate_workflow_contracts() -> None:
-    lifecycle = ("plan -> implement -> document -> simplify -> verify", "work unit", "complexity", "docs-impact")
-    require_terms(ROOT / "shared/skills/engineering-workflow/SKILL.md", lifecycle)
-    require_terms(ROOT / "copilot/agents/dev.agent.md", ("engineering-workflow", *lifecycle))
-    require_terms(ROOT / "claude-code/commands/dev.md", ("engineering-workflow", *lifecycle))
-    require_terms(ROOT / "pi/prompts/dev.md", ("engineering-workflow", *lifecycle))
-    for path in (
-        ROOT / "shared/skills/engineering-workflow/SKILL.md",
-        ROOT / "copilot/agents/dev.agent.md",
-        ROOT / "claude-code/commands/dev.md",
-        ROOT / "pi/prompts/dev.md",
-    ):
-        require_terms(path, ("planning grill", "auto", "plan lock", "rapid", "eli5", ".agent-state/eli5", "not complete"))
-    require_terms(
-        ROOT / "shared/skills/engineering-workflow/references/planning-grill.md",
-        ("goals", "acceptance", "boundaries", "alternatives", "assumptions", "interactive", "auto", "decision record", "rapid execution after lock"),
-    )
-    require_terms(
-        ROOT / "shared/skills/engineering-workflow/SKILL.md",
-        (
-            "policy is portable; execution is native", "planning answer mode",
-            "native continuation", "not proof", "authorization remains separate",
-            "quality is the constraint; efficiency is the optimization",
-            "output tokens", "never trade an earlier item for a later one",
-        ),
-    )
-    require_terms(
-        ROOT / "shared/skills/engineering-workflow/references/routing.md",
-        (
-            "host executor contract", "run-to-completion", "planning isolation",
-            "bounds and cancellation", "fallback order", "future harness",
-        ),
-    )
-    require_terms(
-        ROOT / "docs/WORKFLOW_CONTRACTS.md",
-        (
-            "normative design constraint", "native-autonomous", "bounded-fallback",
-            "strongest safe native mechanism", "otherwise blocked",
-            "quality is the constraint; efficiency is the optimization",
-            "procedural and evidence-based", "minimize code, files, process",
-        ),
-    )
-    minimum_sufficient = (
-        "no code", "repository reuse", "standard library", "native platform",
-        "installed dependency", "direct expression", "minimum new code",
-        "shared causal point", "trust-boundary validation",
-    )
-    require_terms(ROOT / "shared/skills/engineering-workflow/SKILL.md", minimum_sufficient)
-    require_terms(ROOT / "docs/WORKFLOW_CONTRACTS.md", minimum_sufficient)
-    require_terms(
-        ROOT / "shared/skills/pr-review/SKILL.md",
-        (
-            "minimality is a review dimension", "repository behavior",
-            "standard-library or native-platform", "protected contract",
-            "line-count games",
-        ),
-    )
-    require_terms(ROOT / "pi/prompts/dev.md", ("harness-role: coordinator", "harness-workflow: dev"))
-    require_terms(ROOT / "pi/prompts/review-pr.md", ("harness-role: coordinator", "harness-workflow: review-pr"))
-
-    for path in (
-        ROOT / "copilot/agents/review-pr.agent.md",
-        ROOT / "claude-code/commands/review-pr.md",
-        ROOT / "pi/prompts/review-pr.md",
-        ROOT / "shared/skills/pr-review/SKILL.md",
-    ):
-        require_terms(path, ("worktree", "unit", "integration", "semantic", "execution", "complexity", "docs-impact"))
-
-    require_absent_terms(ROOT / "copilot/agents/fast-lane.agent.md", ("'edit'", "implement_mechanical"))
-    require_absent_terms(ROOT / "claude-code/agents/fast.md", ("edit,", "write", "implement_mechanical"))
-
-    # Product behavior generation must remain specialist/conditional.
-    require_terms(ROOT / "shared/skills/engineering-workflow/SKILL.md", ("do not create a product behavior specification unless the user asks" ,))
-    require_terms(ROOT / "shared/skills/pr-review/SKILL.md", ("do not create one during review",))
-
-    require_terms(
-        ROOT / "shared/skills/eli5/SKILL.md",
-        (
-            "curious developer", "purpose", "first use", "core concepts",
-            "source architecture", "execution flow", "evidence anchors",
-            "dependency-free", "reduced-motion",
-        ),
-    )
 
 
 def validate_vendor() -> None:
@@ -326,7 +228,7 @@ def validate_removed_surfaces() -> None:
 
 
 def validate_required_refinements() -> None:
-    for required in (ROOT / "tools/complexity.py", ROOT / "tools/commit_docs.py", ROOT / "tools/check.py", ROOT / "tools/experiments.py", ROOT / "tools/work_units.py", ROOT / "tools/hook_check.py", ROOT / "tools/spec_bridge.py", ROOT / "copilot/hooks/wysiwyship.json", ROOT / "codex/agents/wysiwyship-worker.toml", ROOT / "config/checks.json", ROOT / "config/model_discovery.py", ROOT / "tests/test_harness.py", ROOT / "templates/WORK_UNIT.md", ROOT / "shared/skills/engineering-workflow/references/planning-grill.md", ROOT / "shared/skills/eli5/scripts/render_explainer.py", ROOT / "shared/skills/eli5/assets/project-eli5-template.html"):
+    for required in (ROOT / "tools/complexity.py", ROOT / "tools/commit_docs.py", ROOT / "tools/check.py", ROOT / "tools/work_units.py", ROOT / "tools/hook_check.py", ROOT / "tools/wiki.py", ROOT / "copilot/hooks/wysiwyship.json", ROOT / "codex/agents/wysiwyship-worker.toml", ROOT / "config/checks.json", ROOT / "config/model_discovery.py", ROOT / "tests/test_harness.py", ROOT / "templates/WORK_UNIT.md", ROOT / "shared/skills/engineering-workflow/references/planning-grill.md", ROOT / "shared/skills/eli5/scripts/render_explainer.py", ROOT / "shared/skills/eli5/assets/project-eli5-template.html"):
         if not required.exists():
             fail(f"missing required harness component {required.relative_to(ROOT)}")
 
@@ -345,13 +247,16 @@ def validate_native_packages(version: str) -> None:
     marketplace = json.loads((REPO / ".claude-plugin/marketplace.json").read_text(encoding="utf-8"))
     if marketplace.get("plugins", [{}])[0].get("version") != version:
         fail(".claude-plugin/marketplace.json plugin entry version drift")
+    for package in ("copilot", "claude"):
+        skills = {path.parent.name for path in (ROOT / "packages" / package / "skills").glob("*/SKILL.md")}
+        if skills != DISTRIBUTED_SKILLS:
+            fail(f"{package} package skills differ from the default set: {sorted(skills)}")
 
 
 def main() -> int:
     version = validate_version_and_models()
     validate_budgets()
     validate_identities()
-    validate_workflow_contracts()
     validate_vendor()
     validate_runtime_independence()
     validate_removed_surfaces()

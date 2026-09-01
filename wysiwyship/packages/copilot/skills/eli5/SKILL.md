@@ -22,6 +22,10 @@ Classify the request before reading:
 
 Inspect authoritative implementation, tests, live documentation, public contracts, configuration, verification results, and relevant commit/work-unit history. Do not build the story from a plan, README, commit title, or marketing language alone.
 
+Use `docs/wiki/` as a navigation map when present, never as final proof. Inspect
+authoritative code, tests, contracts, and configuration before repeating its
+technical statements.
+
 Record enough evidence to answer:
 
 - **Purpose:** the concrete problem and who experiences it;

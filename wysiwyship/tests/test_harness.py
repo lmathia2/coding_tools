@@ -30,15 +30,23 @@ installer = load_module("install_harness", HARNESS / "scripts/install_harness.py
 commit_docs = load_module("commit_docs", HARNESS / "tools/commit_docs.py")
 routing = load_module("routing", HARNESS / "tools/routing.py")
 work_units = load_module("work_units", HARNESS / "tools/work_units.py")
+wiki = load_module("wiki", HARNESS / "tools/wiki.py")
 check_gate = load_module("check_gate", HARNESS / "tools/check.py")
-experiments = load_module("experiments", HARNESS / "tools/experiments.py")
 hook_check = load_module("hook_check", HARNESS / "tools/hook_check.py")
-spec_bridge = load_module("spec_bridge", HARNESS / "tools/spec_bridge.py")
 model_config = load_module("model_config", HARNESS / "config/model_config.py")
+adapter_config = load_module("adapter_config", HARNESS / "config/adapter_config.py")
 configure_models = load_module("configure_models", HARNESS / "config/configure-models.py")
 model_discovery = load_module("model_discovery", HARNESS / "config/model_discovery.py")
 package_builder = load_module("build_packages", HARNESS / "scripts/build_packages.py")
 eli5_renderer = load_module("eli5_renderer", HARNESS / "shared/skills/eli5/scripts/render_explainer.py")
+
+
+def initialize_test_wiki(root: Path) -> None:
+    wiki.initialize(root)
+    for item in wiki.manifest_template()["pages"]:
+        page = root / item["path"]
+        page.write_text(f"# {page.stem}\n\nGenerated test page.\n", encoding="utf-8")
+    wiki.mark_refreshed(root)
 
 
 class PortableExecutionContractTests(unittest.TestCase):
@@ -282,7 +290,7 @@ class ModelConfigurationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             path = Path(raw) / "dev.agent.md"
             path.write_text("---\nname: Test\nmodel: Old\n---\n<!-- harness-role: coordinator -->\n<!-- harness-workflow: dev -->\n", encoding="utf-8")
-            updated = configure_models.rewrite(path, "copilot", profile)
+            updated = adapter_config.rewrite_text(path, path.read_text(encoding="utf-8"), "copilot", profile)
         self.assertIn("model: Test Model", updated)
         self.assertIn("reasoningEffort: medium", updated)
 
@@ -296,7 +304,7 @@ class ModelConfigurationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             path = Path(raw) / "fast.toml"
             path.write_text('name = "fast"\nmodel = "old"\nmodel_reasoning_effort = "high"\n# harness-role: fast\n', encoding="utf-8")
-            updated = configure_models.rewrite(path, "codex", profile)
+            updated = adapter_config.rewrite_text(path, path.read_text(encoding="utf-8"), "codex", profile)
         self.assertIn('model = "gpt-test-fast"', updated)
         self.assertIn('model_reasoning_effort = "low"', updated)
 
@@ -479,6 +487,13 @@ class CommitDocumentationTests(unittest.TestCase):
         result = commit_docs.evaluate_commit("abc", "change", "change", ["src/app.py", "tests/test_app.py"])
         self.assertEqual(result["status"], "FAIL")
 
+    def test_derived_wiki_does_not_satisfy_authoritative_documentation(self) -> None:
+        result = commit_docs.evaluate_commit(
+            "abc", "change", "change", ["src/app.py", "docs/wiki/architecture.md"]
+        )
+        self.assertEqual(result["status"], "FAIL")
+        self.assertEqual(result["documentation_paths"], [])
+
     def test_git_range_inspection(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             target = Path(raw)
@@ -496,13 +511,82 @@ class CommitDocumentationTests(unittest.TestCase):
             self.assertEqual([result["status"] for result in results], ["FAIL"])
 
 
+class GroundedWikiTests(unittest.TestCase):
+    def make_repository(self, root: Path) -> None:
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        (root / "README.md").write_text("# Test\n", encoding="utf-8")
+        (root / "src").mkdir()
+        (root / "src/app.py").write_text("def run():\n    return 'ready'\n", encoding="utf-8")
+        wiki.initialize(root)
+
+    def test_init_is_default_safe_and_idempotent(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            first = wiki.initialize(root)
+            second = wiki.initialize(root)
+            self.assertEqual(len(first["created"]), 7)
+            self.assertEqual(second["created"], [])
+            self.assertEqual(wiki.verify(root)["status"], "PASS")
+
+    def test_initial_generation_cannot_be_marked_or_pass_cadence_with_placeholders(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self.make_repository(root)
+            subprocess.run(["git", "config", "user.name", "Harness Test"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.email", "harness@example.invalid"], cwd=root, check=True)
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "placeholder wiki"], cwd=root, check=True)
+            self.assertEqual(wiki.cadence_check(root, "HEAD", 5)["status"], "FAIL")
+            with self.assertRaisesRegex(ValueError, "replace every placeholder"):
+                wiki.mark_refreshed(root)
+
+    def test_verify_rejects_missing_pages(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self.make_repository(root)
+            (root / "docs/wiki/architecture.md").unlink()
+            self.assertEqual(wiki.verify(root)["status"], "FAIL")
+
+    def test_manifest_rejects_escaping_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self.make_repository(root)
+            manifest = root / "docs/wiki/manifest.json"
+            manifest.write_text(json.dumps({
+                "schema_version": 1,
+                "pages": [{"path": "docs/wiki/../outside.md", "purpose": "escape"}],
+            }), encoding="utf-8")
+            self.assertEqual(wiki.verify(root)["status"], "ERROR")
+
+    def test_cadence_requires_full_refresh_at_interval(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self.make_repository(root)
+            subprocess.run(["git", "config", "user.name", "Harness Test"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.email", "harness@example.invalid"], cwd=root, check=True)
+            initialize_test_wiki(root)
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "initial wiki"], cwd=root, check=True)
+            self.assertEqual(wiki.cadence_check(root, "HEAD", 2)["status"], "PASS")
+            wiki.mark_refreshed(root)
+            self.assertEqual(wiki.cadence_check(root, "HEAD", 2)["status"], "PASS")
+            (root / "note.txt").write_text("one\n", encoding="utf-8")
+            subprocess.run(["git", "add", "note.txt"], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "one"], cwd=root, check=True)
+            self.assertEqual(wiki.cadence_check(root, "HEAD", 2)["status"], "PASS")
+            (root / "note.txt").write_text("two\n", encoding="utf-8")
+            subprocess.run(["git", "commit", "--allow-empty", "-qm", "two"], cwd=root, check=True)
+            self.assertEqual(wiki.cadence_check(root, "HEAD", 2)["status"], "FAIL")
+
 class LifecycleGateTests(unittest.TestCase):
     def make_repository(self, root: Path) -> str:
         subprocess.run(["git", "init", "-q"], cwd=root, check=True)
         subprocess.run(["git", "config", "user.name", "Harness Test"], cwd=root, check=True)
         subprocess.run(["git", "config", "user.email", "harness@example.invalid"], cwd=root, check=True)
         (root / "README.md").write_text("# Test\n", encoding="utf-8")
-        subprocess.run(["git", "add", "README.md"], cwd=root, check=True)
+        initialize_test_wiki(root)
+        subprocess.run(["git", "add", "."], cwd=root, check=True)
         subprocess.run(["git", "commit", "-qm", "baseline"], cwd=root, check=True)
         return subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, text=True, capture_output=True, check=True).stdout.strip()
 
@@ -538,64 +622,12 @@ class LifecycleGateTests(unittest.TestCase):
                 "repository": {"require_clean": False},
             }
             results = check_gate.run_checks(root, base, "HEAD", config, False)
-            self.assertEqual([item["status"] for item in results], ["PASS", "PASS", "PASS", "PASS"])
+            self.assertEqual([item["status"] for item in results], ["PASS", "PASS", "PASS", "PASS", "PASS"])
 
     def test_command_cwd_cannot_escape_repository(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             with self.assertRaisesRegex(ValueError, "escapes repository root"):
                 check_gate.safe_command_cwd(Path(raw), "../outside")
-
-
-class ExperimentTests(unittest.TestCase):
-    def test_profile_resolves_model_and_reasoning(self) -> None:
-        profile, spec = experiments.read_profile(
-            HARNESS / "config/models.json", "quality", "pi", "deep", "dev"
-        )
-        self.assertEqual(profile, "quality")
-        self.assertIn("model", spec)
-        self.assertEqual(spec["reasoning"], "xhigh")
-
-    def test_append_and_load_preserve_optional_measurements(self) -> None:
-        metadata = {
-            "workflow": "dev", "role": "normal", "platform": "pi",
-            "profile": "balanced", "model": None, "reasoning": "medium",
-        }
-        record = experiments.make_record(
-            metadata,
-            status="pass",
-            verification="pass",
-            duration_seconds=2.5,
-            complexity_before=9,
-            complexity_after=6,
-        )
-        with tempfile.TemporaryDirectory() as raw:
-            path = Path(raw) / "experiments.jsonl"
-            experiments.append_records(path, [record])
-            loaded = experiments.load_records(path)
-        self.assertEqual(loaded[0]["complexity_delta"], -3)
-        self.assertIsNone(loaded[0]["cost_usd"])
-
-    def test_comparison_reports_observed_sample_counts(self) -> None:
-        records = [
-            {"profile": "quality", "status": "pass", "verification": "pass", "duration_seconds": 10},
-            {"profile": "quality", "status": "fail", "verification": "unknown", "duration_seconds": None},
-        ]
-        summary = experiments.summarize(records, "profile")[0]
-        self.assertEqual(summary["outcome"], {"reported": 2, "rate": 0.5})
-        self.assertEqual(summary["verification"], {"reported": 1, "rate": 1.0})
-        self.assertEqual(summary["metrics"]["duration_seconds"], {"reported": 1, "average": 10.0})
-
-    def test_pi_result_import_uses_measured_duration(self) -> None:
-        args = argparse.Namespace(workflow="dev", profile="economy")
-        record = experiments.pi_record(
-            args,
-            {
-                "name": "probe", "role": "fast", "model": "test", "thinking": "low",
-                "returncode": 0, "timed_out": False, "duration_seconds": 1.25,
-            },
-        )
-        self.assertEqual(record["status"], "pass")
-        self.assertEqual(record["duration_seconds"], 1.25)
 
 
 class WorkUnitTests(unittest.TestCase):
@@ -604,7 +636,8 @@ class WorkUnitTests(unittest.TestCase):
         subprocess.run(["git", "config", "user.name", "Harness Test"], cwd=root, check=True)
         subprocess.run(["git", "config", "user.email", "harness@example.invalid"], cwd=root, check=True)
         (root / "README.md").write_text("# Test\n", encoding="utf-8")
-        subprocess.run(["git", "add", "README.md"], cwd=root, check=True)
+        initialize_test_wiki(root)
+        subprocess.run(["git", "add", "."], cwd=root, check=True)
         subprocess.run(["git", "commit", "-qm", "baseline"], cwd=root, check=True)
         return subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, text=True, capture_output=True, check=True).stdout.strip()
 
@@ -761,55 +794,6 @@ class WorkUnitTests(unittest.TestCase):
                 work_units.advance_command(advance)
 
 
-class SpecBridgeTests(unittest.TestCase):
-    def test_detects_supported_artifact_locations(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            paths = [
-                root / "specs/001-auth/tasks.md",
-                root / "openspec/changes/add-auth/tasks.md",
-                root / "_bmad-output/implementation-artifacts/story-auth.md",
-            ]
-            for path in paths:
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text("- [ ] task\n", encoding="utf-8")
-            detected = {(item.framework, item.path) for item in spec_bridge.detect(root)}
-            self.assertEqual(len(detected), 3)
-
-    def test_parses_ids_parallel_hints_dependencies_and_paths(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            path = Path(raw) / "tasks.md"
-            path.write_text(
-                "## User Story 1\n- [ ] T001 [P] Add `src/api.py`\n- [ ] T002 Test contract depends: T001\n- [x] T003 Already done\n",
-                encoding="utf-8",
-            )
-            tasks = spec_bridge.parse_tasks(path)
-        self.assertEqual([task.source_id for task in tasks], ["T001", "T002"])
-        self.assertTrue(tasks[0].parallel)
-        self.assertEqual(tasks[0].owned_paths, ["src/api.py"])
-        self.assertEqual(tasks[1].dependencies, ["T001"])
-        self.assertEqual(tasks[1].section, "User Story 1")
-
-    def test_import_preserves_source_and_resolved_dependencies(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
-            subprocess.run(["git", "config", "user.name", "Harness Test"], cwd=root, check=True)
-            subprocess.run(["git", "config", "user.email", "harness@example.invalid"], cwd=root, check=True)
-            source = root / "specs/001-auth/tasks.md"
-            source.parent.mkdir(parents=True)
-            source.write_text("- [ ] T001 Add `src/api.py`\n- [ ] T002 Add tests depends: T001\n", encoding="utf-8")
-            subprocess.run(["git", "add", "."], cwd=root, check=True)
-            subprocess.run(["git", "commit", "-qm", "accepted spec"], cwd=root, check=True)
-            plan = spec_bridge.preview(root, "spec-kit", source, False)
-            created = spec_bridge.import_preview(root, plan, "worker-a", True)
-            self.assertEqual(created[1]["dependencies"], [created[0]["id"]])
-            self.assertEqual(created[0]["source"], {"framework": "spec-kit", "path": "specs/001-auth/tasks.md"})
-            self.assertEqual(created[0]["planning"]["mode"], "imported")
-            self.assertIn("Accepted spec-kit artifact", created[0]["planning"]["decisions"][0])
-            self.assertEqual(work_units.active_unit(root)["id"], created[0]["id"])
-
-
 class PackageBuilderTests(unittest.TestCase):
     def test_native_package_routing_cli_is_self_contained(self):
         with tempfile.TemporaryDirectory() as raw:
@@ -919,11 +903,12 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue((target / ".wysiwyship/tools/complexity.py").exists())
             self.assertTrue((target / ".wysiwyship/tools/commit_docs.py").exists())
             self.assertTrue((target / ".wysiwyship/tools/check.py").exists())
-            self.assertTrue((target / ".wysiwyship/tools/experiments.py").exists())
+            self.assertTrue((target / ".wysiwyship/tools/wiki.py").exists())
             self.assertTrue((target / ".wysiwyship/tools/work_units.py").exists())
             self.assertTrue((target / ".wysiwyship/tools/hook_check.py").exists())
-            self.assertTrue((target / ".wysiwyship/tools/spec_bridge.py").exists())
             self.assertTrue((target / ".wysiwyship/tools/routing.py").exists())
+            self.assertTrue((target / "docs/wiki/manifest.json").exists())
+            self.assertEqual(wiki.verify(target)["status"], "PASS")
             for host in ("codex", "copilot", "claude", "pi"):
                 completed = subprocess.run(
                     [sys.executable, str(target / ".wysiwyship/tools/routing.py"), "plan",
@@ -937,6 +922,8 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue((target / ".wysiwyship/model-discovery.json").exists())
             self.assertTrue((target / ".github/hooks/wysiwyship.json").exists())
             self.assertTrue((target / ".agents/skills/engineering-workflow/SKILL.md").exists())
+            self.assertFalse((target / ".agents/skills/skill-authoring").exists())
+            self.assertFalse((target / ".agents/skills/vscode").exists())
             self.assertTrue((target / ".codex/agents/wysiwyship-worker.toml").exists())
             settings = json.loads((target / ".claude/settings.json").read_text(encoding="utf-8"))
             self.assertEqual(settings["hooks"]["Stop"][0]["hooks"][0]["command"], installer.CLAUDE_HOOK_COMMAND)

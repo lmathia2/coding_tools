@@ -81,7 +81,7 @@ Rapid/autonomous describes the desired interaction contract. The adapter must us
 native continuation when available; a prompt that says “keep going” is not proof
 that the host will schedule another model turn.
 
-If the repository already contains an accepted Spec Kit `tasks.md`, OpenSpec change `tasks.md`, or BMAD implementation story/spec, treat that artifact as authoritative planning input. Preview its translation with `${CLAUDE_PLUGIN_ROOT}/tools/spec_bridge.py`; import ledger units only with explicit acceptance. Do not regenerate, reinterpret, or replace the upstream specification workflow.
+If the repository already contains an accepted Spec Kit, OpenSpec, or BMAD task artifact, read it directly as authoritative planning input. Do not regenerate, reinterpret, or replace the upstream specification workflow.
 
 If execution disproves a plan assumption, use the focused planning re-entry rule above before continuing.
 
@@ -180,6 +180,14 @@ Good documentation explains **function, intent, goal/invariant, contract, constr
 If the repository already contains an outside-in product behavior specification and this change alters documented user-visible behavior, update only the affected feature/foundation/checklist/triage artifacts. **Do not create a product behavior specification unless the user asks for one.**
 
 Run repository-native docs builds, doctests, examples, link checks, schema/reference generation, or clean-diff checks when applicable. Never report an unexecuted docs check as passing.
+
+The grounded repository wiki is enabled by default and has a configurable full-
+refresh cadence (five commits by default). Read
+[references/grounded-wiki.md](references/grounded-wiki.md) during the document
+stage. Cadence—not guessed semantic staleness—triggers model-assisted work; when
+due, rebuild every declared page using the active host.
+Generated `docs/wiki/` content is derived and never satisfies the authoritative
+documentation requirement above.
 
 ## 7. Simplify with measured complexity
 

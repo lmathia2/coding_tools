@@ -61,7 +61,7 @@ bash wysiwyship/install.sh claude /absolute/path/to/project
 bash wysiwyship/install.sh pi /absolute/path/to/project
 ```
 
-The installer preflights every destination, backs up managed paths it replaces, prints what it detected and configured, and writes `.wysiwyship/install-manifest.json`. Model discovery is read-only and stores its evidence in `.wysiwyship/model-discovery.json`.
+The installer preflights every destination, backs up managed paths it replaces, prints what it detected and configured, and writes `.wysiwyship/install-manifest.json`. Model discovery is read-only and stores its evidence in `.wysiwyship/model-discovery.json`. It also initializes a default grounded developer wiki under `docs/wiki/` without overwriting existing files.
 
 Preview without writing:
 
@@ -155,6 +155,12 @@ The optional `.agent-state/work-units/` ledger makes long, parallel, or interrup
 
 Documentation evolves with the code. A code commit updates the nearest authoritative README, architecture document, contract, example, or runbook—or records `Docs-Impact: none — <concrete reason>` when behavior and understanding genuinely did not change.
 
+The separate `docs/wiki/` teaching layer is on by default. Every five commits,
+the active host rebuilds all declared pages from current repository evidence and
+advances a refresh marker; configure `wiki.refresh_every_commits` as `1` for
+every-commit refresh. Its structure and cadence are part of the composed gate,
+but generated wiki prose never substitutes for the authoritative per-commit docs.
+
 ### Simplicity as evidence
 
 Before adding code, the workflow traces the affected path and checks an ordered
@@ -174,7 +180,7 @@ The score is a design signal, not a target to game. Extraction is useful when it
 
 ### Deterministic completion gate
 
-Projects add their native commands to `.wysiwyship/config/checks.json`. The range gate combines those commands with documentation evidence, complexity, work-unit state, and repository cleanliness:
+Projects add their native commands to `.wysiwyship/config/checks.json`. The range gate combines those commands with documentation evidence, grounded-wiki cadence and integrity, complexity, work-unit state, and repository cleanliness:
 
 ```bash
 python3 .wysiwyship/tools/check.py <base-ref> --head HEAD
@@ -243,7 +249,7 @@ flowchart TB
 | `shared/skills/` | Canonical host-neutral workflow policy and ELI5 renderer |
 | `codex/`, `copilot/`, `claude-code/`, `pi/` | Thin host-native entry points and specialist definitions |
 | `config/` | Model profiles, host discovery, and adapter translation |
-| `tools/` | Work units, documentation gate, complexity, verification, and experiments |
+| `tools/` | Work units, documentation gate, complexity, wiki cadence, routing, and verification |
 | `scripts/install_harness.py` | Transactional project/global installation |
 | `scripts/build_packages.py` | Reproducible Copilot and Claude plugin bundles |
 | `packages/` | Generated native bundles; never edit these copies directly |

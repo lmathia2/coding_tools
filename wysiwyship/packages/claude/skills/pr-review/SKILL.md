@@ -61,6 +61,12 @@ Discover authoritative commands from repository/CI configuration. Run:
 
 When WYSIWYShip is installed, run `${CLAUDE_PLUGIN_ROOT}/tools/check.py <base> --head <exact-pr-head>` as the composed deterministic range gate. Treat its documentation-sync, complexity, configured-check, and optional ledger results as the shared execution contract; retain additional repository-native checks required by the PR's blast radius.
 
+The same gate verifies the default-on grounded wiki's structure and full-refresh
+cadence. A due refresh, malformed manifest, or missing page is `MAJOR` unless the
+PR explicitly repairs it. Cadence, not guessed semantic staleness, triggers model
+work.
+Generated wiki pages do not repair a missing authoritative documentation update.
+
 Parallelize independent checks only when they do not contend for databases, ports, fixtures, accounts, devices, or mutable external state.
 
 If a repository already has a product behavior specification, check it **only when the PR changes behavior covered by that specification**. Do not create one during review.

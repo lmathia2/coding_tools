@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Added a self-contained, default-on developer wiki inspired by OpenWiki: four
+  starter pages, safe local paths, structural validation, and a full refresh
+  every five commits by default (`1` for every commit). Generated wiki pages
+  remain derived and cannot satisfy authoritative per-commit documentation;
+  no OpenWiki runtime, provider, Node dependency, connector, telemetry, CDN, or
+  graph viewer is required.
+- Applied a whole-repository minimum-sufficient audit: removed the claim/hash
+  reconciliation protocol, experiment logger, accepted-spec bridge, duplicated
+  adapter policy, and prose-substring validation. External planning artifacts
+  are read directly, model comparisons use the existing evaluation runner, and
+  only the four runtime skills are packaged; contributor helpers stay in source.
+
 - Folded Ponytail's useful prompt rules into the canonical development and PR
   workflows: an ordered minimum-sufficient ladder, causal bug fixes,
   anti-speculation guardrails, protected quality boundaries, and diff-focused

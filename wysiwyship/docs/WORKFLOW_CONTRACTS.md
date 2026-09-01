@@ -40,7 +40,7 @@ One dependable entry point with model and workflow selection hidden from the use
 7. Use repository evidence to resolve ownership, callers/contracts, tests, and documentation impact.
 8. Resolve and lock the cheapest capable route, actually invoke its named agent, and check its receipt; justify inline exceptions and disclose unverified effective settings.
 9. Parallelize independent units only when it improves latency or reduces anchoring/uncertainty; parallel writers use isolated worktrees and disjoint ownership.
-10. Update live authoritative documentation in the same logical commit, including implementation, APIs/contracts, purpose, intent, and invariants; otherwise record `Docs-Impact: none — <reason>`.
+10. Update live authoritative documentation in the same logical commit, including implementation, APIs/contracts, purpose, intent, and invariants; otherwise record `Docs-Impact: none — <reason>`. Separately, honor the default-on grounded wiki's configured full-refresh cadence; generated wiki pages are not authoritative evidence.
 11. Measure changed-function cyclomatic complexity against the unit start ref when feasible, simplify coherently, and explain scores above 10 or material increases.
 12. Execute proportional behavior/unit/integration/runtime/static/docs checks.
 13. Escalate to another premium perspective only for material uncertainty or high risk.
@@ -147,9 +147,21 @@ The installed gate evaluates the committed range as one machine-readable contrac
 python3 .wysiwyship/tools/check.py <unit-start-ref> --head HEAD
 ```
 
-It checks documentation evidence in every code commit, scores only Python functions intersecting changed lines, and runs the explicit argument-array commands in `.wysiwyship/config/checks.json`. A project can add unit, integration, build, type, lint, generated-artifact, or documentation commands without embedding shell evaluation in the harness. `--format json` provides CI/host automation output; `--require-clean` adds a repository-cleanliness assertion when appropriate.
+It checks documentation evidence in every code commit, scores only Python functions intersecting changed lines, verifies grounded-wiki integrity and refresh cadence, and runs the explicit argument-array commands in `.wysiwyship/config/checks.json`. A project can add unit, integration, build, type, lint, generated-artifact, or documentation commands without embedding shell evaluation in the harness. `--format json` provides CI/host automation output; `--require-clean` adds a repository-cleanliness assertion when appropriate.
 
-Exit status `0` means all checks passed, `1` means a check failed, and `2` means configuration or gate execution was invalid. The default installed configuration has documentation and complexity checks enabled and leaves project-specific commands empty.
+Exit status `0` means all checks passed, `1` means a check failed, and `2` means configuration or gate execution was invalid. The default installed configuration enables documentation, complexity, and the grounded wiki with `wiki.refresh_every_commits: 5`; project-specific commands remain empty.
+
+### Grounded wiki API
+
+Project installs create `docs/wiki/manifest.json`, four starter pages, a
+user-owned `INSTRUCTIONS.md`, and `.refresh.json` without
+overwriting existing content. Native-plugin workflows run `wiki.py init` when
+the manifest is absent. `due --every N` uses the last commit that changed the
+refresh marker, not semantic-staleness inference, to decide whether all pages
+must be rebuilt. The active host edits every manifest page directly; `verify`
+checks structure and presence, and `mark-refreshed` rejects starter placeholders
+before advancing the generation. Set the cadence to `1` when the generated wiki
+must be rebuilt with every commit.
 
 ### Resumable work-unit state and hooks
 
@@ -165,17 +177,11 @@ work_units.py close [ID]
 
 Project installation adds a Copilot `agentStop` hook and merges an idempotent Claude Code `Stop` hook. Both are no-ops without an active unit, self-limit when already continuing from a stop hook, block an incomplete active lifecycle, and run the deterministic gate after the unit reaches `complete`. A successful hook removes only the active pointer; unit history remains available. Manual/non-hook hosts run `check.py --active` followed by `work_units.py close`.
 
-### Accepted-spec intake bridge
+### Accepted specification input
 
-`spec_bridge.py` detects current repository artifacts at `specs/*/tasks.md` (Spec Kit), `openspec/changes/*/tasks.md` (OpenSpec), and BMAD implementation story/spec locations under `_bmad-output/implementation-artifacts/`. It parses Markdown checklist IDs, completion, `[P]` hints, explicit `depends:` IDs, section context, and referenced paths.
-
-```text
-spec_bridge.py detect
-spec_bridge.py preview PATH [--framework spec-kit|openspec|bmad]
-spec_bridge.py import PATH --accepted [--owner NAME] [--activate-first]
-```
-
-`preview` is read-only. `import` requires `--accepted`, preflights all IDs/conflicts before writing, resolves explicit task dependencies to generated unit IDs, and retains the source framework/path as authoritative provenance. It does not infer unstated dependencies or run any upstream generator, validator, apply, or archive command. Update/check off the upstream task artifact during the unit's documentation stage.
+When a project already has an accepted Spec Kit, OpenSpec, or BMAD task artifact,
+the coordinator reads it directly as authoritative planning input. WYSIWYShip does
+not translate it into another task schema or own its authoring and lifecycle.
 
 ### Normal-case cost shape
 
@@ -278,21 +284,8 @@ Each JSON task accepts `role`, `model`, `thinking`, and optional `routing`. `rol
 
 The Pi helper resolves project `.wysiwyship/config/models.json` first and global `~/.wysiwyship/config/models.json` second. `--model-config` overrides both locations.
 
-### Model experiment evidence
-
-`.wysiwyship/tools/experiments.py` stores append-only JSONL records under `.agent-state/model-experiments.jsonl` by default. A record identifies workflow, semantic role, platform, profile, resolved model, and reasoning strength. It can also carry duration, reported tokens/cost, verification outcome, complexity before/after, review defects, and rework. Unreported provider telemetry stays `null`, and comparison output includes the observed sample count for every metric.
-
-Model/reasoning labels and grouping are requested/configured settings, not confirmed answering-model identity. New records and comparisons explicitly label that attribution. Pi imports retain the launcher receipt for inspection without promoting argv to host-observed telemetry.
-
-```text
-experiments.py record --workflow dev --role normal --platform claude_code --profile quality --status pass --verification pass
-experiments.py record --workflow dev --role deep --platform codex --profile detected --status pass --verification pass
-experiments.py run --workflow dev --role fast --platform pi --profile economy -- <command>
-experiments.py import-pi <parallel-pi-results.json> --workflow dev --profile economy
-experiments.py compare --group-by profile [--format json]
-```
-
-`run` measures an external command without a shell and propagates its exit status. A zero exit records successful execution, but verification remains `unknown` unless explicitly supplied because command success alone does not prove the implementation contract.
+Controlled workflow/model comparisons use the self-contained evaluation runner
+under `evals/`; there is no second experiment-recording subsystem.
 
 ## Installer API
 

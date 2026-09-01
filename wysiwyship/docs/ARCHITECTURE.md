@@ -83,18 +83,21 @@ Independent agents are conditional, not ceremonial. Add them when they provide m
 
 Planning is the deliberate human-collaboration boundary. Interactive mode may require several question/answer rounds and one final lock; `auto` runs the same decision tree internally and records its assumptions. Once locked, the execution coordinator handles routine design choices, implementation surprises, tests, refactoring, integration, and documentation without further user input. Planning re-entry is narrow: only an invalidated material decision, required scope/contract expansion, materially changed consequences, or new authority can reopen the lock.
 
-The spec bridge is one-way intake from accepted Spec Kit, OpenSpec, or BMAD implementation artifacts into that operational ledger. It preserves source IDs and references and deliberately does not own requirement authoring, validation, status, application, or archival. This keeps WYSIWYShip focused on implementation quality while allowing a team to choose its specification layer independently.
+Accepted Spec Kit, OpenSpec, or BMAD artifacts remain authoritative planning input.
+The coordinator reads them directly rather than translating them into another
+task schema.
 
 ## Shared policy
 
-Only six discoverable shared skills are intentional:
+Four skills are distributed to projects and native packages:
 
 1. `engineering-workflow` — all ordinary coding process: planning grill/lock, rapid autonomous execution, routing principles, parallelism, minimal design, debugging/TDD, documentation, verification, and successful-completion handoff;
 2. `eli5` — evidence-based developer onboarding and change explanation covering purpose, first use, core concepts, connected source architecture, representative execution flow, rationale, proof, and limits in a dependency-free visual HTML artifact;
 3. `pr-review` — worktree-based semantic + executable review and high-risk escalation;
-4. `product-behavior-spec` — explicit specialist outside-in product documentation;
-5. `skill-authoring` — maintenance-only harness policy;
-6. `vscode` — optional local visual diff utility.
+4. `product-behavior-spec` — explicit specialist outside-in product documentation.
+
+Contributor-only `skill-authoring` and optional `vscode` helpers remain in the
+source repository but are not installed into user projects.
 
 Repository mapping, context snapshots, task ledgers, Superpowers process, Ponytail minimality, and documentation synchronization are techniques inside the core workflows rather than separately discoverable skills.
 
@@ -126,7 +129,9 @@ Pi receives the selected config at `.wysiwyship/config/models.json`. Its helper 
 
 Requested settings and answering-model metadata are distinct. Launcher argv or coordinator reports stay `UNVERIFIED`; only attributed host metadata can yield `CONFIRMED`, and conflicting metadata fails. The optional `require_confirmed` policy blocks completion without matching effective settings. These are consistency checks on local evidence, not authenticated attestations, a universal scheduler, or interception of every source edit. Native clients still decide whether to follow the dispatch instruction; unsupported tools/permissions must be disclosed rather than silently substituted.
 
-Experiment evidence is deliberately separate from profile configuration. Profiles express intended routing; `.agent-state/model-experiments.jsonl` records observed outcomes. The comparison tool groups records without imputing unavailable host telemetry, so a profile with one reported cost is not presented as having the same evidence quality as a profile with twenty reported costs.
+Controlled comparisons of profiles and workflows use the self-contained
+`evals/runner.py` suite. Profile configuration still describes requested routing,
+not confirmed answering-model identity.
 
 ## Platform adapters
 
@@ -215,3 +220,4 @@ resolve exact base + PR HEAD
 13. Runtime setup performs no external dependency installation.
 14. Installed stop hooks are inert unless an active work-unit pointer exists.
 15. Every successful development workflow produces and verifies a local ELI5 visual handoff after the committed-range gate passes.
+16. The grounded repository wiki is initialized by default, remains derived rather than authoritative, and is fully rebuilt at its configured commit cadence using the active host rather than an external provider runtime.

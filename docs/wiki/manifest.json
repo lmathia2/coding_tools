@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "pages": [
+    {
+      "path": "docs/wiki/quickstart.md",
+      "purpose": "How to install, invoke, and verify the project"
+    },
+    {
+      "path": "docs/wiki/architecture.md",
+      "purpose": "Core components, ownership, and runtime flow"
+    },
+    {
+      "path": "docs/wiki/development-lifecycle.md",
+      "purpose": "How a change moves from plan to verified result"
+    },
+    {
+      "path": "docs/wiki/host-adapters.md",
+      "purpose": "Host integrations, capabilities, and limits"
+    }
+  ]
+}

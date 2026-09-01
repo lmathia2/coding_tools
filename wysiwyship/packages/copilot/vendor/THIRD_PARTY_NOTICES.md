@@ -23,6 +23,21 @@ anti-speculation rules, protected quality boundaries, and diff-focused
 simplification review are adapted into normal implementation and PR semantic
 review. There is no separate Ponytail skill, mode, hook, command, or runtime.
 
+## OpenWiki
+
+- Source: `langchain-ai/openwiki`
+- Pinned commit: `6be1e0148fa900cd5fae455d6f759380109a37e1`
+- Local adaptation: `tools/wiki.py`,
+  `shared/skills/engineering-workflow/references/grounded-wiki.md`, and
+  `docs/DOCUMENTATION_POLICY.md`
+- License: [`licenses/OPENWIKI-MIT.txt`](licenses/OPENWIKI-MIT.txt)
+
+Grounded developer pages and durable updates informed a Python-standard-library
+implementation. WYSIWYShip uses a configurable full-refresh commit
+cadence and the active coding host; it does not bundle OpenWiki's runtime, Node
+dependencies, provider clients, connectors, telemetry, CI bot, OKF output, CDN,
+or visualizer.
+
 ## Pi Skills
 
 - Source: `badlogic/pi-skills`

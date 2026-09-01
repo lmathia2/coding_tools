@@ -16,9 +16,11 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "config"))
+sys.path.insert(0, str(ROOT / "tools"))
 from adapter_config import rewrite_text  # noqa: E402
 from model_config import get_profile, load_config  # noqa: E402
 from model_discovery import adaptive_profile, discover, report_lines  # noqa: E402
+import wiki as grounded_wiki  # noqa: E402
 
 VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
 PLATFORMS = {"codex", "copilot", "claude", "pi", "both", "all"}
@@ -33,6 +35,7 @@ LEGACY_COPILOT_AGENTS = (
     "worker-terra.agent.md", "fast-terra.agent.md", "worker-sonnet.agent.md",
     "worker-sol.agent.md", "deep-sol.agent.md", "security-opus.agent.md",
 )
+DEFAULT_SKILLS = ("eli5", "engineering-workflow", "pr-review", "product-behavior-spec")
 CLAUDE_HOOK_COMMAND = "python3 .wysiwyship/tools/hook_check.py --host claude"
 PREVIOUS_CLAUDE_HOOK_COMMAND = "python3 .smart-harness/tools/hook_check.py --host claude"
 
@@ -238,7 +241,7 @@ class Installer:
             raise PermissionError(f"target directory is not writable: {self.target}")
 
     def validate_sources(self) -> None:
-        required = [ROOT / "VERSION", ROOT / "config/models.json", ROOT / "config/checks.json", ROOT / "config/model_discovery.py", ROOT / "shared/skills", ROOT / "templates", ROOT / "codex/agents", ROOT / "copilot/hooks/wysiwyship.json", ROOT / "tools/complexity.py", ROOT / "tools/commit_docs.py", ROOT / "tools/check.py", ROOT / "tools/experiments.py", ROOT / "tools/work_units.py", ROOT / "tools/hook_check.py", ROOT / "tools/spec_bridge.py", ROOT / "vendor/SOURCES.json"]
+        required = [ROOT / "VERSION", ROOT / "config/models.json", ROOT / "config/checks.json", ROOT / "config/model_discovery.py", ROOT / "shared/skills", ROOT / "templates", ROOT / "codex/agents", ROOT / "copilot/hooks/wysiwyship.json", ROOT / "tools/complexity.py", ROOT / "tools/commit_docs.py", ROOT / "tools/check.py", ROOT / "tools/work_units.py", ROOT / "tools/hook_check.py", ROOT / "tools/wiki.py", ROOT / "vendor/SOURCES.json"]
         missing = [str(path) for path in required if not path.exists()]
         if missing:
             raise FileNotFoundError(f"installer source is incomplete: {missing}")
@@ -280,9 +283,8 @@ class Installer:
         for skill_root in roots:
             for name in LEGACY_SKILLS:
                 self.remove_legacy(skill_root / name)
-            for source in sorted((ROOT / "shared/skills").iterdir()):
-                if source.is_dir():
-                    self.replace(source, skill_root / source.name)
+            for name in DEFAULT_SKILLS:
+                self.replace(ROOT / "shared/skills" / name, skill_root / name)
 
     def install_adapter(self, source: Path, destination: Path, platform: str) -> None:
         if self.profile is None:
@@ -391,7 +393,20 @@ class Installer:
         if not (self.target / "CLAUDE.md").exists():
             self.replace(ROOT / "templates/CLAUDE.md.example", self.target / "CLAUDE.md.example")
         self.ensure_project_directories()
+        self.initialize_grounded_wiki()
         self.update_gitignore()
+
+    def initialize_grounded_wiki(self) -> None:
+        for relative, text in grounded_wiki.starter_files(self.target).items():
+            destination = self.target / relative
+            if destination.exists():
+                continue
+            if self.dry_run:
+                self.log("would initialize wiki", destination)
+                continue
+            self.snapshot(destination)
+            self.log("initialized wiki", destination)
+            atomic_write(destination, text)
 
     def ensure_project_directories(self) -> None:
         for directory in (self.target / ".agent-worktrees", self.target / ".agent-state"):

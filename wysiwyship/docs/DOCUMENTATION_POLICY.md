@@ -2,6 +2,11 @@
 
 Documentation is a live specification and a commit-level gate inside `engineering-workflow` and `pr-review`, not a release-end phase or separate default workflow.
 
+WYSIWYShip also maintains a default-on grounded developer wiki under
+`docs/wiki/`. This wiki is derived navigation and explanation, not an
+authoritative specification. It cannot satisfy the commit-level documentation
+gate below.
+
 ## Commit-level synchronization
 
 Every logical code commit contains the authoritative documentation needed to understand that version of the system. Documentation records not only what was implemented but why it exists: purpose, intent, protected goals/invariants, API methods and contracts, constraints, and relevant failure or operational behavior.
@@ -52,6 +57,24 @@ python3 .wysiwyship/tools/commit_docs.py <base-ref>
 ```
 
 It treats Markdown/reStructuredText/AsciiDoc and conventional documentation directories/files as documentation. Repositories with generated or unusual documentation formats may supplement it with a native check; the semantic PR lane still verifies content quality, purpose, intent, and contract accuracy.
+
+`docs/wiki/` is deliberately excluded from that evidence. The composed gate also
+checks its integrity and configurable full-refresh cadence:
+
+```bash
+python3 .wysiwyship/tools/wiki.py due --every 5
+python3 .wysiwyship/tools/check.py <base-ref> --head HEAD
+```
+
+The installer initializes four starter pages without overwriting existing files.
+Every five commits by default, the document phase rebuilds all declared pages
+from current code, tests, configuration, and authoritative docs, then advances
+`docs/wiki/.refresh.json`. Set `wiki.refresh_every_commits` to `1` for strict
+every-commit refresh or another positive integer for a different bounded cadence.
+
+The tool deliberately checks only manifest structure, page presence, and commit
+cadence; it does not guess semantic staleness or call a model.
+`docs/wiki/INSTRUCTIONS.md` remains user-owned across refreshes.
 
 ## Product behavior specifications
 

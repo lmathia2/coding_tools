@@ -11,21 +11,9 @@ effort: high
 
 Review request: $ARGUMENTS
 
-Use `wysiwyship:pr-review`.
+Use `wysiwyship:pr-review` as the complete review policy.
 
-Resolve each lane with `routing.py plan --host claude --workflow review_pr`; invoke that subagent type through the Agent tool, wait for its result, and check its receipt. Use the resolved plugin namespace when present; never silently fall back to a generic agent.
-
-1. Resolve exact base/HEAD, intent, logical commit/work-unit order, changed boundaries, authoritative commands, and risk.
-2. Create the detached PR-head worktree required by `wysiwyship:pr-review`.
-3. Launch together:
-   - `wysiwyship:smart-deep-reasoner` in PR_CORE mode;
-   - `wysiwyship:smart-fast` in PR_EXEC mode for full feasible unit/integration execution plus relevant runtime/static/docs checks.
-4. Check each implementation commit for coherent `plan -> implement -> document -> simplify -> verify` evidence, live documentation in the same commit (or `Docs-Impact: none — <reason>`), and changed-function complexity score/delta.
-5. Run `${CLAUDE_PLUGIN_ROOT}/tools/check.py <base> --head <exact-pr-head>` as the composed deterministic range gate when installed, plus any additional repository-native checks required by the blast radius.
-6. For HIGH_RISK changes, add only the relevant specialist lanes:
-   - `wysiwyship:smart-deep-reasoner` PR_ADVERSARIAL;
-   - `wysiwyship:smart-top-reviewer` SECURITY_RESILIENCE.
-7. If a BLOCKER/MAJOR is proposed, launch a fresh `wysiwyship:smart-deep-reasoner` VERIFY_FINDING for that finding before publishing high severity.
-8. Synthesize the recommendation and exact execution evidence, then clean up worktrees.
-
-Product-behavior documentation is checked only when it already exists and the PR changes behavior it covers. There is no separate minimality/Ponytail lane; simplicity is part of PR_CORE.
+Resolve routes with `routing.py plan --host claude --workflow review_pr`.
+Invoke the named subagent through Claude's Agent tool, including its plugin
+namespace when present, then validate its receipt. Never silently substitute a
+generic agent.

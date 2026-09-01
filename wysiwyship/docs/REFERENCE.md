@@ -6,7 +6,7 @@
 
 ## Simplicity budget
 
-- Shared discoverable skills: **6** (budget: 6)
+- Shared source skills: **6** (4 distributed + 2 contributor-only)
 - Codex specialist definitions: **4** (budget: 4)
 - Copilot agent definitions: **7** (2 visible + 5 hidden)
 - Claude Code hidden agents: **5** (budget: 5)
@@ -22,7 +22,7 @@ Every implementation unit is coherent and independently committable, with explic
 plan -> implement -> document -> simplify -> verify
 ```
 
-Live authoritative documentation travels in the same logical commit as code. Changed Python functions can be scored with `.wysiwyship/tools/complexity.py`; other languages use repository-native analyzers.
+Live authoritative documentation travels in the same logical commit as code. The derived grounded wiki is initialized by default and fully rebuilt on its configured commit cadence. Changed Python functions can be scored with `.wysiwyship/tools/complexity.py`; other languages use repository-native analyzers.
 
 ## Model routing
 
@@ -123,6 +123,7 @@ Active profile: **`balanced`**. Available profiles: `balanced`, `economy`, `qual
 |---|---|---|---|
 | Superpowers methodology adaptation | `b36e0829c6d0140e93cfef2ca599b1b07d4a7797` | MIT | `shared/skills/engineering-workflow`, `shared/skills/skill-authoring` |
 | Ponytail adaptation | `2ed6c52c9d7e5e56942508591085fd45dea277d3` | MIT | `shared/skills/engineering-workflow`, `shared/skills/pr-review` |
+| OpenWiki adaptation | `6be1e0148fa900cd5fae455d6f759380109a37e1` | MIT | `tools/wiki.py`, `shared/skills/engineering-workflow/references/grounded-wiki.md`, `docs/DOCUMENTATION_POLICY.md` |
 | Pi VS Code skill adaptation | `90bb51cae36515a648515b633a81c0c6efc8c74d` | MIT | `shared/skills/vscode` |
 | ELI5 adaptation | `a766623b062331fdde53467001379b4ddf3acc2f` | MIT | `shared/skills/eli5/SKILL.md`, `shared/skills/eli5/references/story-format.md` |
 | Frontend Slides adaptation | `9906a34d640d2111f724544cbc50f7f130569ae1` | MIT | `shared/skills/eli5/assets/project-eli5-template.html`, `shared/skills/eli5/scripts/render_explainer.py`, `shared/skills/eli5/SKILL.md` |
@@ -131,6 +132,7 @@ Active profile: **`balanced`**. Available profiles: `balanced`, `economy`, `qual
 
 - `.wysiwyship/tools/complexity.py` — dependency-free Python function cyclomatic complexity and baseline deltas.
 - `.wysiwyship/tools/commit_docs.py` — commit-range documentation synchronization checks.
+- `.wysiwyship/tools/wiki.py` — default developer wiki with a configurable full-refresh commit cadence.
 - `.wysiwyship/tools/routing.py` — cross-host route resolution and invocation-receipt consistency checks; not a model launcher or authenticated attestation.
 - `.wysiwyship/config/models.json` — installed active profile and model/reasoning routes for every host.
 - `.wysiwyship/model-discovery.json` — installer evidence, account-visible capabilities, fallbacks, and limitations when discovery is enabled.

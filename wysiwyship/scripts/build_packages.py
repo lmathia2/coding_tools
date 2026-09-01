@@ -17,6 +17,7 @@ PACKAGES = ROOT / "packages"
 VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
 PLUGIN_NAME = "wysiwyship"
 DESCRIPTION = "What you spec is what you ship: plan, implement, document, simplify, verify, and explain with deterministic evidence."
+DEFAULT_SKILLS = ("eli5", "engineering-workflow", "pr-review", "product-behavior-spec")
 
 
 def write_json(path: Path, value: dict[str, object]) -> None:
@@ -49,7 +50,8 @@ def copy_runtime(destination: Path) -> None:
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(ROOT / "config" / name, target)
     shutil.copy2(ROOT / "config/model_config.py", destination / "config/model_config.py")
-    copy_files(ROOT / "shared/skills", destination / "skills")
+    for name in DEFAULT_SKILLS:
+        shutil.copytree(ROOT / "shared/skills" / name, destination / "skills" / name)
     copy_files(ROOT / "vendor", destination / "vendor")
 
 

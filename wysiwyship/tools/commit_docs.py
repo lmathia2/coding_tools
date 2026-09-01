@@ -19,6 +19,7 @@ DOC_SUFFIXES = {".adoc", ".md", ".mdx", ".rst"}
 DOC_DIRECTORIES = {"doc", "docs", "documentation"}
 DOC_BASENAMES = {"architecture", "changelog", "contributing", "readme", "runbook"}
 NO_IMPACT_RE = re.compile(r"(?im)^Docs-Impact:\s*none\s*(?:—|-)\s*\S.+$")
+DERIVED_WIKI_ROOT = PurePosixPath("docs/wiki")
 
 
 def git(*args: str, cwd: str | None = None) -> str:
@@ -30,6 +31,8 @@ def git(*args: str, cwd: str | None = None) -> str:
 
 def is_documentation(path: str) -> bool:
     parsed = PurePosixPath(path)
+    if parsed == DERIVED_WIKI_ROOT or DERIVED_WIKI_ROOT in parsed.parents:
+        return False
     stem = parsed.stem.lower()
     return (
         parsed.suffix.lower() in DOC_SUFFIXES

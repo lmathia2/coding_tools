@@ -27,6 +27,19 @@
       "mode": "ordered minimum-sufficient ladder, causal fixes, anti-speculation guardrails, protected quality boundaries, and diff simplification folded into implementation and semantic review; no separate skill, mode, hook, command, or plugin runtime"
     },
     {
+      "name": "OpenWiki adaptation",
+      "source": "https://github.com/langchain-ai/openwiki",
+      "commit": "6be1e0148fa900cd5fae455d6f759380109a37e1",
+      "license": "MIT",
+      "license_file": "vendor/licenses/OPENWIKI-MIT.txt",
+      "local_paths": [
+        "tools/wiki.py",
+        "shared/skills/engineering-workflow/references/grounded-wiki.md",
+        "docs/DOCUMENTATION_POLICY.md"
+      ],
+      "mode": "grounded developer pages and durable updates adapted into a standard-library, host-native, full-refresh cadence; no claim graph, OpenWiki runtime, Node dependency, provider, connector, telemetry, CI bot, OKF bundle, CDN, or visualizer"
+    },
+    {
       "name": "Pi VS Code skill adaptation",
       "source": "https://github.com/badlogic/pi-skills",
       "commit": "90bb51cae36515a648515b633a81c0c6efc8c74d",

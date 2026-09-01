@@ -14,6 +14,7 @@ import commit_docs
 import complexity
 import work_units
 import routing
+import wiki
 
 
 HUNK_RE = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@")
@@ -21,6 +22,7 @@ DEFAULT_CONFIG = {
     "schema_version": 1,
     "documentation": {"enabled": True},
     "complexity": {"enabled": True, "fail_above": 20},
+    "wiki": {"enabled": True, "refresh_every_commits": 5},
     "commands": [],
     "repository": {"require_clean": False},
     "work_units": {"enabled": True, "require_complete": False},
@@ -65,7 +67,7 @@ def load_config(path: Path) -> dict[str, Any]:
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict) or data.get("schema_version") != 1:
         raise ValueError(f"{path}: expected a schema_version 1 JSON object")
-    for key in ("documentation", "complexity", "repository", "work_units"):
+    for key in ("documentation", "complexity", "wiki", "repository", "work_units"):
         if key in data and not isinstance(data[key], dict):
             raise ValueError(f"{path}: {key} must be an object")
     commands = data.get("commands", [])
@@ -165,6 +167,12 @@ def complexity_check(root: Path, base: str, head: str, limit: int) -> dict[str, 
     return result("complexity", "PASS", f"{len(functions)} changed function(s) are at or below {limit}", files)
 
 
+def wiki_check(root: Path, head: str, every: int) -> dict[str, object]:
+    payload = wiki.cadence_check(root, head, every)
+    status = str(payload["status"])
+    return result("grounded-wiki", status, str(payload["summary"]), payload)
+
+
 def safe_command_cwd(root: Path, configured: str) -> Path:
     root = root.resolve()
     candidate = (root / configured).resolve()
@@ -228,6 +236,11 @@ def run_checks(root: Path, base: str, head: str, config: dict[str, Any], require
         if not isinstance(limit, int) or limit < 1:
             raise ValueError("complexity.fail_above must be a positive integer")
         checks.append(complexity_check(root, base, head, limit))
+    if config.get("wiki", {}).get("enabled", True):
+        every = config.get("wiki", {}).get("refresh_every_commits", 5)
+        if not isinstance(every, int) or every < 1:
+            raise ValueError("wiki.refresh_every_commits must be a positive integer")
+        checks.append(wiki_check(root, head, every))
     checks.extend(command_check(root, command) for command in config.get("commands", []))
     configured_clean = config.get("repository", {}).get("require_clean", False)
     if require_clean or configured_clean:

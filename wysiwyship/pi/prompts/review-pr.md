@@ -8,19 +8,9 @@ argument-hint: [base-ref] [PR intent/details]
 
 Review request: $ARGUMENTS
 
-Use `pr-review`.
+Use `pr-review` as the complete review policy.
 
-Resolve each lane with `routing.py plan --host pi --workflow review_pr`. Include the plan as the Pi task's `routing` object, dispatch through `parallel-pi.py`, and validate each result's `routing_receipt`. Explicitly record any lane retained in the coordinator as inline; do not claim it ran on a specialist model.
-
-1. Resolve exact base/HEAD, intent, logical commit/work-unit order, changed boundaries, authoritative commands, and risk.
-2. Create the detached PR-head worktree.
-3. Run two default lanes in parallel using the main context plus `.pi/tools/parallel-pi.py --workflow review_pr` when useful. Give each child a semantic `role` so the active profile supplies its model and thinking strength; explicit task settings override the profile:
-   - semantic architecture/correctness/wiring/contracts/tests/docs/simplicity review;
-   - execution lane with complete feasible unit and integration suites plus relevant runtime/static/docs checks.
-4. Check each implementation commit for coherent `plan -> implement -> document -> simplify -> verify` evidence, live documentation in the same commit (or `Docs-Impact: none — <reason>`), and changed-function complexity score/delta.
-5. Run `.wysiwyship/tools/check.py <base> --head <exact-pr-head>` as the composed deterministic range gate when installed, plus any additional repository-native checks required by the blast radius.
-6. Add adversarial and security/resilience reasoning only for HIGH_RISK changes.
-7. Independently attempt to falsify candidate BLOCKER/MAJOR findings before publishing high severity.
-8. Report recommendation and exact execution evidence, then clean up worktrees.
-
-Check existing product-behavior documentation only when the PR changes behavior it covers. Do not create a product behavior specification during review.
+Resolve routes with `routing.py plan --host pi --workflow review_pr`. Dispatch
+delegated lanes through `.pi/tools/parallel-pi.py --workflow review_pr` with the
+locked route as `routing`, then validate each `routing_receipt`. Record inline
+lanes explicitly; never claim they ran on a specialist model.

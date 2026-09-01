@@ -8,16 +8,13 @@ from pathlib import Path
 import subprocess
 import sys
 
-from adapter_config import markdown_target as adapter_target, replace_field, rewrite_text
+from adapter_config import rewrite_text
 from model_config import get_profile, load_config
 
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 CONFIG_PATH = HERE / "models.json"
-def rewrite(path: Path, platform: str, profile: dict[str, object]) -> str:
-    text = path.read_text(encoding="utf-8")
-    return rewrite_text(path, text, platform, profile)
 
 
 def adapter_files() -> list[tuple[Path, str]]:
@@ -33,7 +30,7 @@ def synchronize(profile: dict[str, object], check: bool) -> list[str]:
     updates = []
     for path, platform in adapter_files():
         current = path.read_text(encoding="utf-8")
-        updated = rewrite(path, platform, profile)
+        updated = rewrite_text(path, current, platform, profile)
         if updated == current:
             continue
         updates.append((path, updated))
@@ -48,10 +45,6 @@ def write_active_profile(config: dict[str, object], name: str) -> None:
         return
     config["active_profile"] = name
     CONFIG_PATH.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
-
-
-def regenerate_reference() -> None:
-    subprocess.run([sys.executable, str(ROOT / "scripts/generate-reference.py")], check=True)
 
 
 def display_selection(args: argparse.Namespace, config: dict[str, object], name: str, profile: dict[str, object]) -> bool:
@@ -73,7 +66,7 @@ def report_sync(config: dict[str, object], name: str, stale: list[str], check: b
         return 1
     if not check:
         write_active_profile(config, name)
-        regenerate_reference()
+        subprocess.run([sys.executable, str(ROOT / "scripts/generate-reference.py")], check=True)
     state = "current" if check or not stale else "updated"
     print(f"model profile {name!r} is {state}")
     return 0
