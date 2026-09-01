@@ -41,6 +41,38 @@ package_builder = load_module("build_packages", HARNESS / "scripts/build_package
 eli5_renderer = load_module("eli5_renderer", HARNESS / "shared/skills/eli5/scripts/render_explainer.py")
 
 
+class PortableExecutionContractTests(unittest.TestCase):
+    def test_policy_and_native_executor_boundary_is_versioned_and_enforced(self) -> None:
+        contracts = {
+            "skill": HARNESS / "shared/skills/engineering-workflow/SKILL.md",
+            "routing": HARNESS / "shared/skills/engineering-workflow/references/routing.md",
+            "spec": HARNESS / "docs/WORKFLOW_CONTRACTS.md",
+            "architecture": HARNESS / "docs/ARCHITECTURE.md",
+        }
+        text = {name: path.read_text(encoding="utf-8").lower()
+                for name, path in contracts.items()}
+        self.assertIn("policy is portable; execution is native", text["skill"])
+        self.assertIn("host executor contract", text["routing"])
+        self.assertIn("planning answer mode and execution mode are independent", text["routing"])
+        self.assertIn("normative design constraint", text["spec"])
+        self.assertIn("a future host", text["spec"])
+        self.assertIn("portable policy over native executors", text["architecture"])
+        for name in ("skill", "spec", "architecture"):
+            self.assertIn(
+                "quality is the constraint; efficiency is the optimization",
+                text[name],
+            )
+        self.assertIn("procedural and evidence-based", text["spec"])
+        self.assertIn("output tokens", text["skill"])
+
+    def test_generated_plugins_receive_the_same_portable_policy(self) -> None:
+        for host in ("claude", "copilot"):
+            skill = HARNESS / "packages" / host / "skills/engineering-workflow/SKILL.md"
+            routing_reference = skill.parent / "references/routing.md"
+            self.assertIn("Policy is portable; execution is native", skill.read_text(encoding="utf-8"))
+            self.assertIn("host executor contract", routing_reference.read_text(encoding="utf-8").lower())
+
+
 class Eli5RendererTests(unittest.TestCase):
     def story(self) -> dict[str, object]:
         return {

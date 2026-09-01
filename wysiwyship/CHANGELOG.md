@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- Folded Ponytail's useful prompt rules into the canonical development and PR
+  workflows: an ordered minimum-sufficient ladder, causal bug fixes,
+  anti-speculation guardrails, protected quality boundaries, and diff-focused
+  simplification. Persona/intensity modes, hooks, branded comments, fixed test
+  ceilings, and output restrictions remain excluded; no Ponytail runtime is
+  required.
+- Made the product objective normative: enforce quality through locked criteria
+  and executable SDLC evidence, then minimize implementation surface, context,
+  model/reasoning spend and output tokens without weakening clarity or safety.
+- Kept Caveman native-policy integration as follow-up work, with no external
+  runtime dependency and no Caveman BSL proxy/engine vendoring.
+
+- Specified the normative portable-policy/native-executor boundary: WYSIWYShip
+  owns lifecycle and evidence while each adapter invokes real host planning,
+  continuation, dispatch, isolation, permission, cancellation and observation
+  capabilities. Planning-answer and execution modes are explicitly independent;
+  missing capabilities degrade visibly or block rather than being imitated.
+
 - Added root `TODOS.md` tracking pilot calibration, the remaining evaluation
   tasks, real-host validation, and known maintenance gaps.
 

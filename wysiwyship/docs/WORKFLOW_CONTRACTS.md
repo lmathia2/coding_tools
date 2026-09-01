@@ -1,5 +1,24 @@
 # Workflow Contracts
 
+## Product objective
+
+WYSIWYShip provides one clear, low-interruption workflow that makes coding
+quality enforceable across supported harnesses while minimizing model spend.
+
+> **Quality is the constraint; efficiency is the optimization.**
+
+The optimization order is normative: (1) satisfy the locked acceptance criteria,
+safety boundaries, and repository contracts; (2) complete the required
+`plan -> implement -> document -> simplify -> verify` evidence; (3) leave a
+clear developer handoff; then (4) minimize code, files, process, loaded context,
+model/reasoning spend, and output tokens. A lower token count never justifies an
+ambiguous decision, weaker implementation, missing documentation, skipped gate,
+or compressed safety/authorization message.
+
+The quality guarantee is procedural and evidence-based, not a claim that defects
+are impossible: a workflow run cannot report success until its locked criteria
+and required gates pass. Missing or unobservable evidence stays explicit.
+
 ## Dev / `/dev`
 
 ### Function
@@ -28,9 +47,87 @@ One dependable entry point with model and workflow selection hidden from the use
 14. After the committed-range gate passes, invoke `eli5`, render and check the visual explainer, and report its audience and path.
 15. Report exact evidence and residual risk.
 
+### Portable policy and native executor contract
+
+This separation is a normative design constraint for every adapter and future
+implementation:
+
+> **WYSIWYShip policy is portable; execution is native to the host.**
+
+The portable layer owns the planning grill/lock, work-unit and dependency
+semantics, lifecycle order, documentation contract, simplicity evidence,
+verification gate, routing meaning, receipts, and ELI5 handoff. It must not grow
+a second-rate generic implementation of a host's agent loop, planning sandbox,
+parallel scheduler, permission system, model router, or telemetry service.
+
+The adapter/executor layer owns the concrete invocation of native capabilities:
+
+```text
+plan | run-to-completion | dispatch | parallelize | isolate/sandbox
+permissions | bounds/cancel | observe
+```
+
+For each required capability, an implementation MUST:
+
+1. invoke the strongest safe native mechanism supported by the active host;
+2. keep policy, planning-answer mode, execution mode, permissions, and model
+   selection as separate decisions;
+3. preserve the locked work-unit contracts and lifecycle across native agents;
+4. record the mechanism requested and host evidence actually observed;
+5. label unavailable, partial, fallback, and unobservable behavior explicitly;
+6. never infer execution, isolation, continuation, parallelism, model identity,
+   or usage from an instruction/configuration alone; and
+7. block the affected lane when no safe accepted fallback satisfies the contract.
+
+`interactive | auto | imported` describes how planning answers are resolved.
+`interactive | native-autonomous | bounded-fallback` describes execution. These
+axes are not aliases: auto planning cannot silently approve an implementation
+plan, enable an Autopilot mode, grant tools, bypass a sandbox, or broaden scope.
+Similarly, native autonomous execution does not waive the planning record,
+documentation, simplification, verification, or completion evidence.
+
+Parallel host features may execute only work units already proven independent,
+with explicit dependencies, exclusive ownership and suitable workspace isolation.
+A host-selected generic fleet is not allowed to silently redefine the locked
+decomposition. Outer-session and custom-agent model precedence must be accounted
+for; host fallback keeps effective settings `UNVERIFIED` until reliable runtime
+metadata confirms them.
+
+The required fallback order is: native capability; explicitly accepted bounded
+adapter fallback with its limitation recorded; otherwise blocked. A future host
+joins by implementing this capability mapping, not by changing the portable SDLC
+policy. See the canonical
+[`routing.md`](../shared/skills/engineering-workflow/references/routing.md).
+
 ### Minimum sufficient change
 
-The shared engineering skill owns the compact anti-overengineering policy: read the causal code path, preserve non-goals/untouched surfaces, reuse before adding, and justify new structural layers by accepted requirements or evidenced risks. Scope growth triggers simplification, not further scaffolding. Routine execution returns to configured normal/fast lanes after planning; extra reasoning, agents, and skills are conditional. Existing tests come first; additions close specific acceptance/regression/risk gaps without arbitrary count or size limits. This policy does not weaken safety, authorization, live documentation, or the complete feasible PR review suites.
+After tracing the affected flow and callers, implementation MUST stop at the
+first sufficient rung: **no code -> repository reuse -> standard library -> native platform -> installed dependency -> direct expression -> minimum new code**.
+“Sufficient” means the complete locked acceptance, edge-case, safety,
+compatibility, and operational contract—not the fewest lines in isolation.
+
+Bug fixes prefer the shared causal point over repeated symptom patches. New
+abstractions, dependencies, configuration, fallbacks, compatibility layers, and
+boilerplate require an accepted requirement or evidenced risk. Known design
+ceilings record the current limit, why it is acceptable, and the measurable
+upgrade trigger rather than adding speculative extension points. Scope growth
+triggers a smaller design or planning re-entry, not further scaffolding.
+
+The simplification phase and PR semantic lane apply the same ladder backward to
+the diff, looking for deletion, reuse, standard-library/native replacement, and
+unjustified layers. They must not game line count, fragment cohesive code, or
+remove trust-boundary validation, data-loss handling, security/privacy/
+authorization, accessibility, compatibility/migration/recovery, necessary
+hardware calibration, live documentation, or risk-proportional verification.
+Existing tests come first; additions close specific acceptance, regression, or
+risk gaps without arbitrary count or size limits.
+
+This is a curated adaptation, not an embedded Ponytail runtime. WYSIWYShip does
+not adopt the persona, intensity/session modes, lifecycle hooks, branded source
+comments, fixed one-check ceiling, or code-first output restriction. The locked
+plan controls scope, risk controls verification depth, and the documentation and
+ELI5 contracts control explanation. Those higher-priority guarantees cannot be
+disabled by a minimality setting.
 
 ### Planning grill, lock, and re-entry
 

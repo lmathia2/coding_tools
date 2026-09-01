@@ -2,7 +2,9 @@
 
 ## Purpose
 
-Provide one high-quality coding interface across Codex, Copilot, Claude Code, and Pi without requiring the developer to remember model or workflow commands.
+Provide one clear, low-interruption coding interface across Codex, Copilot,
+Claude Code, and Pi that enforces an evidence-backed SDLC and minimizes total
+model spend without weakening quality. Quality is the constraint; efficiency is the optimization.
 
 ## Goals
 
@@ -17,6 +19,12 @@ Provide one high-quality coding interface across Codex, Copilot, Claude Code, an
 - executable verification;
 - exact-HEAD isolated PR review;
 - self-contained installation.
+
+The architecture optimizes in a fixed order: locked acceptance and safety,
+required SDLC evidence, developer clarity, then the smallest implementation,
+context window, reasoning/model spend, and response. “Guaranteed quality” means
+the workflow cannot claim completion while required evidence is missing; it does
+not mean any agent or test suite can prove the absence of all defects.
 
 ## Default execution shape
 
@@ -33,6 +41,41 @@ request
   -> ELI5 visual handoff
   -> completion
 ```
+
+## Portable policy over native executors
+
+WYSIWYShip is the control policy, not another agent runtime. The same accepted
+plan and evidence contract flows through a thin host adapter to the strongest
+safe mechanism already supplied by that harness:
+
+```text
+portable policy
+  planning decisions + work units + lifecycle + docs + simplicity + gates
+        |
+        v
+host capability adapter
+  plan | continue | dispatch | parallelize | isolate | observe | cancel
+        |
+        +--> Copilot native modes, custom agents and Fleet
+        +--> Codex native task, subagent and sandbox controls
+        +--> Claude Code native agent and permission controls
+        +--> Pi native process/session controls plus parallel-pi
+        `--> future harness: map supported capabilities; expose the gaps
+```
+
+The adapter does not reinterpret acceptance or implement its own SDLC. It maps
+capabilities, invokes native execution, and reports evidence. Unsupported or
+unobservable behavior is explicit; instructions and configuration never become
+proof that a turn continued, an agent launched, a sandbox held, or a model
+answered. Native capability first, accepted bounded fallback second, otherwise
+blocked.
+
+Planning-answer mode and execution mode are orthogonal. Interactive/auto/imported
+controls who resolves the planning decisions. Interactive/native-autonomous/
+bounded-fallback controls how the locked plan runs. Permissions, isolation and
+model routing are additional independent axes. This prevents an `auto` request
+from silently enabling broad permissions or mapping one host's Autopilot semantics
+onto every harness.
 
 Independent agents are conditional, not ceremonial. Add them when they provide material independent evidence or judgment: ambiguous debugging, architecture alternatives, high-risk boundaries, or PR semantic review.
 
@@ -164,10 +207,11 @@ resolve exact base + PR HEAD
 5. Parallelism requires real independence; writers require isolated ownership/worktrees.
 6. Live authoritative documentation changes in the same logical commit as code, or the commit records a concrete no-impact reason.
 7. Changed-function complexity is measured and increases are explained; scores are not gamed at the expense of cohesion.
-8. Unexecuted checks are never PASS.
-9. PR review executes complete feasible configured unit and integration suites at exact PR HEAD.
-10. Premium-model fan-out is conditional on uncertainty/risk.
-11. Product behavior specification generation is explicit, never automatic.
-12. Runtime setup performs no external dependency installation.
-13. Installed stop hooks are inert unless an active work-unit pointer exists.
-14. Every successful development workflow produces and verifies a local ELI5 visual handoff after the committed-range gate passes.
+8. Implementation stops at the first minimum-sufficient rung that satisfies the full locked contract; quality boundaries outrank line count.
+9. Unexecuted checks are never PASS.
+10. PR review executes complete feasible configured unit and integration suites at exact PR HEAD.
+11. Premium-model fan-out is conditional on uncertainty/risk.
+12. Product behavior specification generation is explicit, never automatic.
+13. Runtime setup performs no external dependency installation.
+14. Installed stop hooks are inert unless an active work-unit pointer exists.
+15. Every successful development workflow produces and verifies a local ELI5 visual handoff after the committed-range gate passes.

@@ -209,6 +209,46 @@ def validate_workflow_contracts() -> None:
         ROOT / "shared/skills/engineering-workflow/references/planning-grill.md",
         ("goals", "acceptance", "boundaries", "alternatives", "assumptions", "interactive", "auto", "decision record", "rapid execution after lock"),
     )
+    require_terms(
+        ROOT / "shared/skills/engineering-workflow/SKILL.md",
+        (
+            "policy is portable; execution is native", "planning answer mode",
+            "native continuation", "not proof", "authorization remains separate",
+            "quality is the constraint; efficiency is the optimization",
+            "output tokens", "never trade an earlier item for a later one",
+        ),
+    )
+    require_terms(
+        ROOT / "shared/skills/engineering-workflow/references/routing.md",
+        (
+            "host executor contract", "run-to-completion", "planning isolation",
+            "bounds and cancellation", "fallback order", "future harness",
+        ),
+    )
+    require_terms(
+        ROOT / "docs/WORKFLOW_CONTRACTS.md",
+        (
+            "normative design constraint", "native-autonomous", "bounded-fallback",
+            "strongest safe native mechanism", "otherwise blocked",
+            "quality is the constraint; efficiency is the optimization",
+            "procedural and evidence-based", "minimize code, files, process",
+        ),
+    )
+    minimum_sufficient = (
+        "no code", "repository reuse", "standard library", "native platform",
+        "installed dependency", "direct expression", "minimum new code",
+        "shared causal point", "trust-boundary validation",
+    )
+    require_terms(ROOT / "shared/skills/engineering-workflow/SKILL.md", minimum_sufficient)
+    require_terms(ROOT / "docs/WORKFLOW_CONTRACTS.md", minimum_sufficient)
+    require_terms(
+        ROOT / "shared/skills/pr-review/SKILL.md",
+        (
+            "minimality is a review dimension", "repository behavior",
+            "standard-library or native-platform", "protected contract",
+            "line-count games",
+        ),
+    )
     require_terms(ROOT / "pi/prompts/dev.md", ("harness-role: coordinator", "harness-workflow: dev"))
     require_terms(ROOT / "pi/prompts/review-pr.md", ("harness-role: coordinator", "harness-workflow: review-pr"))
 

@@ -30,7 +30,22 @@ Review architecture/design fit, ownership/coupling, semantic correctness, runtim
 
 Inspect logical commits as well as the aggregate diff. Each implementation commit should be coherent, independently reviewable, and follow `plan -> implement -> document -> simplify -> verify`. Code, tests, and its live authoritative documentation belong in the same commit. A code-only commit requires `Docs-Impact: none — <concrete reason>`; otherwise request an amend/squash even when the final PR aggregate contains later documentation. Run `${CLAUDE_PLUGIN_ROOT}/tools/commit_docs.py <base-ref>` when installed.
 
-Minimality is a review dimension, not a separate reviewer. Tie new abstractions, dependencies, configuration, fallbacks, and parallel implementations to accepted requirements or evidenced risks; propose a smaller causal fix when that justification is missing. New tests should close an actual acceptance, regression, or risk gap—not duplicate coverage or expand scope. Recommend deletion/reuse/native/stdlib simplification only when it preserves requirements, necessary tests, security, accessibility, compatibility, documentation, and operations; do not impose arbitrary test-count or test-size caps or reduce the required execution suites below.
+Minimality is a review dimension, not a separate reviewer. Run the development
+ladder backward over the diff: find code that can be deleted, repository behavior
+that can be reused, standard-library or native-platform facilities that replace
+custom code/dependencies, and layers/configuration/fallbacks with no accepted need.
+Every actionable simplification names the location, unnecessary surface, smaller
+replacement, protected contract, and verification impact. Prefer a shared causal
+fix over repeated symptom patches and the fewest cohesive files over line-count games.
+If nothing can be removed safely, report no minimality finding rather than
+inventing one.
+
+New tests should close an actual acceptance, regression, or risk gap—not duplicate
+coverage or expand scope. Never recommend removing required validation,
+data-loss handling, security/privacy/authorization, accessibility,
+compatibility/migration/recovery, hardware calibration, documentation, or
+risk-proportional execution suites. Do not impose arbitrary test-count or
+test-size caps.
 
 ### Execution lane
 

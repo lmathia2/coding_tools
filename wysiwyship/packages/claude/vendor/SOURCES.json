@@ -24,7 +24,7 @@
         "shared/skills/engineering-workflow",
         "shared/skills/pr-review"
       ],
-      "mode": "minimal-correct-solution concepts folded into implementation and semantic review; no separate review lane or plugin runtime"
+      "mode": "ordered minimum-sufficient ladder, causal fixes, anti-speculation guardrails, protected quality boundaries, and diff simplification folded into implementation and semantic review; no separate skill, mode, hook, command, or plugin runtime"
     },
     {
       "name": "Pi VS Code skill adaptation",

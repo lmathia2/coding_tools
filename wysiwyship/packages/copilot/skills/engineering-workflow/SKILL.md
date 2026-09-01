@@ -10,7 +10,11 @@ One workflow replaces the former planning, engineering-core, parallelism, contex
 
 ## Goal
 
-Finish the requested change correctly with the least process and model spend that preserves quality.
+Finish the requested change correctly with the least process and model spend
+that preserves quality. **Quality is the constraint; efficiency is the optimization.**
+Optimize in this order: locked acceptance and safety, required
+SDLC evidence, developer clarity, then minimum code/files/process, loaded
+context, model/reasoning spend, and output tokens. Never trade an earlier item for a later one.
 
 Default shape: **one coordinator + one implementation context per coherent work unit + deterministic verification**. Add agents only when independent evidence or judgment can materially change the result.
 
@@ -19,6 +23,29 @@ Every implementation unit follows this invariant, without skipping or reordering
 ```text
 plan -> implement -> document -> simplify -> verify
 ```
+
+### Portable policy, native execution
+
+**Policy is portable; execution is native.** WYSIWYShip owns the host-neutral
+planning, lifecycle, documentation, simplicity, verification, routing semantics,
+and evidence requirements. It does not replace a host's agent runtime.
+
+Before executing a locked plan, use the active adapter to map the required
+capabilities—read-only planning, run-to-completion, specialist dispatch, useful
+parallelism, workspace isolation, permissions/sandboxing, bounds/cancellation,
+and runtime observation—to mechanisms the host actually provides. Invoke those
+native mechanisms rather than describing them in prose or building a weak generic
+imitation. Keep planning answer mode (`interactive` or `auto`) independent from
+execution mode (`interactive`, native autonomous continuation, or an explicitly
+bounded fallback): `auto` never silently grants Autopilot, bypass permissions, or
+removes a human plan-approval checkpoint.
+
+If a capability is unavailable, partial, or unobservable, use the smallest safe
+accepted fallback and label the limitation; otherwise stop the affected lane.
+Never claim native continuation, isolation, parallel dispatch, a model switch, or
+telemetry from configuration alone. Authorization remains separate from both
+policy and model routing. Read [references/routing.md](references/routing.md) for
+the normative executor/adapter contract.
 
 ## 1. Grill, lock, then plan execution
 
@@ -50,11 +77,21 @@ One unit should produce one reviewable commit or commit-ready change. Do not spl
 
 Once the user approves the decision record, or auto mode locks it, execution should be rapid and autonomous. Do not ask for routine implementation decisions already bounded by the plan. Reopen only the invalidated decision when evidence disproves a material assumption or acceptance criterion, scope/public contracts must expand, consequences materially change, or new authority is required; then append the decision, increment the iteration count, relock, and resume.
 
+Rapid/autonomous describes the desired interaction contract. The adapter must use
+native continuation when available; a prompt that says “keep going” is not proof
+that the host will schedule another model turn.
+
 If the repository already contains an accepted Spec Kit `tasks.md`, OpenSpec change `tasks.md`, or BMAD implementation story/spec, treat that artifact as authoritative planning input. Preview its translation with `${PLUGIN_ROOT}/tools/spec_bridge.py`; import ledger units only with explicit acceptance. Do not regenerate, reinterpret, or replace the upstream specification workflow.
 
 If execution disproves a plan assumption, use the focused planning re-entry rule above before continuing.
 
 ## 2. Spend tokens where they change the answer
+
+Load only the repository evidence needed for the current decision, expanding
+when uncertainty, callers, or risk require it. Keep progress and handoff prose
+compact while preserving exact commands, contracts, failures, decisions, risks,
+and safety/authorization messages. Token reduction never excuses skipped
+documentation, verification, or the developer ELI5 handoff.
 
 Use the cheapest capable lane:
 
@@ -89,13 +126,28 @@ python3 "${PLUGIN_ROOT}/tools/work_units.py" close
 
 ## 4. Implement the smallest correct design
 
-**Minimum sufficient change:**
+Trace the affected flow and callers first, then stop at the first rung that
+satisfies the complete locked contract:
 
-- Read affected code/callers; preserve the locked goal, acceptance criteria, non-goals, and untouched surfaces.
-- Prefer no change when behavior exists; otherwise delete, reuse, or use native capabilities before adding code. Fix root causes, not stacked symptoms.
-- Justify new abstractions, dependencies, configuration, fallbacks, or duplicate implementations by accepted requirements or evidenced risks—not future possibilities.
-- If unrelated scope or scaffolding grows, pause and choose a smaller coherent design; do not fragment code to game metrics.
-- Stop after acceptance, affected documentation, and required verification pass. Preserve safety, compatibility, accessibility, recovery, and authorization boundaries.
+1. **No code:** the behavior already exists, configuration/data solves it, or the requested surface is unnecessary.
+2. **Repository reuse:** use an existing helper, type, component, pattern, or service.
+3. **Standard library:** prefer a maintained language/runtime facility.
+4. **Native platform:** prefer browser, database, operating-system, framework, or host capability.
+5. **Installed dependency:** use an existing dependency when it is simpler than local code and fits its contract.
+6. **Direct expression:** implement the behavior directly without a new layer.
+7. **Minimum new code:** add only the smallest cohesive design that satisfies the evidence.
+
+This ladder is a decision filter, not a research project. The first rung that
+meets acceptance, edge cases, and operational constraints wins; shortest text
+alone does not. Keep the fewest cohesive files, and prefer deletion and boring
+code over speculative flexibility.
+
+- For a bug, inspect callers and sibling paths and fix the shared causal point when one exists; do not stack symptom patches.
+- Add no abstraction, dependency, configuration, fallback, compatibility layer, or boilerplate for an unaccepted future possibility. Each must map to an accepted requirement or evidenced risk.
+- If implementation grows beyond the lock, challenge the need and choose a smaller design; use planning re-entry when scope or contracts truly must expand.
+- Record any deliberate design ceiling with the limit, evidence that makes it acceptable now, and the measurable trigger/upgrade path. Do not add branded comments or speculative extension points.
+- Never simplify away trust-boundary validation, data-loss prevention, security/privacy/authorization, accessibility, compatibility/migration/recovery, necessary hardware calibration, live documentation, or risk-proportional verification.
+- Stop when acceptance, documentation, simplification, and verification pass. Do not add optional polish merely to make the change look complete.
 
 ## 5. Debug and change behavior with evidence
 

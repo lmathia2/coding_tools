@@ -16,7 +16,16 @@ A coding model can generate a plausible patch without producing a dependable eng
 - verification becomes a summary of intent instead of executable evidence;
 - the next developer sees what changed, but not how the system works or why it was designed that way.
 
-WYSIWYShip moves collaboration to the beginning, locks the important decisions, then lets execution run quickly. Completion requires code, live documentation, simplicity evidence, executable verification, and a grounded explanation of the result.
+WYSIWYShip moves collaboration to the beginning, locks the important decisions,
+then lets execution run quickly. Its priority is explicit: quality first, then
+efficiency. Completion requires code, live documentation, simplicity evidence,
+executable verification, and a grounded explanation of the result; within those
+constraints, the workflow minimizes code, process, loaded context, model spend,
+and output tokens.
+
+The guarantee is procedural: a run cannot call itself complete while required
+evidence is missing. It is not a promise that an agent or test suite can make
+software defect-free.
 
 ## Quick start
 
@@ -147,6 +156,13 @@ The optional `.agent-state/work-units/` ledger makes long, parallel, or interrup
 Documentation evolves with the code. A code commit updates the nearest authoritative README, architecture document, contract, example, or runbook—or records `Docs-Impact: none — <concrete reason>` when behavior and understanding genuinely did not change.
 
 ### Simplicity as evidence
+
+Before adding code, the workflow traces the affected path and checks an ordered
+minimum-sufficient ladder: no change, repository reuse, standard library, native
+platform, installed dependency, direct implementation, then minimum new code.
+The first option satisfying the complete locked contract wins. Security,
+validation, accessibility, compatibility, documentation, and proportional tests
+are protected boundaries—not simplification targets.
 
 The dependency-free Python analyzer scores changed functions and reports baseline deltas:
 

@@ -44,6 +44,21 @@ validation. Keep pilot data separate from follow-on evaluation data.
 
 ## Validation and maintenance gaps
 
+- [ ] Integrate Caveman's context and response discipline as compact native
+  policy in planning packets, agent handoffs and reporting. Preserve exact code,
+  commands, failures, contracts, safety and decision rationale; do not vendor
+  Caveman's BSL proxy/engine. Review its MIT skill sources and notices, then
+  validate the combined policy against the local paired evaluation suite.
+
+- [ ] Implement the versioned host-executor capability contract for Codex,
+  Copilot, Claude Code and Pi: native planning isolation, bounded continuation,
+  dispatch/parallelism, sandbox/worktree controls, cancellation and runtime
+  observation. Keep planning-answer and execution modes independent, and add
+  adapter conformance tests before claiming support.
+- [ ] Integrate Copilot Plan/Autopilot/Fleet as native executor capabilities
+  beneath the portable policy. Do not make `--allow-all` or outer-session Auto
+  model selection an implicit WYSIWYShip default; record fallbacks and effective
+  settings honestly.
 - [ ] Run real-host development and PR smoke tests for Codex, Claude Code,
   GitHub Copilot and Pi. Verify dispatch, fallbacks and receipt behavior;
   existing offline tests do not prove host execution.

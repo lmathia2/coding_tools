@@ -2,6 +2,48 @@
 
 Use for development units and PR review lanes on every host. A skill describes work; an agent definition configures a potential child. Neither invokes a model. Keep the parent session's model separate from the child's route.
 
+## Portable policy and host executor contract
+
+WYSIWYShip specifies outcomes and evidence; the adapter executes them using the
+host runtime. Do not add a generic agent loop, scheduler, sandbox, or subagent
+framework merely to make every host look identical. The host-neutral vocabulary
+is deliberately small:
+
+```text
+plan -> lock -> run-to-completion -> dispatch -> parallelize -> isolate -> observe -> cancel
+```
+
+These are requested capabilities, not promises that every host implements every
+verb. Before execution, the coordinator or launcher must determine and record:
+
+| Capability | Required adapter behavior |
+| --- | --- |
+| Planning isolation | Use native read-only planning when present; otherwise disclose that the plan boundary is instruction-enforced. |
+| Continuation | Use the host's bounded autonomous/continuation mode when selected and available. A “keep working” prompt is not continuation evidence. |
+| Specialist dispatch | Invoke the resolved native custom-agent/subagent mechanism and bind it to the locked route. |
+| Parallelism | Use native parallel execution only for independent units with explicit dependencies, ownership, and isolation; otherwise stay sequential. |
+| Isolation | Prefer native sandbox/worktree controls. State the actual filesystem/network/process boundary and never call separate directories a security sandbox. |
+| Permissions | Preserve user/organization policy. Auto planning, autonomous execution, and model routing grant no additional authority. |
+| Bounds and cancellation | Apply native time/turn/credit limits and cancellation when supported; record missing bounds rather than inventing them. |
+| Observation | Capture host-produced invocation, status, model/effort and usage metadata where available; keep unobserved fields `UNVERIFIED` or `unknown`. |
+
+Planning answer mode and execution mode are independent axes. `interactive` versus
+`auto` determines who resolves planning questions. It does not select interactive
+versus native autonomous execution, approve a plan transition, enable all tools,
+or weaken a sandbox. Adapters may combine modes only through an explicit host
+mapping recorded in the plan or launcher configuration.
+
+Use this fallback order per capability: native mechanism; explicitly accepted,
+bounded adapter fallback with the limitation recorded; otherwise blocked. Never
+report the fallback as the native capability. A new host implements this contract
+by mapping only the capabilities it truly supports, without changing the shared
+engineering lifecycle.
+
+Model precedence belongs to the adapter. Account for outer-session selection,
+per-call overrides, custom-agent settings, host defaults, and silent fallback.
+When a host can override or ignore a requested specialist model, do not claim the
+route switched models unless host-produced evidence confirms it.
+
 ## Lock the route
 
 Run the installed helper before dispatch and retain its JSON output with the unit's plan:
@@ -24,6 +66,12 @@ Record exceptions/fallbacks in the plan before use. If an agent, model, reasonin
 | Claude Code | Invoke the Agent tool with the resolved subagent type, not the built-in general-purpose fallback. Native-plugin agents use the `wysiwyship:` namespace, which the plugin helper resolves automatically. |
 | Copilot | Invoke the available `agent`/`runSubagent` tool with the resolved custom-agent name. Confirm it is exposed in the coordinator's allowed agents. Do not substitute a generic subagent without recording a new route. |
 | Pi | Launch `parallel-pi.py` even for a single delegated unit. Give the task `name`, `prompt`, `role`, and the complete plan object in `routing`. Use the same configuration/profile for both helpers. The launcher rejects settings inconsistent with that plan. |
+
+Native continuation and dispatch are separate. For example, a Copilot adapter may
+use Plan mode, Autopilot, Fleet, and custom agents; WYSIWYShip still owns the plan
+content, work-unit boundaries, lifecycle and gate. Codex, Claude Code, Pi, and
+future harnesses use their own native equivalents and expose honest capability
+gaps. Do not put one host's flags into this shared policy.
 
 Development workers receive scope, acceptance, owned paths, dependencies, documentation, verification, and the route ID. They run the complete lifecycle without asking again about locked choices or recursively dispatching another copy of themselves. Parallel writers still need disjoint ownership and isolated worktrees. Review workers receive the exact PR HEAD and worktree, lane scope, and route ID. Wait for results before integration or a review recommendation.
 
