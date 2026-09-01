@@ -99,35 +99,21 @@ joins by implementing this capability mapping, not by changing the portable SDLC
 policy. See the canonical
 [`routing.md`](../shared/skills/engineering-workflow/references/routing.md).
 
-### Minimum sufficient change
+### Four lightweight coding rules
 
-After tracing the affected flow and callers, implementation MUST stop at the
-first sufficient rung: **no code -> repository reuse -> standard library -> native platform -> installed dependency -> direct expression -> minimum new code**.
-“Sufficient” means the complete locked acceptance, edge-case, safety,
-compatibility, and operational contract—not the fewest lines in isolation.
+After tracing the affected flow and callers, implementation applies exactly four
+Ponytail-derived rules:
 
-Bug fixes prefer the shared causal point over repeated symptom patches. New
-abstractions, dependencies, configuration, fallbacks, compatibility layers, and
-boilerplate require an accepted requirement or evidenced risk. Known design
-ceilings record the current limit, why it is acceptable, and the measurable
-upgrade trigger rather than adding speculative extension points. Scope growth
-triggers a smaller design or planning re-entry, not further scaffolding.
+1. **Source priority:** repository reuse -> standard library -> platform native -> installed dependency -> a clear one-line/direct solution -> local implementation last.
+2. **Dependency discipline:** no new dependency when a few clear, maintainable lines cover the requirement.
+3. **Guardrail checklist:** brevity never removes trust-boundary validation, data-loss handling, security/privacy/authorization, accessibility, compatibility/migration/recovery, necessary hardware calibration, live documentation, or risk-proportional verification.
+4. **Debt annotations:** deliberate corners record the current ceiling and measurable upgrade trigger using `ponytail: <ceiling>; upgrade when <trigger>` in the local comment style.
 
-The simplification phase and PR semantic lane apply the same ladder backward to
-the diff, looking for deletion, reuse, standard-library/native replacement, and
-unjustified layers. They must not game line count, fragment cohesive code, or
-remove trust-boundary validation, data-loss handling, security/privacy/
-authorization, accessibility, compatibility/migration/recovery, necessary
-hardware calibration, live documentation, or risk-proportional verification.
-Existing tests come first; additions close specific acceptance, regression, or
-risk gaps without arbitrary count or size limits.
-
-This is a curated adaptation, not an embedded Ponytail runtime. WYSIWYShip does
-not adopt the persona, intensity/session modes, lifecycle hooks, branded source
-comments, fixed one-check ceiling, or code-first output restriction. The locked
-plan controls scope, risk controls verification depth, and the documentation and
-ELI5 contracts control explanation. Those higher-priority guarantees cannot be
-disabled by a minimality setting.
+These are preference and review rules, not a deletion mandate. The workflow does
+not optimize line count, reject justified abstractions, or rewrite working code
+merely because a shorter form exists. The locked plan controls scope, risk
+controls verification depth, and the documentation and ELI5 contracts control
+explanation. No separate Ponytail runtime, persona, mode, hook, or command ships.
 
 ### Planning grill, lock, and re-entry
 

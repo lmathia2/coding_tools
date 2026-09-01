@@ -124,30 +124,17 @@ python3 "${CLAUDE_PLUGIN_ROOT}/tools/check.py" --active
 python3 "${CLAUDE_PLUGIN_ROOT}/tools/work_units.py" close
 ```
 
-## 4. Implement the smallest correct design
+## 4. Implement with four lightweight rules
 
-Trace the affected flow and callers first, then stop at the first rung that
-satisfies the complete locked contract:
+Trace the affected flow and callers first, then apply only these rules:
 
-1. **No code:** the behavior already exists, configuration/data solves it, or the requested surface is unnecessary.
-2. **Repository reuse:** use an existing helper, type, component, pattern, or service.
-3. **Standard library:** prefer a maintained language/runtime facility.
-4. **Native platform:** prefer browser, database, operating-system, framework, or host capability.
-5. **Installed dependency:** use an existing dependency when it is simpler than local code and fits its contract.
-6. **Direct expression:** implement the behavior directly without a new layer.
-7. **Minimum new code:** add only the smallest cohesive design that satisfies the evidence.
+1. **Source priority:** repository reuse → standard library → platform native → installed dependency → a clear one-line/direct solution → write local code last. This is a preference order, not a reason to rewrite working code.
+2. **Dependency discipline:** do not introduce a new dependency for behavior that a few clear, maintainable lines can provide.
+3. **Guardrail checklist:** never trade away trust-boundary validation, data-loss prevention, security/privacy/authorization, accessibility, compatibility/migration/recovery, necessary hardware calibration, live documentation, or risk-proportional verification for speed or brevity.
+4. **Debt annotations:** mark a deliberate corner cut in the local comment style as `ponytail: <current ceiling>; upgrade when <measurable trigger>`. Annotate known limits, not speculative future work.
 
-This ladder is a decision filter, not a research project. The first rung that
-meets acceptance, edge cases, and operational constraints wins; shortest text
-alone does not. Keep the fewest cohesive files, and prefer deletion and boring
-code over speculative flexibility.
-
-- For a bug, inspect callers and sibling paths and fix the shared causal point when one exists; do not stack symptom patches.
-- Add no abstraction, dependency, configuration, fallback, compatibility layer, or boilerplate for an unaccepted future possibility. Each must map to an accepted requirement or evidenced risk.
-- If implementation grows beyond the lock, challenge the need and choose a smaller design; use planning re-entry when scope or contracts truly must expand.
-- Record any deliberate design ceiling with the limit, evidence that makes it acceptable now, and the measurable trigger/upgrade path. Do not add branded comments or speculative extension points.
-- Never simplify away trust-boundary validation, data-loss prevention, security/privacy/authorization, accessibility, compatibility/migration/recovery, necessary hardware calibration, live documentation, or risk-proportional verification.
-- Stop when acceptance, documentation, simplification, and verification pass. Do not add optional polish merely to make the change look complete.
+These rules guide implementation choices; they do not make deletion or line
+count a goal, reject justified abstractions, or override the locked contract.
 
 ## 5. Debug and change behavior with evidence
 
@@ -193,13 +180,14 @@ documentation requirement above.
 
 After documentation is current, simplify the implementation without changing accepted behavior:
 
-1. remove duplication, dead paths, speculative abstraction, and unnecessary dependencies;
+1. simplify duplication, dead paths, confusing control flow, or unnecessary dependencies only when the result is clearer and preserves the accepted design;
 2. prefer guard clauses, cohesive helpers, data-driven dispatch, and existing native patterns when they improve clarity;
 3. score changed Python functions with `${CLAUDE_PLUGIN_ROOT}/tools/complexity.py` (or the repository-native equivalent for another language);
 4. compare against the unit's starting ref when possible and report current score plus delta;
 5. treat `1–5` as Excellent, `6–10` as Good, `11–20` as Moderate Risk, and `>20` as High Risk / Refactor Required.
 
 Complexity is evidence, not a gameable gate. Do not extract meaningless one-line helpers or obscure control flow merely to lower a number. Any score above 10 or material increase requires a concrete simplification recommendation or an explicit justification tied to cohesion, correctness, or performance. If simplification changes a documented contract, return to the documentation stage before verification.
+Do not delete working code merely to reduce the diff or line count.
 
 Example:
 

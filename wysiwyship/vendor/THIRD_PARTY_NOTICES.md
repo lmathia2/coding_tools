@@ -18,10 +18,11 @@ Design clarification, proportional planning, isolation, TDD/debugging, bounded d
 - v0.7 local integration: `shared/skills/engineering-workflow/`, `shared/skills/pr-review/`
 - License: [`licenses/PONYTAIL-MIT.txt`](licenses/PONYTAIL-MIT.txt)
 
-The ordered minimum-sufficient decision ladder, causal-fix preference,
-anti-speculation rules, protected quality boundaries, and diff-focused
-simplification review are adapted into normal implementation and PR semantic
-review. There is no separate Ponytail skill, mode, hook, command, or runtime.
+Four rules are adapted into implementation and PR semantic review: source
+priority, dependency discipline, protected safety/data-loss guardrails, and debt
+annotations with current ceilings and measurable upgrade triggers. Deletion-first
+behavior is excluded. There is no separate Ponytail skill, mode, hook, command,
+or runtime.
 
 ## OpenWiki
 

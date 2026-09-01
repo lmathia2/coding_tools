@@ -99,7 +99,7 @@ Four skills are distributed to projects and native packages:
 Contributor-only `skill-authoring` and optional `vscode` helpers remain in the
 source repository but are not installed into user projects.
 
-Repository mapping, context snapshots, task ledgers, Superpowers process, Ponytail minimality, and documentation synchronization are techniques inside the core workflows rather than separately discoverable skills.
+Repository mapping, context snapshots, task ledgers, Superpowers process, the four Ponytail-derived coding rules, and documentation synchronization are techniques inside the core workflows rather than separately discoverable skills.
 
 ## Model profiles
 
@@ -212,7 +212,7 @@ resolve exact base + PR HEAD
 5. Parallelism requires real independence; writers require isolated ownership/worktrees.
 6. Live authoritative documentation changes in the same logical commit as code, or the commit records a concrete no-impact reason.
 7. Changed-function complexity is measured and increases are explained; scores are not gamed at the expense of cohesion.
-8. Implementation stops at the first minimum-sufficient rung that satisfies the full locked contract; quality boundaries outrank line count.
+8. Implementation applies the four lightweight coding rules without treating deletion or line count as a goal; quality boundaries outrank brevity.
 9. Unexecuted checks are never PASS.
 10. PR review executes complete feasible configured unit and integration suites at exact PR HEAD.
 11. Premium-model fan-out is conditional on uncertainty/risk.

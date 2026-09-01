@@ -161,14 +161,15 @@ advances a refresh marker; configure `wiki.refresh_every_commits` as `1` for
 every-commit refresh. Its structure and cadence are part of the composed gate,
 but generated wiki prose never substitutes for the authoritative per-commit docs.
 
-### Simplicity as evidence
+### Four lightweight coding rules
 
-Before adding code, the workflow traces the affected path and checks an ordered
-minimum-sufficient ladder: no change, repository reuse, standard library, native
-platform, installed dependency, direct implementation, then minimum new code.
-The first option satisfying the complete locked contract wins. Security,
-validation, accessibility, compatibility, documentation, and proportional tests
-are protected boundaries—not simplification targets.
+Before implementation, the workflow traces the affected path and applies four
+rules: prefer repository reuse → standard library → platform native → installed
+dependencies → a clear one-line/direct solution → local code last; avoid new
+dependencies for behavior a few clear lines can provide; never weaken safety,
+trust boundaries, or data-loss handling for brevity; and annotate deliberate
+design ceilings with a measurable upgrade trigger. These rules guide choices—
+they do not require deleting working code or optimizing line count.
 
 The dependency-free Python analyzer scores changed functions and reports baseline deltas:
 

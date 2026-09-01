@@ -24,7 +24,7 @@
         "shared/skills/engineering-workflow",
         "shared/skills/pr-review"
       ],
-      "mode": "ordered minimum-sufficient ladder, causal fixes, anti-speculation guardrails, protected quality boundaries, and diff simplification folded into implementation and semantic review; no separate skill, mode, hook, command, or plugin runtime"
+      "mode": "four lightweight rules folded into implementation and semantic review: source priority, dependency discipline, protected safety/data-loss guardrails, and debt annotations with ceilings and upgrade triggers; deletion-first behavior excluded; no separate skill, mode, hook, command, or plugin runtime"
     },
     {
       "name": "OpenWiki adaptation",

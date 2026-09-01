@@ -30,15 +30,12 @@ Review architecture/design fit, ownership/coupling, semantic correctness, runtim
 
 Inspect logical commits as well as the aggregate diff. Each implementation commit should be coherent, independently reviewable, and follow `plan -> implement -> document -> simplify -> verify`. Code, tests, and its live authoritative documentation belong in the same commit. A code-only commit requires `Docs-Impact: none — <concrete reason>`; otherwise request an amend/squash even when the final PR aggregate contains later documentation. Run `.wysiwyship/tools/commit_docs.py <base-ref>` when installed.
 
-Minimality is a review dimension, not a separate reviewer. Run the development
-ladder backward over the diff: find code that can be deleted, repository behavior
-that can be reused, standard-library or native-platform facilities that replace
-custom code/dependencies, and layers/configuration/fallbacks with no accepted need.
-Every actionable simplification names the location, unnecessary surface, smaller
-replacement, protected contract, and verification impact. Prefer a shared causal
-fix over repeated symptom patches and the fewest cohesive files over line-count games.
-If nothing can be removed safely, report no minimality finding rather than
-inventing one.
+Apply the four lightweight coding rules as one review dimension: source priority,
+dependency discipline, protected guardrails, and debt annotations with ceilings
+and measurable upgrade triggers. Raise a finding only for a concrete violation,
+such as missed reuse, an avoidable new dependency, a weakened safety boundary,
+or an undocumented deliberate limit. Do not hunt for deletions, optimize line
+count, or reject justified code solely because a shorter implementation exists.
 
 New tests should close an actual acceptance, regression, or risk gap—not duplicate
 coverage or expand scope. Never recommend removing required validation,

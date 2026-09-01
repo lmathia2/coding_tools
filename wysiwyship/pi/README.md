@@ -23,4 +23,4 @@ Independent Pi reasoning lanes can use `.pi/tools/parallel-pi.py`, which spawns 
 
 The installation also provides `.wysiwyship/tools/complexity.py` for dependency-free Python function complexity scoring and baseline comparison.
 
-The five shared skills fold selected dependency-free planning, minimality, and context concepts from the pinned sources documented under `.wysiwyship/vendor/`. No external Pi package-manager command, npm dependency, API key, browser package, or external checkout is installed by the harness.
+The four distributed skills fold selected dependency-free planning, coding-rule, and context concepts from the pinned sources documented under `.wysiwyship/vendor/`. No external Pi package-manager command, npm dependency, API key, browser package, or external checkout is installed by the harness.

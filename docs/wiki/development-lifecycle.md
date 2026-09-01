@@ -17,9 +17,11 @@ independently committable units with ownership and exact verification commands.
 plan → implement → document → simplify → verify
 ```
 
-Implementation stops at the first minimum-sufficient design that meets the
-locked contract. Documentation then updates the authoritative purpose, intent,
-contracts, invariants, and operational behavior in the same logical commit.
+Implementation follows source priority and dependency discipline without using
+deletion or line count as a goal. Safety guardrails remain protected, and known
+design ceilings carry an upgrade trigger. Documentation then updates the
+authoritative purpose, intent, contracts, invariants, and operational behavior
+in the same logical commit.
 
 During documentation, `wiki.py due --every N` checks the full-refresh cadence.
 If it passes, no model work is spent on the wiki. If due, the active host rebuilds

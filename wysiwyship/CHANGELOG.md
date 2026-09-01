@@ -14,12 +14,11 @@
   are read directly, model comparisons use the existing evaluation runner, and
   only the four runtime skills are packaged; contributor helpers stay in source.
 
-- Folded Ponytail's useful prompt rules into the canonical development and PR
-  workflows: an ordered minimum-sufficient ladder, causal bug fixes,
-  anti-speculation guardrails, protected quality boundaries, and diff-focused
-  simplification. Persona/intensity modes, hooks, branded comments, fixed test
-  ceilings, and output restrictions remain excluded; no Ponytail runtime is
-  required.
+- Reduced the Ponytail adaptation to four lightweight rules: source priority,
+  dependency discipline, protected safety/data-loss guardrails, and annotated
+  design ceilings with upgrade triggers. Deletion-first review, line-count
+  optimization, persona/intensity modes, hooks, and output restrictions remain
+  excluded; no Ponytail runtime is required.
 - Made the product objective normative: enforce quality through locked criteria
   and executable SDLC evidence, then minimize implementation surface, context,
   model/reasoning spend and output tokens without weakening clarity or safety.

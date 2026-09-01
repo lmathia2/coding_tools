@@ -7,7 +7,7 @@ WYSIWYShip is self-contained but incorporates selected concepts from MIT-license
 External methodologies are no longer exposed as separate default skills when their behavior belongs in the core workflow.
 
 - Superpowers design/planning/isolation/TDD/delegation/review concepts are folded into `engineering-workflow`; its skill-authoring concepts remain in a contributor-only source skill.
-- Ponytail minimal-correct-solution concepts are folded into `engineering-workflow` and the simplicity dimension of `pr-review`; there is no separate Ponytail execution/review lane.
+- Four Ponytail-derived rules—source priority, dependency discipline, protected guardrails, and annotated design ceilings—are folded into `engineering-workflow` and `pr-review`; deletion-first behavior and a separate execution/review lane are excluded.
 - The dependency-free VS Code diff utility remains an optional source helper and is not installed by default.
 - The audience-calibration structure from `dreambigou/eli5` and fixed-stage visual presentation patterns from `zarazhangrui/frontend-slides` are combined in the local `eli5` skill and offline renderer.
 - The evidence-first interview discipline associated with public `grill-me` / `grilling` skills is independently implemented as a planning subroutine inside `engineering-workflow`; no external skill or separate command is required. See `vendor/INSPIRATIONS.md`.
