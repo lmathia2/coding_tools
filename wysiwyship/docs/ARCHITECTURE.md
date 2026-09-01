@@ -92,7 +92,7 @@ task schema.
 Four skills are distributed to projects and native packages:
 
 1. `engineering-workflow` — all ordinary coding process: planning grill/lock, rapid autonomous execution, routing principles, parallelism, minimal design, debugging/TDD, documentation, verification, and successful-completion handoff;
-2. `eli5` — evidence-based developer onboarding and change explanation covering purpose, first use, core concepts, connected source architecture, representative execution flow, rationale, proof, and limits in a dependency-free visual HTML artifact;
+2. `eli5` — evidence-based visual onboarding for the entire package covering its problem, installation, first run, core concepts, connected source architecture, representative execution flow, deeper-study paths, proof, and limits in a dependency-free HTML artifact;
 3. `pr-review` — worktree-based semantic + executable review and high-risk escalation;
 4. `product-behavior-spec` — explicit specialist outside-in product documentation.
 
@@ -107,7 +107,13 @@ Repository mapping, context snapshots, task ledgers, Superpowers process, the fo
 
 The installer normally derives a `detected` profile without mutating the canonical source. It asks each installed host only through documented or configuration-file surfaces, records the evidence class, and writes `.wysiwyship/model-discovery.json`. Account-visible or configured-restriction catalogs may select explicit models; an unprovable entitlement becomes `model: null` and inherits the active session. This prevents host detection from turning a supported model name into a false access claim.
 
-The automatic ELI5 handoff runs in the configured `dev` coordinator after verification; an explicit `/eli5` invocation uses the host session model. Both retain the curious-developer baseline. The renderer validates that the story includes a connected architecture or execution flow and at least three inspected evidence anchors, then renders those paths and symbols beside the explanation. The renderer itself is deterministic and model-independent.
+The automatic ELI5 handoff runs in the configured `dev` coordinator after
+verification; an explicit `/eli5` invocation uses the host session model. Both
+retain the curious-developer baseline and explain the entire package. The latest
+diff is only a secondary signal for significant updates to the package mental
+model. The renderer caps the complete deck at 10 slides and validates a connected
+architecture/execution flow plus at least three inspected evidence anchors. The
+renderer itself is deterministic and model-independent.
 
 The config uses one provider-neutral `reasoning` property. Adapter translation is deliberately narrow:
 

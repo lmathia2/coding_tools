@@ -132,6 +132,12 @@ class Eli5RendererTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "at most 5"):
             eli5_renderer.render_document(story)
 
+    def test_caps_complete_deck_at_ten_slides(self) -> None:
+        story = self.story()
+        story["slides"] *= 3
+        with self.assertRaisesRegex(ValueError, "3 to 8"):
+            eli5_renderer.render_document(story)
+
     def test_defaults_to_curious_developer_audience(self) -> None:
         story = self.story()
         del story["audience"]

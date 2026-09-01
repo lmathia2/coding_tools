@@ -127,8 +127,8 @@ def validate_story(story: dict[str, Any]) -> None:
         {"title", "summary"},
     )
     slides = story.get("slides")
-    if not isinstance(slides, list) or not 3 <= len(slides) <= 9:
-        raise ValueError("story.slides must contain 3 to 9 slides")
+    if not isinstance(slides, list) or not 3 <= len(slides) <= 8:
+        raise ValueError("story.slides must contain 3 to 8 slides")
     for index, slide in enumerate(slides):
         validate_slide(slide, index)
     validate_grounding(slides)

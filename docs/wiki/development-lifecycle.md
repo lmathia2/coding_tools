@@ -39,5 +39,8 @@ reported as success.
 ## 4. Explain the finished result
 
 After integrated committed-range verification, the required ELI5 handoff creates
-one offline visual walkthrough for a curious developer. It is a learning artifact,
-not a substitute for source, authoritative documentation, or tests.
+an offline visual guide to the entire package for a curious developer: problem,
+installation, first run, architecture, under-the-hood flow, and deeper paths.
+The completed diff contributes only significant package-level updates. The deck
+is capped at 10 slides and remains a learning artifact, not a substitute for
+source, authoritative documentation, or tests.

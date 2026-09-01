@@ -183,9 +183,24 @@ The full `product-behavior-spec` workflow runs only when explicitly requested. E
 
 ### Project ELI5 completion handoff
 
-Every successful `Dev` / `/dev` run invokes the shared `eli5` skill after all code units are integrated and the committed range passes. ELI5 means the simplest accurate developer mental model, not a product pitch or release-summary deck. Every explanation covers purpose, exact first use and expected behavior, core concepts, connected source architecture, one representative flow through named files/symbols/contracts, design rationale, proof, and limitations. A more specific audience changes emphasis without removing those layers.
+Every successful `Dev` / `/dev` run invokes the shared `eli5` skill after all
+code units are integrated and the committed range passes. ELI5 is a visual
+onboarding guide to the entire package, not a product pitch, release summary, or
+diff walkthrough. Every explanation covers the package and problem, exact
+installation, first run and expected behavior, core concepts, connected source
+architecture, one representative flow through named files/symbols/contracts,
+deeper documentation/source paths, proof, and limitations. A more specific
+audience changes emphasis without removing those layers.
 
-The skill derives claims from implementation, tests, live documentation, contracts, configuration, and verification evidence. Its story schema requires a connected architecture or execution flow plus at least three visible evidence anchors such as source paths, symbols, commands, configuration keys, schemas, and tests. It writes story JSON under `.agent-state/eli5/` and uses its bundled `render_explainer.py` plus local HTML template to emit a single dependency-free file.
+The skill derives claims from implementation, tests, live documentation,
+contracts, configuration, and verification evidence, then reviews the completed
+diff only for material changes to that package model. Routine diff details are
+omitted; significant changes update the relevant package slide or one compact
+callout. Its story schema requires a connected architecture/execution flow,
+installation and run commands, deeper-study pointers, and at least three visible
+evidence anchors. It writes story JSON under `.agent-state/eli5/` and uses its
+bundled renderer and template to emit one dependency-free file capped at 10
+slides.
 
 The default ignored output avoids making the repository dirty after the final gate. A user-requested versioned output belongs in the affected documentation commit and must pass the normal documentation and range gates. Blocked or incomplete development does not produce a misleading completion deck. A renderer or validation failure means the successful development handoff is not complete.
 

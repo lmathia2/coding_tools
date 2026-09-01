@@ -126,7 +126,7 @@ flowchart LR
 4. **Document:** update purpose, intent, contracts, invariants, and operational behavior in the same logical commit as code.
 5. **Simplify:** measure changed-function cyclomatic complexity and improve the design without gaming the score.
 6. **Verify:** run the repository's configured tests, builds, static checks, documentation checks, and committed-range gate.
-7. **Explain:** generate an offline developer walkthrough showing how to use the result, its core concepts, source architecture, representative execution flow, design decisions, and proof.
+7. **Explain:** generate an offline visual guide to the entire package—problem, installation, first run, core concepts, architecture, under-the-hood flow, deeper references, and proof. The completed diff supplies only significant update callouts.
 
 Execution reopens planning only when evidence invalidates a material decision, a public contract or scope must expand, consequences change materially, or new authority is required.
 
@@ -191,17 +191,21 @@ An unexecuted check is never reported as passing.
 
 ### Grounded ELI5 handoff
 
-ELI5 means the simplest accurate developer explanation, not a high-level product pitch. It reads code, tests, contracts, configuration, and verification evidence, then teaches:
+ELI5 means the simplest accurate visual onboarding guide for the entire package,
+not a product pitch or diff walkthrough. It reads code, tests, contracts,
+configuration, verification evidence, and the latest diff, then teaches:
 
-- what problem the repository or change solves;
-- the exact first-use path and what the developer should expect;
+- what the package provides, which developer needs it, and the problem it solves;
+- the exact installation and first-run paths, created state, and expected behavior;
 - the core concepts and vocabulary;
 - which modules own which responsibilities;
 - how one real request flows through named files, symbols, and contracts;
-- why important boundaries and tradeoffs exist;
+- where authoritative docs, source entry points, extensions, and troubleshooting live;
 - what is proven, limited, or still uncertain.
 
-The output is one offline HTML file under `.agent-state/eli5/` unless you request a versioned documentation path.
+Only a recent change that materially affects this package mental model is called
+out. The output is one offline HTML file with at most 10 slides under
+`.agent-state/eli5/` unless you request a versioned documentation path.
 
 ### Model routing
 

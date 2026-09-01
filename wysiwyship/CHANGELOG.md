@@ -48,7 +48,11 @@
 - Consolidated a compact minimum-sufficient-change policy into the existing engineering workflow and PR review: evidence-backed structural additions, bounded scope, proportional regression tests, and configured lower-cost routine execution without weakening safety or required verification.
 
 - Reworked the root and product READMEs around developer onboarding: problem, quick start, expected workflow, core concepts, source ownership, and architecture diagrams.
-- Tightened the ELI5 skill from a high-level story into a grounded developer walkthrough that must cover purpose, first use, core concepts, connected source architecture, a named under-the-hood flow, rationale, proof, and limitations.
+- Reframed ELI5 as a visual onboarding guide to the entire package: problem,
+  installation, first run and expected behavior, core concepts, architecture,
+  an under-the-hood flow, deeper-study paths, proof, and limits. Completed diffs
+  now supply only material package-level callouts, and rendered decks are capped
+  at 10 slides.
 - Added renderer support for ordered architecture/execution flows and visible evidence anchors; validation now requires a flow and at least three inspected paths, symbols, commands, configuration keys, schemas, or tests.
 
 ## 0.11.0 — Planning grill and execution lock

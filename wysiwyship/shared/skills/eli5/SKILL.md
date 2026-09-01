@@ -1,26 +1,39 @@
 ---
 name: eli5
-description: "Teach a curious developer what a completed coding project or change is for, how to use it, its core concepts, how the code is organized and executes under the hood, why key design choices exist, and what evidence proves it works. Produce a precise, source-grounded, dependency-free visual HTML walkthrough. Use for /eli5, project or codebase explanations, architecture walkthroughs, onboarding guides, and the mandatory handoff after a successful WYSIWYShip development workflow."
+description: "Create a source-grounded visual onboarding guide for an entire software package: the problem it solves, installation, first run and expected behavior, core concepts, architecture, an under-the-hood flow, and where developers should learn more. Use for /eli5, package onboarding, architecture walkthroughs, and the mandatory handoff after a successful WYSIWYShip development workflow."
 ---
 
 # Developer ELI5
 
-Produce the simplest accurate mental model a developer can use to navigate and extend the code. Do not produce a product pitch, release-summary deck, or childish analogy.
+Produce the simplest accurate visual guide a developer can use to install, run,
+navigate, and extend the entire package. Do not produce a product pitch,
+release-summary deck, diff walkthrough, or childish analogy.
 
 ## 1. Establish the boundary and audience
 
-For an automatic post-development run, begin only after all required work units are integrated and verification passes. For an explicit `/eli5`, explain the requested repository state and label unverified or incomplete areas.
+For an automatic post-development run, begin only after all required work units
+are integrated and verification passes. For an explicit `/eli5`, explain the
+requested repository state and label unverified or incomplete areas.
 
-Default to a curious developer with general programming literacy but no repository context. A requested role or experience level may change emphasis and vocabulary, but never remove purpose, first use, core concepts, code architecture, execution flow, design rationale, or proof.
+Default to a curious developer with general programming literacy but no
+repository context. A requested role or experience level may change emphasis
+and vocabulary, but never remove the package problem, installation, first run,
+expected behavior, core concepts, architecture, under-the-hood flow, or pointers
+to deeper documentation.
 
-Classify the request before reading:
-
-- **Project onboarding:** explain the repository's current purpose, installation or startup path, primary user workflow, source architecture, and extension points.
-- **Completed change:** explain the observable delta, how a developer uses it, where it fits in the existing architecture, the changed execution path, and why the implementation was chosen.
+Every run is package onboarding, including the automatic handoff after a change.
+Inspect the completed diff only after understanding the package. Use it to update
+the affected package explanation and call out a change only when it materially
+alters installation, use, architecture, a public contract, or an important
+limitation. Never organize the deck around the diff.
 
 ## 2. Build an evidence map
 
-Inspect authoritative implementation, tests, live documentation, public contracts, configuration, verification results, and relevant commit/work-unit history. Do not build the story from a plan, README, commit title, or marketing language alone.
+Inspect authoritative implementation, tests, live documentation, public
+contracts, configuration, verification results, and relevant commit/work-unit
+history. Establish the whole-package model before reviewing the latest diff. Do
+not build the story from a plan, README, commit title, or marketing language
+alone.
 
 Use `docs/wiki/` as a navigation map when present, never as final proof. Inspect
 authoritative code, tests, contracts, and configuration before repeating its
@@ -28,13 +41,14 @@ technical statements.
 
 Record enough evidence to answer:
 
-- **Purpose:** the concrete problem and who experiences it;
-- **Use:** exact install/start/invoke commands, prerequisites, expected output or state, and the first likely failure;
+- **Purpose:** what the package is, the concrete problem, and who experiences it;
+- **Install:** prerequisites, exact installation command, created files/state, and the first likely failure;
+- **Run:** exact first invocation, expected output/state, and the primary developer workflow;
 - **Concepts:** the smallest vocabulary needed to understand the design;
 - **Architecture:** named modules and their responsibilities, boundaries, dependencies, persistent state, and generated versus canonical files;
 - **Flow:** one representative request from entry point through named files, symbols, data/contracts, side effects, and result;
-- **Rationale:** evidenced decisions, constraints, alternatives, and tradeoffs;
-- **Proof:** tests and verification actually executed, meaningful quality evidence, limitations, and uncertainty.
+- **More detail:** authoritative docs, key entry points, extension points, and troubleshooting paths;
+- **Proof:** tests and verification actually executed, meaningful quality evidence, limitations, uncertainty, and any materially significant recent change.
 
 Use source paths, symbols, commands, configuration keys, schemas, tests, or captured output as evidence anchors. Every technical claim must be traceable to inspected evidence. Never invent an API, runtime path, metric, capability, or design rationale.
 
@@ -54,27 +68,33 @@ Do not use vanity metrics, generic benefits, or labels such as “smart,” “s
 
 ## 4. Design the walkthrough
 
-Read [references/story-format.md](references/story-format.md). Create 6–9 focused content slides for a normal repository or non-trivial change; use fewer only when the evidence is genuinely smaller.
+Read [references/story-format.md](references/story-format.md). Create 6–8 focused
+content slides for a normal package. The renderer adds title and closing slides,
+so the complete deck contains at most 10 slides. Use fewer only when the package
+is genuinely smaller.
 
-For project onboarding, normally cover this sequence:
+Normally cover this sequence:
 
-1. **Purpose:** the problem, intended developer, and concrete capability;
-2. **First five minutes:** prerequisites, exact command or invocation, created state, and what to expect;
-3. **Core concepts:** three to five terms that unlock the rest of the code;
-4. **Architecture:** connected components with responsibilities and real source paths;
-5. **Under the hood:** one end-to-end flow through named entry points, symbols, contracts, and outputs;
-6. **Key boundary:** canonical/generated state, data ownership, API contract, or failure behavior;
-7. **Why this design:** important choices and tradeoffs grounded in code or live docs;
-8. **Proof and limits:** executed tests/checks plus honest gaps and next steps.
+1. **Package and problem:** what it provides, who needs it, and the problem it solves;
+2. **Install:** prerequisites, exact command, created state, and common setup failure;
+3. **Run:** exact first invocation, expected behavior, and the primary workflow;
+4. **Core concepts:** three to five terms that unlock the rest of the code;
+5. **Architecture:** connected components with responsibilities and real source paths;
+6. **Under the hood:** one end-to-end flow through named entry points, symbols, contracts, and outputs;
+7. **Go deeper:** authoritative docs, important source entry points, extension points, and troubleshooting;
+8. **Proof and limits:** executed checks, honest gaps, and only significant recent updates.
 
-For a completed change, keep the same learning path but lead with the behavioral delta and show the impacted slice of architecture. Do not omit first use or under-the-hood flow merely because the change is small.
+Fold a significant diff into the relevant package slide or one compact update
+callout. Omit routine implementation details that do not change how a developer
+understands, installs, runs, navigates, or extends the package.
 
 Use `flow` for architecture and execution sequences, `code` for an exact command or compact contract, and `evidence` for source anchors. Every story must include:
 
-- at least one exact first-use command or invocation;
+- at least one exact installation command and one exact first-run invocation;
 - at least one connected architecture or execution `flow`;
 - at least three evidence anchors across the deck;
 - at least one named source path and one named symbol or contract when code is available;
+- at least one pointer to authoritative documentation or a source entry point for deeper study;
 - a final action the developer can take immediately.
 
 ## 5. Render the offline explainer
@@ -94,7 +114,9 @@ Keep the output as one offline file with no CDN, external font, package manager,
 Run the renderer with `--check` before writing. Verify that:
 
 - commands, paths, symbols, contracts, and claims match the inspected repository state;
-- the deck answers purpose, first use, core concepts, architecture, under-the-hood flow, rationale, proof, and limits;
+- the deck answers package purpose, installation, first run and expected behavior, core concepts, architecture, under-the-hood flow, where to learn more, proof, and limits;
+- the complete rendered deck contains no more than 10 slides;
+- recent changes appear only when they materially affect the package mental model;
 - architecture edges describe real calls, copies, reads, writes, or ownership—not merely visual adjacency;
 - the artifact contains no remote resource marker or runtime dependency;
 - slides fit without overflow and keyboard, touch, print, and reduced-motion behavior remain present;

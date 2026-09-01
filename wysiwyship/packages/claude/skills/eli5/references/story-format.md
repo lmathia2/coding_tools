@@ -1,47 +1,47 @@
-# Developer ELI5 story format
+# Package ELI5 story format
 
 Provide one JSON object to `render_explainer.py`.
 
 ```json
 {
-  "title": "How the release gate works",
-  "subtitle": "Run it, trace it, and understand why it exists",
+  "title": "Understand and run the package",
+  "subtitle": "The problem, first five minutes, architecture, and deeper paths",
   "audience": "Curious developer",
-  "summary": "One sentence describing the concrete capability and its value.",
+  "summary": "One sentence describing the package, its user, and the problem it solves.",
   "slides": [
     {
-      "eyebrow": "FIRST FIVE MINUTES",
-      "title": "Run the gate against your current branch",
-      "body": "The command compares the current commit range with the accepted base and executes the configured evidence checks.",
-      "code": "python3 "${CLAUDE_PLUGIN_ROOT}/tools/check.py" <base-ref> --head HEAD",
-      "evidence": ["tools/check.py:main", "config/checks.json"],
+      "eyebrow": "INSTALL",
+      "title": "Install the package, then run one request",
+      "body": "The installer copies package-local tools and host adapters, then the native host accepts the first developer request.",
+      "code": "bash install.sh all /absolute/path/to/project\n\n/dev add one bounded feature",
+      "evidence": ["README.md:Getting started", "scripts/install_harness.py:Installer.run"],
       "accent": "coral"
     },
     {
       "eyebrow": "UNDER THE HOOD",
-      "title": "One command composes four independent checks",
+      "title": "A request moves through the package's main components",
       "flow": [
-        {"title": "CLI", "body": "Parse the range and config", "path": "tools/check.py:main"},
-        {"title": "Evidence", "body": "Run docs, complexity, project commands, and cleanliness", "path": "tools/check.py:run_checks"},
-        {"title": "Result", "body": "Return text or structured JSON and a non-zero status on failure", "path": "tools/check.py:render_text"}
+        {"title": "Host entry", "body": "Accept the developer request", "path": "host adapter"},
+        {"title": "Shared policy", "body": "Plan and execute the package workflow", "path": "shared/skills/"},
+        {"title": "Evidence tools", "body": "Verify the result and report failures", "path": "tools/"}
       ],
-      "evidence": ["tests/test_harness.py:CheckGateTests"],
+      "evidence": ["docs/ARCHITECTURE.md", "tests/test_harness.py"],
       "accent": "mint"
     },
     {
       "eyebrow": "PROOF",
-      "title": "The contract is covered by executable tests",
+      "title": "Follow the authoritative paths when you need more detail",
       "metrics": [
-        {"value": "4", "label": "check classes", "detail": "Docs, complexity, commands, cleanliness"}
+        {"value": "3", "label": "starting points", "detail": "Architecture, contracts, and source entry points"}
       ],
-      "evidence": ["tests/test_harness.py:test_gate_composes_docs_complexity_and_commands"],
+      "evidence": ["docs/ARCHITECTURE.md", "docs/WORKFLOW_CONTRACTS.md", "README.md"],
       "accent": "gold"
     }
   ],
   "closing": {
-    "title": "Trace one real change next",
-    "body": "Start at the command, follow run_checks, then inspect the failing evidence object.",
-    "next_steps": ["Run the gate on a small branch and open its JSON output"]
+    "title": "Install it, run one request, then trace the flow",
+    "body": "Use the package once, then follow the named architecture path into the source.",
+    "next_steps": ["Open the architecture guide and trace the first-run command"]
   }
 }
 ```
@@ -63,14 +63,19 @@ Provide one JSON object to `render_explainer.py`.
 
 ## Content contract
 
-A normal project or non-trivial change should use 6–9 content slides. The renderer accepts 3–9 for genuinely small subjects and adds title and closing slides.
+A normal package should use 6–8 content slides. The renderer accepts 3–8 for
+genuinely small packages and adds title and closing slides, keeping the complete
+deck at 10 slides or fewer. A recent diff updates the package story only when it
+materially changes installation, use, architecture, a public contract, or an
+important limitation.
 
 Every story must include:
 
-- one exact installation, startup, invocation, or first-use command;
+- one exact installation command and one exact first-run invocation;
 - one `flow` showing connected architecture or execution;
 - at least three grounded evidence anchors;
 - a representative source path and symbol or contract when code is available;
+- a pointer to authoritative documentation or source entry point for more detail;
 - proof and limitations that distinguish executed facts from inference;
 - a closing action the developer can perform immediately.
 
@@ -78,7 +83,7 @@ Do not treat folders listed side by side as an architecture diagram. Each `flow`
 
 ## Density limits
 
-- 3–9 content slides;
+- 3–8 content slides, producing at most 10 rendered slides including title and closing;
 - up to five bullets, five flow nodes, four items, four metrics, and four evidence anchors per slide;
 - titles under 90 characters, bullets under 180 characters, and body text under 700 characters;
 - code excerpts under 1,200 characters and limited to a command, contract, or representative control path;
